@@ -1,0 +1,403 @@
+/* Countdown Styles */
+.countdown-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.countdown-badge.active {
+    background: #10b981;
+    color: white;
+}
+
+.countdown-badge.warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.countdown-badge.urgent {
+    background: #ef4444;
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+.countdown-badge.critical {
+    background: #dc2626;
+    color: white;
+    animation: blink 1s infinite;
+}
+
+.countdown-badge.expired {
+    background: #6b7280;
+    color: white;
+}
+
+.countdown-detail {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.5rem;
+    justify-content: center;
+}
+
+.countdown-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    min-width: 80px;
+    border: 1px solid #e5e7eb;
+}
+
+.countdown-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--hospital-primary);
+    line-height: 1;
+}
+
+.countdown-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.375rem;
+    font-weight: 500;
+}
+
+.expired-message {
+    color: #ef4444;
+    font-weight: 600;
+    text-align: center;
+    padding: 1rem;
+    background: #fef2f2;
+    border-radius: 6px;
+    border: 1px solid #fecaca;
+}
+
+/* Contract Card Expired State */
+.contract-card.expired {
+    opacity: 0.7;
+    border-color: #d1d5db;
+}
+
+.contract-card.expired .contract-card-header h3 {
+    color: #6b7280;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0.5;
+    }
+}
+
+/* Rollover Modal */
+.rollover-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.rollover-modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.rollover-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.rollover-modal-header h3 {
+    margin: 0;
+    color: var(--hospital-primary);
+    font-size: 1.25rem;
+}
+
+.rollover-close-btn {
+    padding: 0.5rem;
+    background: #e5e7eb;
+    color: #374151;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rollover-close-btn:hover {
+    background: #d1d5db;
+}
+
+.rollover-form-group {
+    margin-bottom: 1.5rem;
+}
+
+.rollover-form-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.rollover-form-group input,
+.rollover-form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1.5px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.rollover-form-group input:focus,
+.rollover-form-group textarea:focus {
+    outline: none;
+    border-color: var(--hospital-primary);
+    box-shadow: 0 0 0 3px rgba(13, 115, 119, 0.1);
+}
+
+.rollover-form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.rollover-modal-footer {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.rollover-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rollover-btn-cancel {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.rollover-btn-cancel:hover {
+    background: #e5e7eb;
+}
+
+.rollover-btn-submit {
+    background: var(--hospital-primary);
+    color: white;
+}
+
+.rollover-btn-submit:hover {
+    background: #0a6b6e;
+}
+
+/* Action Buttons */
+.contract-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.action-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    background: white;
+    color: #374151;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.action-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.action-btn.rollover {
+    border-color: var(--hospital-primary);
+    color: var(--hospital-primary);
+}
+
+.action-btn.rollover:hover {
+    background: var(--hospital-primary);
+    color: white;
+}
+
+.action-btn.history {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.action-btn.history:hover {
+    background: #3b82f6;
+    color: white;
+}
+
+/* Status Indicators */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-indicator.active {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-indicator.warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-indicator.critical {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-indicator.expired {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .countdown-detail {
+        gap: 0.375rem;
+    }
+    
+    .countdown-item {
+        min-width: 70px;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .countdown-number {
+        font-size: 1.25rem;
+    }
+    
+    .countdown-label {
+        font-size: 0.75rem;
+    }
+    
+    .rollover-modal-content {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    .contract-actions {
+        flex-wrap: wrap;
+    }
+}
+/* Additional Action Buttons for Ruang Lingkup */
+.btn-action {
+    padding: 0.375rem;
+    border: 1px solid #d1d5db;
+    background: white;
+    color: #6b7280;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+}
+
+.btn-action svg {
+    width: 16px;
+    height: 16px;
+}
+
+.btn-action:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.btn-view:hover {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.btn-edit:hover {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #f59e0b;
+}
+
+.btn-delete:hover {
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.btn-rollover:hover {
+    background: #d1fae5;
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.btn-history:hover {
+    background: #e0e7ff;
+    border-color: #6366f1;
+    color: #6366f1;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.375rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}

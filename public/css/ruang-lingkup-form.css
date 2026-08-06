@@ -1,0 +1,427 @@
+:root {
+    --rl-primary: #007774;
+    --rl-primary-light: #009995;
+    --rl-primary-dark: #005a57;
+}
+.rl-wrap { max-width: 920px; margin: 0 auto; }
+.rl-card {
+    background: #fff; border-radius: 8px; border: 1px solid var(--border, #e2e8f0);
+    padding: 1.125rem 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.rl-section { margin-bottom: 0.875rem; }
+.rl-section:last-child { margin-bottom: 0; }
+.rl-section-header {
+    display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.625rem;
+    padding-bottom: 0.4375rem; border-bottom: 1px solid var(--border, #e2e8f0);
+}
+.rl-section-header h3 { font-size: 0.8125rem; font-weight: 700; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.03em; }
+.rl-section-icon {
+    width: 22px; height: 22px; background: #f0fdfa; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.rl-section-icon svg { width: 12px; height: 12px; color: var(--rl-primary); }
+
+.rl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5625rem; }
+.rl-field { display: flex; flex-direction: column; gap: 0.1875rem; }
+.rl-field.s1 { grid-column: span 1; }
+.rl-field.s2 { grid-column: span 2; }
+.rl-field.full { grid-column: 1 / -1; }
+
+.rl-label { font-size: 0.75rem; font-weight: 600; color: #475569; letter-spacing: 0.015em; }
+.rl-label.req::after { content: ' *'; color: #ef4444; }
+
+.rl-input, .rl-select, .rl-textarea {
+    width: 100%; padding: 0.4375rem 0.625rem; border: 1px solid #d1d5db; border-radius: 4px;
+    font-size: 0.8125rem; transition: all 0.15s; background: #fff; color: #0f172a;
+    line-height: 1.4;
+}
+.rl-input:focus, .rl-select:focus, .rl-textarea:focus {
+    outline: none; border-color: var(--rl-primary); box-shadow: 0 0 0 2.5px rgba(0,119,116,0.1);
+}
+.rl-input.error, .rl-select.error, .rl-textarea.error { border-color: #ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,0.15); }
+.rl-chk-grid.error { border: 1.5px solid #ef4444; border-radius: 4px; padding: 0.3125rem; }
+.rl-input::placeholder, .rl-select::placeholder, .rl-textarea::placeholder { color: #94a3b8; font-size: 0.6875rem; }
+.rl-select { appearance: none; padding-right: 1.5rem; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 0.75rem;
+}
+.rl-textarea { min-height: 48px; resize: vertical; }
+
+.rl-chk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.3125rem; }
+.rl-chk-item {
+    display: flex; align-items: center; gap: 0.3125rem; padding: 0.3rem 0.4375rem;
+    border: 1.5px solid #e2e8f0; border-radius: 4px; cursor: pointer; transition: all 0.12s; background: #fff;
+}
+.rl-chk-item:hover { border-color: var(--rl-primary); background: #f0fdfa; }
+.rl-chk-item:has(input:checked) { border-color: var(--rl-primary); background: #f0fdfa; box-shadow: 0 0 0 1.5px rgba(0,119,116,0.15); }
+.rl-chk-item input[type="checkbox"] { accent-color: var(--rl-primary); width: 12px; height: 12px; margin: 0; flex-shrink: 0; }
+.rl-chk-lbl {
+    font-size: 0.6875rem; font-weight: 500; color: #475569; display: flex; align-items: center; gap: 0.1875rem;
+}
+.rl-chk-lbl svg { width: 10px; height: 10px; color: var(--rl-primary); flex-shrink: 0; }
+.rl-chk-item:has(input:checked) .rl-chk-lbl { color: var(--rl-primary); font-weight: 600; }
+
+.rl-dyn { display: flex; flex-direction: column; gap: 0.3125rem; }
+.rl-dyn-row { display: flex; gap: 0.3125rem; align-items: center; }
+.rl-dyn-row .rl-input { flex: 1; }
+.rl-btn-add, .rl-btn-rem {
+    width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; border: 1.5px solid; cursor: pointer; flex-shrink: 0; transition: all 0.12s;
+    background: #fff; padding: 0;
+}
+.rl-btn-add svg, .rl-btn-rem svg { width: 11px; height: 11px; }
+.rl-btn-add { border-color: #e2e8f0; color: #64748b; }
+.rl-btn-add:hover { background: var(--rl-primary); border-color: var(--rl-primary); color: #fff; }
+.rl-btn-rem { border-color: #fee2e2; color: #ef4444; }
+.rl-btn-rem:hover { background: #ef4444; border-color: #ef4444; color: #fff; }
+
+.rl-empty { padding: 0.4375rem; text-align: center; }
+.rl-empty p { font-size: 0.6875rem; color: #94a3b8; margin: 0 0 0.3125rem 0; }
+.rl-empty .btn-primary { font-size: 0.6875rem; padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.1875rem; }
+.rl-empty .btn-primary svg { width: 11px; height: 11px; }
+
+.rl-check-wrap { display: flex; align-items: center; gap: 0.375rem; min-height: 26px; padding-top: 0.125rem; }
+.rl-check-wrap input[type="checkbox"] { accent-color: var(--rl-primary); width: 13px; height: 13px; margin: 0; cursor: pointer; }
+.rl-check-wrap span { font-size: 0.6875rem; font-weight: 600; color: #475569; }
+
+.rl-toggle-wrap { display: flex; align-items: center; gap: 0.5rem; min-height: 26px; padding-top: 0.125rem; }
+.rl-toggle-wrap .toggle-switch { margin: 0; flex-shrink: 0; }
+.rl-toggle-wrap > span:not(.slider) { font-size: 0.6875rem; font-weight: 600; color: #475569; }
+
+.toggle-status input:not(:checked) + .slider { background-color: #ef4444; }
+
+.rl-badge-container {
+    display: flex; flex-wrap: wrap; gap: 0.25rem; margin-bottom: 0.375rem;
+}
+.rl-obat-badge {
+    display: inline-flex; align-items: center; gap: 0.1875rem; background: #dcfce7;
+    border: 1px solid #bbf7d0; border-radius: 3px; padding: 0.125rem 0.375rem;
+    margin: 0.125rem; font-size: 0.6875rem; color: #166534;
+}
+.rl-obat-x { cursor: pointer; color: #94a3b8; font-size: 0.8125rem; line-height: 1; margin-left: 0.0625rem; }
+.rl-obat-x:hover { color: #ef4444; }
+
+.rl-actions { display: flex; gap: 0.5rem; justify-content: flex-end; padding-top: 0.75rem; border-top: 1px solid #e2e8f0; margin-top: 0; }
+.rl-actions .btn-primary, .rl-actions .btn-secondary { font-size: 0.75rem; padding: 0.375rem 0.875rem; display: inline-flex; align-items: center; gap: 0.3125rem; }
+.rl-actions .btn-primary svg, .rl-actions .btn-secondary svg { width: 14px; height: 14px; }
+.rl-actions .btn-primary svg.rl-btn-nav-svg, .rl-actions .btn-secondary svg.rl-btn-nav-svg { width: 12px; height: 12px; }
+.rl-field .btn-secondary svg { width: 14px; height: 14px; }
+
+.rl-autocomplete {
+    position: absolute; top: 100%; left: 0; background: #fff;
+    border: 1px solid #e2e8f0; border-top: 0; border-radius: 0 0 4px 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.07); z-index: 1000; max-height: 160px;
+    overflow-y: auto; display: none;
+    min-width: 100%; max-width: 420px;
+}
+.rl-autocomplete-item {
+    padding: 0.3125rem 0.625rem; cursor: pointer; font-size: 0.75rem;
+    border-bottom: 1px solid #f1f5f9; transition: all 0.1s;
+}
+.rl-autocomplete-item:last-child { border-bottom: none; }
+.rl-autocomplete-item:hover, .rl-autocomplete-item.active { background: #f0fdfa; color: var(--rl-primary); }
+.rl-autocomplete-empty {
+    padding: 0.5rem 0.625rem; font-size: 0.75rem; color: #94a3b8; text-align: center;
+}
+
+.rl-page-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.875rem; padding-bottom: 0.625rem; border-bottom: 1px solid #e2e8f0; }
+.rl-page-head h3 { font-size: 0.9375rem; font-weight: 700; color: #0f172a; margin: 0; }
+
+.input-container { position: relative; }
+
+/* Multi-step indicator */
+.step-indicator-wrapper {
+    position: relative; margin-bottom: 1.5rem; padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f5f9; padding-bottom: 1.25rem;
+}
+.step-indicator-line {
+    position: absolute; top: calc(0.5rem + 12px); left: 10%; right: 10%;
+    height: 3px; background: #e2e8f0; z-index: 1; border-radius: 2px;
+}
+.step-indicator-line-progress {
+    height: 100%; width: 0%; background: var(--rl-primary); transition: width 0.3s ease; border-radius: 2px;
+}
+.step-indicator-nodes {
+    display: flex; justify-content: space-between; position: relative; z-index: 2;
+    max-width: 90%; margin: 0 auto;
+}
+.step-node {
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.375rem;
+    flex: 1;
+}
+.step-node-circle {
+    width: 26px; height: 26px; border-radius: 50%; background: #fff;
+    border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; color: #64748b; transition: all 0.3s ease;
+    box-shadow: 0 0 0 3px #fff;
+}
+.step-node-label {
+    font-size: 0.6875rem; font-weight: 600; color: #64748b; transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+/* Node states */
+.step-node.active .step-node-circle {
+    border-color: var(--rl-primary); background: #fff; color: var(--rl-primary);
+    box-shadow: 0 0 0 4px rgba(0,119,116,0.15), 0 0 0 3px #fff;
+}
+.step-node.active .step-node-label {
+    color: var(--rl-primary); font-weight: 700;
+}
+.step-node.completed .step-node-circle {
+    border-color: var(--rl-primary); background: var(--rl-primary); color: #fff;
+}
+.step-node.completed .step-node-label {
+    color: var(--rl-primary);
+}
+
+/* Review Step Styles */
+.rl-review-container {
+    display: flex; flex-direction: column; gap: 1rem;
+}
+.rl-review-card {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;
+    padding: 1rem;
+}
+.rl-review-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem 1.5rem;
+}
+.rl-review-item {
+    display: flex; flex-direction: column; gap: 0.125rem;
+}
+.rl-review-item.full-width {
+    grid-column: span 2;
+}
+.rl-review-label {
+    font-size: 0.6875rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.rl-review-value {
+    font-size: 0.8125rem; font-weight: 600; color: #1e293b;
+}
+.rl-review-value.empty-val {
+    color: #94a3b8; font-style: italic; font-weight: 400;
+}
+.rl-review-badges {
+    display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.125rem;
+}
+
+@media (max-width: 640px) {
+    .rl-grid { grid-template-columns: 1fr; }
+    .rl-field.s1, .rl-field.s2 { grid-column: span 1; }
+    .rl-chk-grid { grid-template-columns: repeat(2, 1fr); }
+    .rl-review-grid { grid-template-columns: 1fr; }
+    .rl-review-item.full-width { grid-column: span 1; }
+}
+
+/* Form utility classes */
+.rl-label-inline-flex {
+    display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.375rem;
+}
+.rl-label-inline-flex .rl-label { margin-bottom: 0; }
+
+.rl-add-link {
+    font-size: 0.6875rem; color: var(--rl-primary); text-decoration: none;
+    font-weight: 600; display: inline-flex; align-items: center; gap: 0.1875rem; white-space: nowrap;
+}
+.rl-add-link svg { width: 11px; height: 11px; flex-shrink: 0; }
+
+.rl-review-heading {
+    font-size: 0.8125rem; font-weight: 700; color: var(--rl-primary);
+    margin: 0 0 0.75rem 0; border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.375rem; text-transform: uppercase; letter-spacing: 0.02em;
+}
+
+.rl-actions-space-between {
+    justify-content: space-between;
+}
+
+.rl-actions .rl-btn-reset {
+    width: 26px; height: 26px; min-width: 26px; display: inline-flex; align-items: center; justify-content: center;
+    color: #dc2626; border: 1px solid #fca5a5; padding: 0; border-radius: 4px; flex-shrink: 0;
+}
+.rl-actions .rl-btn-reset svg {
+    width: 13px; height: 13px;
+}
+
+.rl-btn-nav-svg {
+    width: 12px; height: 12px; display: inline-block; vertical-align: middle;
+}
+.rl-btn-nav-svg.mr-3 { margin-right: 3px; }
+.rl-btn-nav-svg.ml-3 { margin-left: 3px; }
+
+.rl-btn-prev {
+    display: none;
+}
+
+.rl-hint {
+    font-size: 0.6875rem; color: #94a3b8; margin-top: 0.375rem; margin-bottom: 0;
+}
+
+/* ---- Inline style utilities ---- */
+.rl-hidden { display: none; }
+.rl-btn-group { display: flex; gap: 0.5rem; }
+
+/* ---- Section Header Compact ---- */
+.rl-section-header-compact {
+    padding-bottom: 0.25rem;
+}
+
+/* ---- BU Heading ---- */
+.rl-bu-heading {
+    font-size: 0.875rem;
+}
+
+/* ---- Sub Grid (1fr 1fr) ---- */
+.rl-sub-grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* ---- Field Margin Top ---- */
+.rl-field-mt {
+    margin-top: 0.75rem;
+}
+
+/* ---- Field Margin Top + Border ---- */
+.rl-field-mt-bordered {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* ---- Button Compact Font ---- */
+.rl-btn-compact {
+    font-size: 0.8125rem;
+}
+
+/* ---- Autocomplete Action Item ---- */
+.rl-autocomplete-action {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--rl-primary);
+    font-weight: 600;
+}
+.rl-autocomplete-action svg {
+    width: 11px; height: 11px; flex-shrink: 0;
+}
+
+/* ---- Modal Narrow ---- */
+.rl-modal-narrow {
+    max-width: 420px;
+    text-align: left;
+}
+
+/* ---- Modal Title ---- */
+.rl-modal-title {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+/* ---- Modal Field ---- */
+.rl-modal-field {
+    margin-bottom: 0.75rem;
+}
+
+/* ---- Modal Error ---- */
+.rl-modal-error {
+    display: none;
+    color: #dc2626;
+    font-size: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+/* ---- Modal Primary Btn ---- */
+.rl-modal-btn-primary {
+    background: var(--rl-primary, #007774);
+}
+
+/* ---- Review Card Compact ---- */
+.rl-review-card-compact {
+    margin-bottom: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+}
+
+/* ---- Review UL ---- */
+.rl-review-ul {
+    list-style-type: disc;
+    padding-left: 1.25rem;
+    margin: 0;
+    font-size: 0.8125rem;
+}
+
+/* ---- Review Grid 2 Col ---- */
+.rl-review-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    font-size: 0.8125rem;
+}
+
+/* ---- Review Section Bordered ---- */
+.rl-review-section-bordered {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* ---- Review Card Heading ---- */
+.rl-review-card-heading {
+    font-size: 0.8125rem;
+    margin: 0 0 0.5rem 0;
+    color: var(--rl-primary);
+}
+
+/* ---- Review Badge Layanan ---- */
+.rl-badge-review-layanan {
+    display: inline-block;
+    background: #e0f2fe;
+    border: 1px solid #bae6fd;
+    color: #0369a1;
+    border-radius: 3px;
+    padding: 0.125rem 0.375rem;
+    margin: 0.125rem;
+    font-size: 0.6875rem;
+}
+
+/* ---- Review Badge Obat ---- */
+.rl-badge-review-obat {
+    display: inline-block;
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    border-radius: 3px;
+    padding: 0.125rem 0.375rem;
+    margin: 0.125rem;
+    font-size: 0.6875rem;
+}
+
+/* ---- High Profile Badge ---- */
+.rl-high-profile-badge {
+    color: #ef4444;
+    font-weight: bold;
+}
+
+/* ---- Review Deskripsi ---- */
+.rl-review-deskripsi {
+    font-size: 0.8125rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* ---- Obat Remove Button ---- */
+.rl-obat-remove {
+    margin-left: 0.25rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-size: 0.8125rem;
+    line-height: 1;
+    padding: 0;
+    color: #166534;
+}
+.rl-obat-remove:hover {
+    color: #ef4444;
+}

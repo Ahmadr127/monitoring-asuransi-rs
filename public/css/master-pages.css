@@ -1,0 +1,60 @@
+/* ---- Shared Master Pages Styles ---- */
+.input-container { position: relative; }
+
+/* Autocomplete dropdown */
+.rl-autocomplete {
+    position: absolute; top: 100%; left: 0; background: #fff;
+    border: 1px solid #e2e8f0; border-top: 0; border-radius: 0 0 4px 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.07); z-index: 1000; max-height: 160px;
+    overflow-y: auto; display: none;
+    min-width: 100%; max-width: 420px;
+}
+.rl-autocomplete-item {
+    padding: 0.3125rem 0.625rem; cursor: pointer; font-size: 0.75rem;
+    border-bottom: 1px solid #f1f5f9; transition: all 0.1s;
+}
+.rl-autocomplete-item:last-child { border-bottom: none; }
+.rl-autocomplete-item:hover, .rl-autocomplete-item.active { background: #f0fdfa; color: #007774; }
+.rl-autocomplete-item.disabled { color: #94a3b8; cursor: not-allowed; }
+.rl-autocomplete-item.disabled:hover { background: #fff; color: #94a3b8; }
+
+/* Filter clear button inside inputs */
+.filter-x-btn {
+    position: absolute !important;
+    right: 1.75rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    z-index: 5;
+}
+.filter-x-btn.hidden { display: none !important; }
+.filter-x-btn:hover { color: #1e293b; background: #f1f5f9; }
+.filter-x-btn svg { width: 14px; height: 14px; }
+
+/* Return banner for master pages */
+.return-banner { display: none; margin-bottom: 0.75rem; }
+.return-banner-link {
+    color: #007774; font-weight: 600; font-size: 0.8125rem;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;
+}
+.return-banner-link svg { width: 14px; height: 14px; }
+.rb-icon { width: 14px; height: 14px; }
+
+/* Password hint */
+.password-hint {
+    display: block;
+    font-size: 0.625rem;
+    margin-top: 0.25rem;
+    color: #94a3b8;
+    transition: color 0.15s;
+}
+.password-hint.invalid { color: #ef4444; }
+.password-hint.valid { color: #10b981; }
