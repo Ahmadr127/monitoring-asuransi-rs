@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
                 'name' => 'Administrator',
                 'username' => 'admin',
                 'email' => 'admin@azra.com',
-                'password' => Hash::make('admin123'),
+                'password' => Hash::make('rsazra'),
                 'role_id' => $roles['admin'],
             ],
             [
