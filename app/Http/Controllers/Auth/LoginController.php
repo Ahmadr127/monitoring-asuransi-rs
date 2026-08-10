@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\SimutuUserSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
@@ -33,6 +36,22 @@ class LoginController extends Controller
         }
 
         $remember = $request->filled('remember');
+
+        // Sinkronisasi ringan dari Simutu: segarkan profil + status user yang login.
+        try {
+            app(SimutuUserSyncService::class)->syncForUsername($credentials['username']);
+        } catch (\Throwable $e) {
+            Log::warning('Simutu lazy sync gagal saat login: '.$e->getMessage());
+        }
+
+        $localUser = User::where('username', $credentials['username'])->first();
+        if (
+            $localUser
+            && $localUser->simutu_status
+            && in_array($localUser->simutu_status, config('simutu_sync.block_login_statuses', ['non-aktif']))
+        ) {
+            return back()->with('error', 'Akun dinonaktifkan di sistem Simutu.')->onlyInput('username');
+        }
 
         if (Auth::attempt($credentials, $remember)) {
             RateLimiter::clear($throttleKey);

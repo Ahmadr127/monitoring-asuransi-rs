@@ -93,6 +93,7 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
 
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::post('/users/sync-simutu', [UserController::class, 'syncFromSimutu'])->name('users.sync-simutu');
         Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::match(['DELETE', 'POST'], '/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 

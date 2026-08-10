@@ -43,6 +43,16 @@
             </div>
         </div>
 
+        <div class="premium-toolbar mb-3 d-flex justify-content-end">
+            <form method="POST" action="{{ route('admin.users.sync-simutu') }}" onsubmit="return confirm('Sinkronkan data pegawai dari Simutu? User yang belum ada akan dibuat otomatis.');">
+                @csrf
+                <button type="submit" class="btn-premium-submit">
+                    <x-icon name="refresh" class="icon-16" />
+                    Sync dari Simutu
+                </button>
+            </form>
+        </div>
+
         <div class="content-layout">
             <!-- Sidebar: Form -->
             <div class="premium-card">

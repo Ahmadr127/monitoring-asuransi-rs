@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ReminderRecipient;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\SimutuUserSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -117,6 +118,21 @@ class UserController extends Controller
 
             return redirect()->route('admin.users.index')
                 ->with('error', 'Gagal menghapus user: '.$e->getMessage());
+        }
+    }
+
+    public function syncFromSimutu()
+    {
+        try {
+            $stats = app(SimutuUserSyncService::class)->sync();
+
+            return redirect()->route('admin.users.index')
+                ->with('success', "Simutu sync selesai: {$stats['checked']} dicek, {$stats['created']} dibuat, {$stats['updated']} diperbarui.");
+        } catch (\Exception $e) {
+            Log::error('Gagal sync dari Simutu: '.$e->getMessage());
+
+            return redirect()->route('admin.users.index')
+                ->with('error', 'Gagal sync dari Simutu: '.$e->getMessage());
         }
     }
 }
