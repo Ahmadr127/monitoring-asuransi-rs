@@ -22,6 +22,13 @@ class UserSeeder extends Seeder
                 'role_id' => $roles['admin'],
             ],
             [
+                'name' => 'Penginput Kontrak',
+                'username' => 'penginput',
+                'email' => 'penginput@azra.com',
+                'password' => Hash::make('rsazra'),
+                'role_id' => $roles['inputor'],
+            ],
+            [
                 'name' => 'Legal Staff',
                 'username' => 'legal',
                 'email' => 'legal@azra.com',

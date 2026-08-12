@@ -33,6 +33,11 @@ class RuangLingkup extends Model
         'tanggal_mulai',
         'tanggal_berakhir',
         'status',
+        'approval_status',
+        'created_by',
+        'updated_by',
+        'submitted_by',
+        'current_approval_request_id',
     ];
 
     protected $casts = [
@@ -43,12 +48,33 @@ class RuangLingkup extends Model
         'cakupan' => 'array',
         'obat' => 'array',
         'is_high_profile' => 'boolean',
+        'approval_status' => \App\Enums\ApprovalStatus::class,
     ];
 
     // Relasi ke badan usaha (single, backward compatibility)
     public function badanUsaha()
     {
         return $this->belongsTo(BadanUsaha::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function submittedBy()
+    {
+        return $this->belongsTo(User::class, 'submitted_by');
+    }
+
+    public function currentApproval()
+    {
+        return $this->belongsTo(ApprovalRequest::class, 'current_approval_request_id');
     }
 
     // Relasi ke pivot multi-BU (source of truth untuk benefit & cakupan per BU)
@@ -121,6 +147,11 @@ class RuangLingkup extends Model
 
     public function updateExpiredStatus()
     {
+        // Atribut bisa null untuk data lama di memori; perlakukan sebagai approved.
+        if (($this->approval_status?->value ?? 'approved') !== 'approved') {
+            return false;
+        }
+
         if ($this->is_expired && $this->status === 'aktif') {
             $oldStatus = $this->status;
             $this->update(['status' => 'tidak_aktif']);
@@ -143,6 +174,7 @@ class RuangLingkup extends Model
     public function scopeExpiring($query, $days = self::EXPIRING_SOON)
     {
         return $query->where('status', 'aktif')
+            ->where('approval_status', 'approved')
             ->whereDate('tanggal_berakhir', '>=', now()->startOfDay())
             ->whereDate('tanggal_berakhir', '<=', now()->addDays($days));
     }
@@ -150,6 +182,13 @@ class RuangLingkup extends Model
     public function scopeExpiredButActive($query)
     {
         return $query->where('status', 'aktif')
+            ->where('approval_status', 'approved')
             ->whereDate('tanggal_berakhir', '<', now()->startOfDay());
+    }
+
+    // Hanya kontrak yang sudah disetujui workflow
+    public function scopeApproved($query)
+    {
+        return $query->where('approval_status', 'approved');
     }
 }

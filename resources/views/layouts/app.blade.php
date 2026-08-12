@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="{{ asset('css/ruang-lingkup-form.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('css/master-pages.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('css/delete-modal.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/searchable-select.css') }}?v={{ time() }}">
 
     <!-- Flatpickr -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -299,5 +300,9 @@
             setInterval(updateDayCountdowns, 60000); // Check every minute
         });
     </script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+    @stack('scripts')
 </body>
 </html>

@@ -17,6 +17,7 @@ class ContractReminderService
         $expiringModels = [];
 
         RuangLingkup::where('status', 'aktif')
+            ->where('approval_status', 'approved')
             ->whereDate('tanggal_berakhir', '>=', now()->startOfDay())
             ->chunkById(100, function ($contracts) use (&$expiringModels) {
                 foreach ($contracts as $contract) {
@@ -29,6 +30,7 @@ class ContractReminderService
         $expiredModels = [];
 
         RuangLingkup::where('status', 'tidak_aktif')
+            ->where('approval_status', 'approved')
             ->whereDate('tanggal_berakhir', '>=', now()->subDays(7)->startOfDay())
             ->chunkById(100, function ($contracts) use (&$expiredModels) {
                 foreach ($contracts as $contract) {

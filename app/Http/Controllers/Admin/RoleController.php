@@ -12,9 +12,10 @@ class RoleController extends Controller
 {
     public function index()
     {
-        $roles = Role::withCount('users')->orderBy('created_at', 'desc')->get();
+        $roles = Role::withCount('users')->with('permissions')->orderBy('created_at', 'desc')->get();
+        $permissions = \App\Models\Permission::orderBy('name')->get();
 
-        return view('admin.master.roles', compact('roles'));
+        return view('admin.master.roles', compact('roles', 'permissions'));
     }
 
     public function store(Request $request)
@@ -55,6 +56,8 @@ class RoleController extends Controller
             $request->validate([
                 'name' => 'required|string|max:255|unique:roles,name,'.$role->id,
                 'key' => 'required|string|max:255|unique:roles,key,'.$role->id.'|alpha_dash',
+                'permissions' => 'nullable|array',
+                'permissions.*' => 'exists:permissions,id',
             ], [
                 'name.required' => 'Nama role harus diisi',
                 'name.unique' => 'Nama role sudah digunakan',
@@ -67,6 +70,10 @@ class RoleController extends Controller
                 'name' => $request->name,
                 'key' => Str::lower($request->key),
             ]);
+
+            if ($request->has('permissions')) {
+                $role->permissions()->sync($request->input('permissions', []));
+            }
 
             return redirect()->route('admin.roles.index')
                 ->with('success', 'Role berhasil diperbarui');
@@ -89,9 +96,9 @@ class RoleController extends Controller
                     ->with('error', 'Role tidak dapat dihapus karena masih digunakan oleh '.$role->users()->count().' user');
             }
 
-            if (in_array($role->key, ['admin', 'user'])) {
+            if ($role->is_system) {
                 return redirect()->route('admin.roles.index')
-                    ->with('error', 'Role default (Admin/User) tidak dapat dihapus');
+                    ->with('error', 'Role sistem tidak dapat dihapus');
             }
 
             $role->delete();

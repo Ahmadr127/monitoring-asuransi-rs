@@ -1,5 +1,5 @@
 @php
-    $isLegal = auth()->user() && auth()->user()->role && auth()->user()->role->key === 'legal';
+    $isLegal = auth()->user() && auth()->user()->hasPermission('approval');
 @endphp
 
 <!DOCTYPE html>
@@ -38,6 +38,7 @@
     <link rel="stylesheet" href="{{ asset('css/ruang-lingkup-form.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('css/master-pages.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('css/delete-modal.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/searchable-select.css') }}?v={{ time() }}">
     @else
     <link rel="stylesheet" href="{{ asset('css/hospital-clean.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('css/admin-pages.css') }}?v={{ time() }}">
@@ -48,6 +49,7 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard-user.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('css/ruang-lingkup.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('css/master-pages.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/searchable-select.css') }}?v={{ time() }}">
     @endif
 
     <!-- Flatpickr -->
@@ -313,5 +315,9 @@
         });
     </script>
     @endif
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+    @stack('scripts')
 </body>
 </html>

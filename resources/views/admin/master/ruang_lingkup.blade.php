@@ -130,16 +130,20 @@
                             <th></th>
                             <th>
                                 <div class="filter-input-container" id="wrap-namaAsuransiFilter">
-                                    <input type="text" id="namaAsuransiFilter" list="namaAsuransiList"
-                                        oninput="handleFilterInput(this)" autocomplete="off" class="filter-select"
-                                        placeholder="Cari...">
+                                    @php $namaList = collect($ruangLingkup)->pluck('rl')->pluck('nama_asuransi')->filter()->unique()->sort(); @endphp
+                                    <x-searchable-select
+                                        name="nama_asuransi"
+                                        id="nf"
+                                        input-id="namaAsuransiFilter"
+                                        :options="$namaList->map(fn ($n) => ['value' => $n, 'text' => $n])"
+                                        placeholder="Cari asuransi..."
+                                        input-class="filter-select"
+                                        onselect="applyNameFilter"
+                                        nullable
+                                    />
                                     <button type="button" class="clear-filter-btn"
                                         onclick="clearFilterWrap('namaAsuransiFilter')" title="Clear"><x-icon name="close" class="" /></button>
                                 </div>
-                                <datalist id="namaAsuransiList">
-                                    @php $namaList = collect($ruangLingkup)->pluck('rl')->pluck('nama_asuransi')->filter()->unique()->sort(); @endphp
-                                    @foreach($namaList as $nama)<option value="{{ $nama }}">@endforeach
-                                </datalist>
                             </th>
                             <th>
                                 <div class="filter-input-container" id="wrap-aliasTeraFilter">
@@ -156,23 +160,29 @@
                             </th>
                             <th>
                                 <div class="filter-input-container" id="wrap-payorTpaFilter">
-                                    <select id="payorTpaFilter" onchange="handleFilterInput(this)" class="filter-select">
-                                        <option value="">Semua</option>
-                                        <option value="TPA">TPA</option>
-                                        <option value="PAYOR">PAYOR</option>
-                                        <option value="TPA &amp; PAYOR">TPA & PAYOR</option>
-                                    </select>
+                                    <x-searchable-select
+                                        input-id="payorTpaFilter"
+                                        :options="[['value' => 'TPA', 'text' => 'TPA'], ['value' => 'PAYOR', 'text' => 'PAYOR'], ['value' => 'TPA & PAYOR', 'text' => 'TPA & PAYOR']]"
+                                        placeholder="Semua"
+                                        :empty-option="'Semua'"
+                                        input-class="filter-select"
+                                        onselect="applyNameFilter"
+                                        nullable
+                                    />
                                     <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('payorTpaFilter')" title="Clear"><x-icon name="close" class="" /></button>
                                 </div>
                             </th>
                             <th>
                                 <div class="filter-input-container" id="wrap-highProfileFilter">
-                                    <select id="highProfileFilter" onchange="handleFilterInput(this)"
-                                        class="filter-select">
-                                        <option value="">Semua</option>
-                                        <option value="1">High</option>
-                                        <option value="0">No High</option>
-                                    </select>
+                                    <x-searchable-select
+                                        input-id="highProfileFilter"
+                                        :options="[['value' => '1', 'text' => 'High'], ['value' => '0', 'text' => 'No High']]"
+                                        placeholder="Semua"
+                                        :empty-option="'Semua'"
+                                        input-class="filter-select"
+                                        onselect="applyNameFilter"
+                                        nullable
+                                    />
                                     <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('highProfileFilter')" title="Clear"><x-icon name="close" class="" /></button>
                                 </div>
                             </th>
@@ -188,32 +198,37 @@
                             </th>
                             <th>
                                 <div class="filter-input-container" id="wrap-periodFilter">
-                                    <select id="periodFilter" onchange="handleFilterInput(this)" class="filter-select">
-                                        <option value="">Semua</option>
-                                        <option value="active">Jalan</option>
-                                        <option value="expiring30">≤ 30 H</option>
-                                        <option value="expiring90">≤ 90 H</option>
-                                        <option value="expired">Habis</option>
-                                    </select>
+                                    <x-searchable-select
+                                        input-id="periodFilter"
+                                        :options="[['value' => 'active', 'text' => 'Jalan'], ['value' => 'expiring30', 'text' => '≤ 30 H'], ['value' => 'expiring90', 'text' => '≤ 90 H'], ['value' => 'expired', 'text' => 'Habis']]"
+                                        placeholder="Semua"
+                                        :empty-option="'Semua'"
+                                        input-class="filter-select"
+                                        onselect="applyNameFilter"
+                                        nullable
+                                    />
                                     <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('periodFilter')" title="Clear"><x-icon name="close" class="" /></button>
                                 </div>
                             </th>
                             <th>
                                 <div class="filter-input-container" id="wrap-jangkaWaktuFilter">
-                                    <select id="jangkaWaktuFilter" onchange="handleFilterInput(this)" class="filter-select">
-                                        <option value="">Semua</option>
-                                        @php
-                                            $jangkaWaktuList = collect($ruangLingkup)->pluck('rl')->flatMap(function ($item) {
-                                                return $item->penagihanPembayaran ? $item->penagihanPembayaran->map(fn($p) => [
-                                                    'key' => $p->jangka_waktu_hari . '|' . $p->tipe_hari,
-                                                    'label' => $p->jangka_waktu_hari . ' Hari ' . $p->tipe_hari,
-                                                ]) : collect();
-                                            })->filter()->unique('key')->sortBy('label');
-                                        @endphp
-                                        @foreach($jangkaWaktuList as $jw)
-                                            <option value="{{ $jw['key'] }}">{{ $jw['label'] }}</option>
-                                        @endforeach
-                                    </select>
+                                    @php
+                                        $jangkaWaktuList = collect($ruangLingkup)->pluck('rl')->flatMap(function ($item) {
+                                            return $item->penagihanPembayaran ? $item->penagihanPembayaran->map(fn($p) => [
+                                                'key' => $p->jangka_waktu_hari . '|' . $p->tipe_hari,
+                                                'label' => $p->jangka_waktu_hari . ' Hari ' . $p->tipe_hari,
+                                            ]) : collect();
+                                        })->filter()->unique('key')->sortBy('label');
+                                    @endphp
+                                    <x-searchable-select
+                                        input-id="jangkaWaktuFilter"
+                                        :options="$jangkaWaktuList->map(fn ($jw) => ['value' => $jw['key'], 'text' => $jw['label']])"
+                                        placeholder="Semua"
+                                        :empty-option="'Semua'"
+                                        input-class="filter-select"
+                                        onselect="applyNameFilter"
+                                        nullable
+                                    />
                                     <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('jangkaWaktuFilter')" title="Clear"><x-icon name="close" class="" /></button>
                                 </div>
                             </th>
@@ -263,11 +278,15 @@
                             </th>
                             <th>
                                 <div class="filter-input-container" id="wrap-statusFilter">
-                                    <select id="statusFilter" onchange="handleFilterInput(this)" class="filter-select">
-                                        <option value="">Semua</option>
-                                        <option value="aktif">Aktif</option>
-                                        <option value="tidak_aktif">Non-Aktif</option>
-                                    </select>
+                                    <x-searchable-select
+                                        input-id="statusFilter"
+                                        :options="[['value' => 'aktif', 'text' => 'Aktif'], ['value' => 'tidak_aktif', 'text' => 'Non-Aktif']]"
+                                        placeholder="Semua"
+                                        :empty-option="'Semua'"
+                                        input-class="filter-select"
+                                        onselect="applyNameFilter"
+                                        nullable
+                                    />
                                     <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('statusFilter')" title="Clear"><x-icon name="close" class="" /></button>
                                 </div>
                             </th>
@@ -1643,6 +1662,12 @@
             if(document.getElementById('diskonFilter')) document.getElementById('diskonFilter').value = '';
             if(document.getElementById('obatFilter')) document.getElementById('obatFilter').value = '';
 
+            ['statusFilter','payorTpaFilter','highProfileFilter','jangkaWaktuFilter','namaAsuransiFilter','periodFilter'].forEach(function(id) {
+                if (window.__searchableSelects && window.__searchableSelects[id]) {
+                    window.__searchableSelects[id].select(null);
+                }
+            });
+
             document.getElementById('clearSearch').style.display = 'none';
             const autocompleteList = document.getElementById('autocompleteList');
             if (autocompleteList) autocompleteList.style.display = 'none';
@@ -1697,6 +1722,11 @@
             filterTable();
         }
 
+        // Dipanggil searchable-select (kolom filter Nama Asuransi) saat memilih item.
+        window.applyNameFilter = function (value, text, inputEl) {
+            handleFilterInput(inputEl);
+        };
+
         function toggleExportDropdown(e) {
             e.stopPropagation();
             const menu = document.getElementById('exportDropdown');
@@ -1722,6 +1752,9 @@
             if (wrap) {
                 const btn = wrap.querySelector('.clear-filter-btn');
                 if (btn) btn.style.display = 'none';
+            }
+            if (window.__searchableSelects && window.__searchableSelects[id]) {
+                window.__searchableSelects[id].select(null);
             }
             filterTable();
         }

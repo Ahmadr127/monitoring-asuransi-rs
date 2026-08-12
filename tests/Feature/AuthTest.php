@@ -20,7 +20,7 @@ class AuthTest extends TestCase
 
     public function test_admin_can_login_and_redirect_to_dashboard()
     {
-        $user = User::factory()->admin()->create([
+        $this->createAdminUser([
             'username' => 'admin',
             'password' => bcrypt('password'),
         ]);
@@ -36,7 +36,7 @@ class AuthTest extends TestCase
 
     public function test_legal_can_login_and_redirect_to_dashboard()
     {
-        $user = User::factory()->nonAdmin()->create([
+        $this->createNonAdminUser([
             'username' => 'staff',
             'password' => bcrypt('password'),
         ]);
@@ -75,8 +75,7 @@ class AuthTest extends TestCase
 
     public function test_logout()
     {
-        $user = User::factory()->admin()->create();
-        $this->actingAs($user);
+        $this->loginAsAdmin();
 
         $response = $this->post('/logout');
 

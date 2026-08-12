@@ -15,26 +15,51 @@
         <!-- Menu Utama Section -->
         <div class="nav-section-title">Menu Utama</div>
 
-        @if(auth()->user()->isAdmin())
-        <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') || request()->routeIs('admin.dashboard') ? 'active' : '' }}" title="Dashboard">
+        @if(auth()->user()->hasPermission('dashboard'))
+        <a href="{{ auth()->user()->hasPermission('kerjasama') ? route('dashboard') : route('user.dashboard') }}"
+           class="nav-link {{ request()->routeIs('dashboard') || request()->routeIs('admin.dashboard') || request()->routeIs('user.dashboard') ? 'active' : '' }}" title="Dashboard">
             <div class="nav-icon">
                 <x-icon name="home" class="icon-lg" />
             </div>
             <span class="nav-text">Dashboard</span>
         </a>
+        @endif
+
+        @if(auth()->user()->hasPermission('kerjasama'))
         <a href="{{ route('admin.ruang-lingkup.index') }}" class="nav-link {{ request()->routeIs('admin.ruang-lingkup.*') ? 'active' : '' }}" title="Data Kerjasama">
             <div class="nav-icon">
                 <x-icon name="document" class="icon-lg" />
             </div>
             <span class="nav-text">Data Kerjasama</span>
         </a>
+        @elseif(auth()->user()->hasPermission('dashboard'))
+        <a href="{{ route('user.kerjasama.index') }}" class="nav-link {{ request()->routeIs('user.kerjasama.*') ? 'active' : '' }}" title="Data Kerjasama">
+            <div class="nav-icon">
+                <x-icon name="document" class="icon-lg" />
+            </div>
+            <span class="nav-text">Data Kerjasama</span>
+        </a>
+        @endif
+
+        @if(auth()->user()->hasPermission('approval'))
+        <a href="{{ route('admin.approvals.index') }}" class="nav-link {{ request()->routeIs('admin.approvals.*') ? 'active' : '' }}" title="Persetujuan Kontrak">
+            <div class="nav-icon">
+                <x-icon name="check-circle" class="icon-lg" />
+            </div>
+            <span class="nav-text">Persetujuan</span>
+        </a>
+        @endif
+
+        @if(auth()->user()->hasPermission('laporan'))
         <a href="{{ route('admin.export.import-form') }}" class="nav-link {{ request()->routeIs('admin.export.*') ? 'active' : '' }}" title="Import/Export Data">
             <div class="nav-icon">
                 <x-icon name="list" class="icon-lg" />
             </div>
             <span class="nav-text">Import / Export</span>
         </a>
+        @endif
 
+        @if(auth()->user()->hasPermission('master'))
         <div class="nav-divider"></div>
 
         <!-- Master Data Section -->
@@ -90,27 +115,50 @@
                 </a>
             </div>
         </div>
+        @endif
 
         <div class="nav-divider"></div>
 
         <!-- Pengaturan Section -->
         <div class="nav-section-title">Pengaturan</div>
 
+        @if(auth()->user()->hasPermission('workflow'))
+        <a href="{{ route('admin.workflows.index') }}" class="nav-link {{ request()->routeIs('admin.workflows.*') ? 'active' : '' }}" title="Workflow Persetujuan">
+            <div class="nav-icon">
+                <x-icon name="list" class="icon-lg" />
+            </div>
+            <span class="nav-text">Workflow Persetujuan</span>
+        </a>
+        @endif
+
+        @if(auth()->user()->hasPermission('departemen'))
+        <a href="{{ route('admin.departments.index') }}" class="nav-link {{ request()->routeIs('admin.departments.*') ? 'active' : '' }}" title="Manajemen Departemen">
+            <div class="nav-icon">
+                <x-icon name="building" class="icon-lg" />
+            </div>
+            <span class="nav-text">Departemen</span>
+        </a>
+        @endif
+
+        @if(auth()->user()->hasPermission('pengaturan'))
         <a href="{{ route('admin.table-settings.index') }}" class="nav-link {{ request()->routeIs('admin.table-settings.*') ? 'active' : '' }}" title="Pengaturan Tampilan">
             <div class="nav-icon">
                 <x-icon name="list" class="icon-lg" />
             </div>
             <span class="nav-text">Manajemen Kolom</span>
         </a>
+        @endif
 
+        @if(auth()->user()->hasPermission('reminder'))
         <a href="{{ route('admin.reminder-recipients.index') }}" class="nav-link {{ request()->routeIs('admin.reminder-recipients.*') ? 'active' : '' }}" title="Pengaturan Reminder">
             <div class="nav-icon">
                 <x-icon name="envelope" class="icon-lg" />
             </div>
             <span class="nav-text">Manajemen Reminder</span>
         </a>
+        @endif
 
-
+        @if(auth()->user()->hasPermission('roles'))
         <a href="{{ route('admin.roles.index') }}" class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}" title="Manajemen Role">
             <div class="nav-icon">
                 <x-icon name="shield-check-solid" class="icon-lg" />
@@ -118,26 +166,20 @@
             <span class="nav-text">Manajemen Role</span>
         </a>
 
+        <a href="{{ route('admin.permissions.index') }}" class="nav-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}" title="Manajemen Permission">
+            <div class="nav-icon">
+                <x-icon name="list" class="icon-lg" />
+            </div>
+            <span class="nav-text">Manajemen Permission</span>
+        </a>
+        @endif
+
+        @if(auth()->user()->hasPermission('users'))
         <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" title="Manajemen User">
             <div class="nav-icon">
                 <x-icon name="users-solid" class="icon-lg" />
             </div>
             <span class="nav-text">Manajemen User</span>
-        </a>
-
-        @else
-        <!-- Menu untuk User (Read-Only) -->
-        <a href="{{ route('user.dashboard') }}" class="nav-link {{ request()->routeIs('user.dashboard') ? 'active' : '' }}" title="Dashboard">
-            <div class="nav-icon">
-                <x-icon name="home" class="icon-lg" />
-            </div>
-            <span class="nav-text">Dashboard</span>
-        </a>
-        <a href="{{ route('user.kerjasama.index') }}" class="nav-link {{ request()->routeIs('user.kerjasama.*') ? 'active' : '' }}" title="Data Kerjasama">
-            <div class="nav-icon">
-                <x-icon name="document" class="icon-lg" />
-            </div>
-            <span class="nav-text">Data Kerjasama</span>
         </a>
         @endif
     </nav>

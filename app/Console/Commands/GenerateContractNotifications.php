@@ -14,10 +14,10 @@ class GenerateContractNotifications extends Command
 
     public function handle(): int
     {
-        $users = \App\Models\User::whereHas('role', fn ($q) => $q->whereIn('key', ['admin', 'legal']))->get();
+        $users = \App\Models\User::whereHas('role.permissions', fn ($q) => $q->where('permissions.name', 'notifikasi'))->get();
 
         foreach ($users as $user) {
-            $routeName = $user->role->key === 'admin' ? 'admin.ruang-lingkup.show' : 'user.kerjasama.show';
+            $routeName = $user->isAdmin() ? 'admin.ruang-lingkup.show' : 'user.kerjasama.show';
 
             $expiring = RuangLingkup::where('status', 'aktif')
                 ->whereDate('tanggal_berakhir', '>=', now()->startOfDay())
@@ -40,7 +40,7 @@ class GenerateContractNotifications extends Command
                         'title' => 'Kontrak Akan Berakhir',
                         'message' => "{$contract->nama_asuransi} akan berakhir dalam {$days} hari",
                         'icon' => 'clock',
-                        'url' => $user->role->key === 'legal' ? '' : $url,
+                        'url' => $url,
                     ]);
                 }
             }
@@ -68,7 +68,7 @@ class GenerateContractNotifications extends Command
                         'title' => 'Kontrak Baru Ditambahkan',
                         'message' => "{$contract->nama_asuransi} telah ditambahkan",
                         'icon' => 'plus',
-                        'url' => $user->role->key === 'legal' ? '' : $url,
+                        'url' => $url,
                     ]);
                 }
             }

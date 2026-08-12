@@ -36,6 +36,11 @@ class RuangLingkupTest extends TestCase
             'tanggal_mulai',
             'tanggal_berakhir',
             'status',
+            'approval_status',
+            'created_by',
+            'updated_by',
+            'submitted_by',
+            'current_approval_request_id',
         ], $rl->getFillable());
     }
 

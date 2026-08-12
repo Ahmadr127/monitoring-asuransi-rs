@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
             BadanUsahaSeeder::class,
             JenisLayananSeeder::class,
             ObatSeeder::class,
+            DepartmentSeeder::class,
+            PermissionSeeder::class,
         ]);
         $this->command->newLine();
 

@@ -42,7 +42,7 @@ class UserController extends Controller
             ]);
 
             $role = Role::find($validated['role_id']);
-            if ($role && $role->key === 'legal') {
+            if ($role && $role->hasPermission('approval')) {
                 ReminderRecipient::firstOrCreate(
                     ['email' => $user->email],
                     [

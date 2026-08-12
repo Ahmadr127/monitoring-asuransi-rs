@@ -62,8 +62,12 @@ class LoginController extends Controller
                 return redirect()->route('admin.dashboard');
             }
 
-            if ($user->role?->key === 'legal') {
+            if ($user->hasPermission('approval') && ! $user->hasPermission('kerjasama')) {
                 return redirect()->route('user.dashboard');
+            }
+
+            if ($user->hasPermission('kerjasama')) {
+                return redirect()->route('admin.ruang-lingkup.index');
             }
 
             return redirect()->route('user.kerjasama.index');

@@ -77,13 +77,13 @@ class DashboardController extends Controller
 
             case 'aktif':
                 $title = 'Kerjasama Aktif';
-                $kerjasama = RuangLingkup::with($with)->where('status', 'aktif')->orderBy('created_at', 'desc')->get();
+                $kerjasama = RuangLingkup::with($with)->approved()->where('status', 'aktif')->orderBy('created_at', 'desc')->get();
                 $icon = 'check-circle';
                 break;
 
             case 'expiring':
                 $title = 'Kerjasama Akan Berakhir';
-                $kerjasama = RuangLingkup::with($with)
+                $kerjasama = RuangLingkup::with($with)->approved()
                     ->where('status', 'aktif')
                     ->whereDate('tanggal_berakhir', '>', now())
                     ->whereDate('tanggal_berakhir', '<=', now()->addDays(30))

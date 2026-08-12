@@ -72,12 +72,14 @@
 
                         <div class="rl-field s1">
                             <label class="rl-label req">TPA / PAYOR</label>
-                            <select name="penjamin_category" id="penjamin_category" class="rl-select">
-                                <option value="">-- Pilih --</option>
-                                <option value="PAYOR" {{ old('penjamin_category', $isEdit ? $ruangLingkup->penjamin_category : '') == 'PAYOR' ? 'selected' : '' }}>PAYOR</option>
-                                <option value="TPA" {{ old('penjamin_category', $isEdit ? $ruangLingkup->penjamin_category : '') == 'TPA' ? 'selected' : '' }}>TPA</option>
-                                <option value="TPA &amp; PAYOR" {{ old('penjamin_category', $isEdit ? $ruangLingkup->penjamin_category : '') == 'TPA & PAYOR' ? 'selected' : '' }}>TPA &amp; PAYOR</option>
-                            </select>
+                            <x-searchable-select
+                                name="penjamin_category"
+                                input-id="penjamin_category"
+                                :options="[['value' => 'PAYOR', 'text' => 'PAYOR'], ['value' => 'TPA', 'text' => 'TPA'], ['value' => 'TPA & PAYOR', 'text' => 'TPA & PAYOR']]"
+                                :value="old('penjamin_category', $isEdit ? $ruangLingkup->penjamin_category : '')"
+                                placeholder="-- Pilih --"
+                                required
+                            />
                         </div>
 
                         <div class="rl-field s1">
@@ -372,6 +374,12 @@
                     <x-icon name="check" class="icon-14" />
                     {{ $isEdit ? 'Update' : 'Simpan' }}
                 </button>
+                @if(auth()->user()->hasPermission('kerjasama'))
+                <button type="submit" name="submit" value="1" class="btn-primary rl-hidden" id="btn_submit_approval">
+                    <x-icon name="send" class="icon-14" />
+                    Simpan & Ajukan Persetujuan
+                </button>
+                @endif
                 </div>
             </div>
         </form>
@@ -394,12 +402,8 @@
 
 </x-app-layout>
 
-<!-- Select2 CSS -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
-<!-- Select2 JS (requires jQuery) -->
+<!-- jQuery (dipakai helper HTML escaping) -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
     // Icon helpers (avoid raw SVG path strings in template literals)
@@ -511,6 +515,9 @@
         clearFormDraft();
         window.removeEventListener('beforeunload', saveFormDraft);
         document.getElementById('ruang_lingkup_form').reset();
+        if (window.__searchableSelects && window.__searchableSelects['penjamin_category']) {
+            window.__searchableSelects['penjamin_category'].select(null);
+        }
         document.getElementById('is_high_profile').checked = false;
         const stToggle = document.getElementById('status_toggle');
         const stLabel = document.getElementById('status_label');
@@ -985,16 +992,19 @@
             document.getElementById('btn_prev').style.display = 'none';
             document.getElementById('btn_next').style.display = 'inline-flex';
             document.getElementById('btn_submit').style.display = 'none';
+            var bsa = document.getElementById('btn_submit_approval'); if (bsa) bsa.style.display = 'none';
         } else if (step === 2) {
             document.getElementById('btn_cancel').style.display = 'none';
             document.getElementById('btn_prev').style.display = 'inline-flex';
             document.getElementById('btn_next').style.display = 'inline-flex';
             document.getElementById('btn_submit').style.display = 'none';
+            var bsa = document.getElementById('btn_submit_approval'); if (bsa) bsa.style.display = 'none';
         } else if (step === 3) {
             document.getElementById('btn_cancel').style.display = 'none';
             document.getElementById('btn_prev').style.display = 'inline-flex';
             document.getElementById('btn_next').style.display = 'none';
             document.getElementById('btn_submit').style.display = 'inline-flex';
+            var bsa = document.getElementById('btn_submit_approval'); if (bsa) bsa.style.display = 'inline-flex';
             renderReviewData();
         }
         updateStepIndicator();
@@ -1048,7 +1058,11 @@
 
             if (!penjaminSelect.value) {
                 penjaminSelect.classList.add('error');
-                if (valid) penjaminSelect.focus();
+                const penjaminTrigger = penjaminSelect.closest('.ssd')?.querySelector('.ssd-trigger');
+                if (penjaminTrigger) {
+                    penjaminTrigger.classList.add('error');
+                    if (valid) penjaminTrigger.focus();
+                }
                 valid = false;
             }
 
@@ -1249,6 +1263,9 @@
             setVal('form_nama_asuransi', draft.nama_asuransi);
             setVal('alias_versi_tera', draft.alias_versi_tera);
             setVal('penjamin_category', draft.penjamin_category);
+            if (window.__searchableSelects && window.__searchableSelects['penjamin_category']) {
+                window.__searchableSelects['penjamin_category'].select(draft.penjamin_category || null);
+            }
             document.getElementById('is_high_profile').checked = !!draft.is_high_profile;
             setVal('form_tanggal_mulai', draft.tanggal_mulai);
             setVal('form_tanggal_berakhir', draft.tanggal_berakhir);

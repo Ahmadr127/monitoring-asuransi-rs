@@ -70,15 +70,14 @@
                             </div>
                             <div class="form-group mb-8">
                                 <label>Tujuan <span class="text-danger">*</span></label>
-                                <select name="purpose" id="real_purpose" class="form-input-minimal" required>
-                                    <option value="">Pilih tujuan...</option>
-                                    <option value="admin">Administrasi</option>
-                                    <option value="legal">Legal</option>
-                                    <option value="marketing">Marketing</option>
-                                    <option value="farmasi">Farmasi</option>
-                                    <option value="kasir">Kasir</option>
-                                    <option value="pendaftaran">Pendaftaran</option>
-                                </select>
+                                <x-searchable-select
+                                    name="purpose"
+                                    input-id="real_purpose"
+                                    :options="[['value' => 'admin', 'text' => 'Administrasi'], ['value' => 'legal', 'text' => 'Legal'], ['value' => 'marketing', 'text' => 'Marketing'], ['value' => 'farmasi', 'text' => 'Farmasi'], ['value' => 'kasir', 'text' => 'Kasir'], ['value' => 'pendaftaran', 'text' => 'Pendaftaran']]"
+                                    :value="old('purpose', '')"
+                                    placeholder="Pilih tujuan..."
+                                    required
+                                />
                             </div>
                         </div>
 
@@ -251,6 +250,9 @@
             $('#real_name').val('');
             $('#real_email').val('');
             $('#real_purpose').val('');
+            if (window.__searchableSelects && window.__searchableSelects['real_purpose']) {
+                window.__searchableSelects['real_purpose'].select(null);
+            }
         };
 
         window.setTableFilter = function(cat) {

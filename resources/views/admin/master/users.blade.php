@@ -80,14 +80,15 @@
                             <input type="password" name="password" class="form-input-minimal" placeholder="********" required minlength="8" oninput="validatePasswordLength(this)">
                             <span class="password-hint" id="password-hint-create">Minimal 8 karakter</span>
                         </div>
-                        <div class="form-group mb-8">
+                        <div class="form-group">
                             <label>Role <span class="text-danger">*</span></label>
-                            <select name="role_id" class="form-input-minimal" required>
-                                <option value="">Pilih Role</option>
-                                @foreach($roles as $role)
-                                    <option value="{{ $role->id }}">{{ $role->name }}</option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select
+                                name="role_id"
+                                :options="$roles->map(fn ($role) => ['value' => $role->id, 'text' => $role->name])"
+                                :value="old('role_id', '')"
+                                placeholder="Pilih Role"
+                                required
+                            />
                         </div>
 
                         <button type="submit" class="btn-premium-submit">
@@ -143,7 +144,7 @@
                                     </td>
                                     <td><code class="username-tag">@<span>{{ $user->username }}</span></code></td>
                                     <td class="text-center">
-                                        @php $isAdmin = strtolower($user->role?->key) === 'admin'; @endphp
+                                        @php $isAdmin = $user->isAdmin(); @endphp
                                         <span class="badge-premium {{ $isAdmin ? 'badge-purple' : 'badge-teal' }}">
                                             @if($isAdmin)
                                                 <x-icon name="shield-check-solid" />
@@ -211,11 +212,14 @@
                     </div>
                     <div class="form-group">
                         <label>Role</label>
-                        <select id="edit_role" name="role_id" class="form-input-minimal" required>
-                            @foreach($roles as $role)
-                                <option value="{{ $role->id }}">{{ $role->name }}</option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            name="role_id"
+                            id="edit_role_select"
+                            input-id="edit_role"
+                            :options="$roles->map(fn ($role) => ['value' => $role->id, 'text' => $role->name])"
+                            placeholder="Pilih Role"
+                            required
+                        />
                     </div>
                     <div class="form-group mb-8">
                         <label>Password Baru <small class="text-xs-muted">(Kosongkan jika tidak ganti)</small></label>
@@ -369,7 +373,9 @@
             $('#edit_name').val(name);
             $('#edit_username').val(username);
             $('#edit_email').val(email);
-            $('#edit_role').val(role);
+            if (window.__searchableSelects && window.__searchableSelects['edit_role']) {
+                window.__searchableSelects['edit_role'].select(role);
+            }
             const pwInput = document.querySelector('#editForm input[name="password"]');
             if (pwInput) {
                 pwInput.value = '';

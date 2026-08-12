@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Exceptions\WorkflowException;
 use App\Models\BadanUsaha;
 use App\Models\JenisLayanan;
 use App\Models\Obat;
 use App\Models\RuangLingkup;
 use App\Models\RuangLingkupBadanUsaha;
 use App\Services\ContractReminderService;
+use App\Services\WorkflowService;
 use App\Traits\PreparesDashboardData;
 use Illuminate\Http\Request;
 
@@ -87,12 +89,13 @@ class RuangLingkupController extends Controller
         ));
     }
 
-    public function store(Request $request, ContractReminderService $reminderService)
+    public function store(Request $request, ContractReminderService $reminderService, WorkflowService $workflowService)
     {
         try {
             $validated = $this->validateRuangLingkupRequest($request);
 
             $validated['is_high_profile'] = $request->has('is_high_profile');
+            $validated['created_by'] = auth()->id();
 
             $buGroups = $validated['bu_groups'];
             unset($validated['bu_groups']);
@@ -121,6 +124,7 @@ class RuangLingkupController extends Controller
             $this->syncBuGroupRelations($ruangLingkup, $buGroups);
 
             $ruangLingkup->contractHistory()->create([
+                'user_id' => auth()->id(),
                 'action_type' => 'created',
                 'old_end_date' => null,
                 'new_end_date' => $validated['tanggal_berakhir'],
@@ -133,8 +137,19 @@ class RuangLingkupController extends Controller
                 ],
             ]);
 
+            if (! auth()->user()->isAdmin() || $request->boolean('submit')) {
+                $ruangLingkup->update(['approval_status' => 'draft']);
+                $workflowService->start($ruangLingkup, auth()->user());
+
+                return redirect()->route('admin.approvals.index')
+                    ->with('success', 'Data disimpan dan diajukan untuk persetujuan.');
+            }
+
             return redirect()->route('admin.ruang-lingkup.index')
                 ->with('success', 'Data ruang lingkup berhasil ditambahkan');
+        } catch (WorkflowException $e) {
+            return redirect()->route('admin.ruang-lingkup.index')
+                ->with('error', 'Data tersimpan, tetapi gagal mengajukan: '.$e->getMessage());
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->route('admin.ruang-lingkup.index')
                 ->withErrors($e->errors())
@@ -146,12 +161,13 @@ class RuangLingkupController extends Controller
         }
     }
 
-    public function update(Request $request, RuangLingkup $ruangLingkup, ContractReminderService $reminderService)
+    public function update(Request $request, RuangLingkup $ruangLingkup, ContractReminderService $reminderService, WorkflowService $workflowService)
     {
         try {
             $validated = $this->validateRuangLingkupRequest($request, true);
 
             $validated['is_high_profile'] = $request->has('is_high_profile');
+            $validated['updated_by'] = auth()->id();
 
             $buGroups = $validated['bu_groups'];
             unset($validated['bu_groups']);
@@ -209,6 +225,13 @@ class RuangLingkupController extends Controller
 
             $this->syncBuGroupRelations($ruangLingkup, $buGroups);
 
+            if ($request->boolean('submit')) {
+                $workflowService->start($ruangLingkup, auth()->user());
+
+                return redirect()->route('admin.approvals.index')
+                    ->with('success', 'Data diperbarui dan diajukan untuk persetujuan.');
+            }
+
             $redirectRoute = $request->input('from') === 'detail'
                 ? route('admin.ruang-lingkup.show', $ruangLingkup)
                 : route('admin.ruang-lingkup.index');
@@ -224,6 +247,13 @@ class RuangLingkupController extends Controller
                 ->withErrors($e->errors())
                 ->withInput()
                 ->with('error', 'Gagal mengupdate data: '.implode(', ', $e->validator->errors()->all()));
+        } catch (WorkflowException $e) {
+            $redirectRoute = $request->input('from') === 'detail'
+                ? route('admin.ruang-lingkup.edit', $ruangLingkup)
+                : route('admin.ruang-lingkup.index');
+
+            return redirect($redirectRoute)
+                ->with('error', 'Data tersimpan, tetapi gagal mengajukan: '.$e->getMessage());
         } catch (\Exception $e) {
             $redirectRoute = $request->input('from') === 'detail'
                 ? route('admin.ruang-lingkup.edit', $ruangLingkup)
@@ -244,6 +274,22 @@ class RuangLingkupController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('admin.ruang-lingkup.index')
                 ->with('error', 'Gagal menghapus data: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Ajukan kontrak (draft / reject) untuk persetujuan workflow.
+     */
+    public function submit(RuangLingkup $ruangLingkup, WorkflowService $workflowService)
+    {
+        try {
+            $workflowService->start($ruangLingkup, auth()->user());
+
+            return redirect()->route('admin.approvals.index')
+                ->with('success', 'Kontrak berhasil diajukan untuk persetujuan.');
+        } catch (WorkflowException $e) {
+            return redirect()->route('admin.ruang-lingkup.show', $ruangLingkup)
+                ->with('error', $e->getMessage());
         }
     }
 

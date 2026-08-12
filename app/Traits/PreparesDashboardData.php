@@ -35,7 +35,7 @@ trait PreparesDashboardData
 
         $all = RuangLingkup::with([
             'diskon', 'penagihanPembayaran', 'badanUsaha', 'jenisLayananRelasi', 'obatRelasi', 'badanUsahaPivot',
-        ])->get()->map(function ($item) {
+        ])->approved()->get()->map(function ($item) {
             $item = $this->mapRuangLingkup($item, true, false);
 
             if ($item->status === 'aktif') {

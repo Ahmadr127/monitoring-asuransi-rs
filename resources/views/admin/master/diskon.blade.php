@@ -27,9 +27,13 @@
                 <div class="form-body">
                     <form method="POST" action="{{ route('admin.diskon.store') }}">
                         @csrf
-                        <x-asuransi-select
-                            :ruangLingkups="$ruangLingkups"
-                            :disabled-ids="$existingRlIds"
+                        <x-searchable-select
+                            name="ruang_lingkup_id"
+                            label="Nama Asuransi"
+                            :options="$ruangLingkups->map(fn ($rl) => ['value' => $rl->id, 'text' => $rl->nama_asuransi])"
+                            :value="request('ruang_lingkup_id')"
+                            :disabled-values="$existingRlIds"
+                            placeholder="Ketik / pilih nama asuransi..."
                             required
                         />
                         <div class="form-group">
@@ -140,11 +144,14 @@
                     
                     <div class="form-group">
                         <label>Pilih Asuransi <span class="text-danger">*</span></label>
-                        <select id="edit_ruang_lingkup_id" name="ruang_lingkup_id" class="searchable-select-edit" required>
-                            @foreach($ruangLingkups as $rl)
-                                <option value="{{ $rl->id }}">{{ $rl->nama_asuransi }}</option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            name="ruang_lingkup_id"
+                            id="edit_ruang_lingkup_select"
+                            input-id="edit_ruang_lingkup_id"
+                            :options="$ruangLingkups->map(fn ($rl) => ['value' => $rl->id, 'text' => $rl->nama_asuransi])"
+                            placeholder="Pilih asuransi..."
+                            required
+                        />
                     </div>
 
                     <div class="form-group">
@@ -172,8 +179,6 @@
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         // Data and Pagination Variables
         let allRows = [];
@@ -345,21 +350,16 @@
             
             document.getElementById('edit_persentase_diskon').value = item.persentase_diskon;
             document.getElementById('edit_keterangan').value = item.keterangan || '';
-            
-            modal.classList.add('active');
 
-            // Initialize select2 inside modal after it's shown
-            $('#edit_ruang_lingkup_id').val(item.ruang_lingkup_id).trigger('change');
-            $('#edit_ruang_lingkup_id').select2({
-                dropdownParent: $('#editModal')
-            });
+            if (window.__searchableSelects && window.__searchableSelects['edit_ruang_lingkup_id']) {
+                window.__searchableSelects['edit_ruang_lingkup_id'].select(item.ruang_lingkup_id);
+            }
+
+            modal.classList.add('active');
         }
 
         function closeEditModal() {
             document.getElementById('editModal').classList.remove('active');
-            if ($('#edit_ruang_lingkup_id').hasClass("select2-hidden-accessible")) {
-                $('#edit_ruang_lingkup_id').select2('destroy');
-            }
         }
 
         // Close modal when clicking outside

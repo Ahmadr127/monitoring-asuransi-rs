@@ -14,14 +14,14 @@ class UserTest extends TestCase
 
     public function test_is_admin_returns_true_for_admin_role()
     {
-        $user = User::factory()->admin()->create();
+        $user = $this->createAdminUser();
 
         $this->assertTrue($user->isAdmin());
     }
 
     public function test_is_admin_returns_false_for_non_admin_role()
     {
-        $user = User::factory()->nonAdmin()->create();
+        $user = $this->createNonAdminUser();
 
         $this->assertFalse($user->isAdmin());
     }

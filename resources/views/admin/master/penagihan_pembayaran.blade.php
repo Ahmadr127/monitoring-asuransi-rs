@@ -23,9 +23,13 @@
                 <div class="form-body">
                     <form method="POST" action="{{ route('admin.penagihan-pembayaran.store') }}">
                         @csrf
-                        <x-asuransi-select
-                            :ruangLingkups="$ruangLingkups"
-                            :disabled-ids="$existingRlIds"
+                        <x-searchable-select
+                            name="ruang_lingkup_id"
+                            label="Nama Asuransi"
+                            :options="$ruangLingkups->map(fn ($rl) => ['value' => $rl->id, 'text' => $rl->nama_asuransi])"
+                            :value="request('ruang_lingkup_id')"
+                            :disabled-values="$existingRlIds"
+                            placeholder="Ketik / pilih nama asuransi..."
                             required
                         />
                         <div class="form-group">
@@ -34,10 +38,13 @@
                         </div>
                         <div class="form-group">
                             <label>Tipe Hari <span class="text-danger">*</span></label>
-                            <select name="tipe_hari" class="form-input-minimal" required>
-                                <option value="Kalender">Hari Kalender</option>
-                                <option value="Hari Kerja">Hari Kerja</option>
-                            </select>
+                            <x-searchable-select
+                                name="tipe_hari"
+                                :options="[['value' => 'Kalender', 'text' => 'Hari Kalender'], ['value' => 'Hari Kerja', 'text' => 'Hari Kerja']]"
+                                :value="old('tipe_hari', '')"
+                                placeholder="Pilih tipe hari..."
+                                required
+                            />
                         </div>
                         <div class="form-group mb-8">
                             <label>Keterangan</label>
@@ -199,11 +206,14 @@
                     @csrf @method('PUT')
                     <div class="form-group">
                         <label>Nama Asuransi <span class="text-danger">*</span></label>
-                        <select id="edit_ruang_lingkup_id" name="ruang_lingkup_id" class="searchable-select" required>
-                            @foreach($ruangLingkups as $rl)
-                                <option value="{{ $rl->id }}">{{ $rl->nama_asuransi }}</option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            name="ruang_lingkup_id"
+                            id="edit_ruang_lingkup_select"
+                            input-id="edit_ruang_lingkup_id"
+                            :options="$ruangLingkups->map(fn ($rl) => ['value' => $rl->id, 'text' => $rl->nama_asuransi])"
+                            placeholder="Pilih asuransi..."
+                            required
+                        />
                     </div>
                     <div class="form-group">
                         <label>Jangka Waktu (Hari) <span class="text-danger">*</span></label>
@@ -211,10 +221,14 @@
                     </div>
                     <div class="form-group">
                         <label>Tipe Hari <span class="text-danger">*</span></label>
-                        <select id="edit_tipe_hari" name="tipe_hari" class="form-input-minimal" required>
-                            <option value="Kalender">Hari Kalender</option>
-                            <option value="Hari Kerja">Hari Kerja</option>
-                        </select>
+                        <x-searchable-select
+                            name="tipe_hari"
+                            id="edit_tipe_hari_select"
+                            input-id="edit_tipe_hari"
+                            :options="[['value' => 'Kalender', 'text' => 'Hari Kalender'], ['value' => 'Hari Kerja', 'text' => 'Hari Kerja']]"
+                            placeholder="Pilih tipe hari..."
+                            required
+                        />
                     </div>
                     <div class="form-group mb-8">
                         <label>Keterangan</label>
@@ -234,10 +248,8 @@
         </div>
     </div>
 
-    <!-- jQuery & Select2 JS -->
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
         // Pagination Variables
@@ -247,8 +259,6 @@
         let itemsPerPage = 10;
 
         $(document).ready(function() {
-            $('.searchable-select').select2({ width: '100%' });
-
             // Init Pagination
             allRows = Array.from(document.querySelectorAll('.table-row'));
             filteredRows = [...allRows];
@@ -426,9 +436,13 @@
 
         window.openEditModal = function(item) {
             $('#editForm').attr('action', '/admin/penagihan-pembayaran/' + item.id);
-            $('#edit_ruang_lingkup_id').val(item.ruang_lingkup_id).trigger('change');
+            if (window.__searchableSelects && window.__searchableSelects['edit_ruang_lingkup_id']) {
+                window.__searchableSelects['edit_ruang_lingkup_id'].select(item.ruang_lingkup_id);
+            }
             $('#edit_jangka_waktu_hari').val(item.jangka_waktu_hari);
-            $('#edit_tipe_hari').val(item.tipe_hari || 'Kalender');
+            if (window.__searchableSelects && window.__searchableSelects['edit_tipe_hari']) {
+                window.__searchableSelects['edit_tipe_hari'].select(item.tipe_hari || 'Kalender');
+            }
             $('#edit_keterangan').val(item.keterangan || '');
             $('#editModal').addClass('active');
         };

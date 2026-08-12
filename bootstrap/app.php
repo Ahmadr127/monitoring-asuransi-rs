@@ -12,7 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'permission' => \App\Http\Middleware\CheckPermission::class,
+            'approval.access' => \App\Http\Middleware\EnsureApprovalAccess::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [

@@ -101,7 +101,7 @@
                             </thead>
                             <tbody id="tableBody">
                                 @forelse($roles as $index => $role)
-                                    @php $isDefault = in_array($role->key, ['admin', 'user']); @endphp
+                                    @php $isDefault = $role->is_system; @endphp
                                     <tr class="table-row" data-search="{{ strtolower($role->name . ' ' . $role->key) }}" data-nama="{{ strtolower($role->name) }}">
                                         <td class="number-cell text-center font-bold-700 text-muted-premium"><span class="row-number">{{ $index + 1 }}</span></td>
                                         <td>
@@ -175,6 +175,26 @@
                         <input type="text" id="edit_key" name="key" class="form-input-minimal" required>
                         <div class="text-xs-muted mt-1">Kunci internal (huruf
                             kecil, tanpa spasi)</div>
+                    </div>
+                    <div class="form-group mb-8">
+                        <label>Permissions</label>
+                        <div class="flex-between-center mb-1">
+                            <span class="text-xs-muted">Centang permission yang dimiliki role ini</span>
+                            <span>
+                                <button type="button" onclick="toggleAllPerms(true)" class="btn-secondary" style="font-size:11px;padding:2px 8px">Semua</button>
+                                <button type="button" onclick="toggleAllPerms(false)" class="btn-secondary" style="font-size:11px;padding:2px 8px">Kosongkan</button>
+                            </span>
+                        </div>
+                        <div class="perm-checklist" style="max-height:200px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;padding:0.75rem">
+                            @forelse($permissions as $perm)
+                                <label class="flex-between-center" style="padding:3px 0;cursor:pointer">
+                                    <span><code class="key-badge">{{ $perm->name }}</code></span>
+                                    <input type="checkbox" name="permissions[]" value="{{ $perm->id }}" class="perm-check">
+                                </label>
+                            @empty
+                                <p class="text-xs-muted">Belum ada permission.</p>
+                            @endforelse
+                        </div>
                     </div>
                     <button type="submit" class="btn-premium-submit">Simpan Perubahan</button>
                 </form>
@@ -296,6 +316,12 @@
             container.innerHTML = html;
         }
 
+        const rolePerms = @json($roles->mapWithKeys(fn ($r) => [$r->id => $r->permissions->pluck('id')->all()])->all());
+
+        window.toggleAllPerms = function (checked) {
+            document.querySelectorAll('.perm-check').forEach(el => { el.checked = checked; });
+        };
+
         window.openEditModal = function (id, name, key, isDefault) {
             $('#editForm').attr('action', '/admin/roles/' + id);
             $('#edit_name').val(name);
@@ -306,6 +332,11 @@
             } else {
                 $('#edit_key').css('background-color', '#f8fafc');
             }
+            document.querySelectorAll('.perm-check').forEach(el => { el.checked = false; });
+            (rolePerms[id] || []).forEach(function (pid) {
+                const el = document.querySelector('.perm-check[value="' + pid + '"]');
+                if (el) { el.checked = true; }
+            });
             $('#editModal').addClass('active');
         };
 

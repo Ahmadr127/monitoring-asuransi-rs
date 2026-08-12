@@ -1,0 +1,173 @@
+/* ============================================================
+   Searchable Select (x-searchable-select) shared styles
+   Mengikuti design token aplikasi (--primary, --border-color, dst.)
+   ============================================================ */
+
+[x-cloak] {
+    display: none !important;
+}
+
+.ssd {
+    position: relative;
+    z-index: 10;
+}
+
+.ssd-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 35px;
+    padding: 0.5rem 0.875rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #1e293b;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ssd-trigger:hover {
+    background: #ffffff;
+}
+
+.ssd-trigger:focus,
+.ssd-trigger.ssd-open {
+    outline: none;
+    border-color: var(--primary);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(0, 119, 116, 0.1);
+}
+
+.ssd-trigger:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.ssd-trigger .ssd-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ssd-trigger .ssd-value.is-placeholder {
+    color: #9ca3af;
+}
+
+.ssd-trigger .ssd-caret {
+    flex: none;
+    display: flex;
+    align-items: center;
+    color: #94a3b8;
+    transition: transform 0.2s;
+}
+
+.ssd-trigger.ssd-open .ssd-caret {
+    transform: rotate(180deg);
+}
+
+/* Saat dipakai berdampingan class filter-select, matikan chevron bawaan */
+.ssd-trigger.filter-select {
+    padding: 0.4rem 0.75rem;
+    background-image: none;
+}
+
+.ssd-panel {
+    position: fixed;
+    z-index: 99999;
+    background: #ffffff;
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+    max-height: 240px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.ssd-search {
+    position: relative;
+    padding: 0.5rem 0.5rem;
+    border-bottom: 1px solid #eef2f7;
+    background: #ffffff;
+}
+
+.ssd-search .icon-14 {
+    position: absolute;
+    left: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.ssd-search input {
+    width: 100%;
+    padding: 0.4rem 0.6rem 0.4rem 1.7rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 11px;
+    background: #f8fafc;
+    outline: none;
+}
+
+.ssd-search input:focus {
+    border-color: var(--primary);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(0, 119, 116, 0.1);
+}
+
+.ssd-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0.25rem 0;
+    margin: 0;
+    list-style: none;
+}
+
+.ssd-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    cursor: pointer;
+    font-size: 11px;
+    color: #1e293b;
+}
+
+.ssd-option:hover,
+.ssd-option.is-active {
+    background: var(--primary-50, #f0fdfc);
+    color: var(--primary);
+}
+
+.ssd-option .ssd-option-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ssd-option .ssd-option-group {
+    color: #94a3b8;
+    font-size: 10px;
+    flex: none;
+}
+
+.ssd-option .ssd-option-check {
+    color: var(--primary);
+    flex: none;
+}
+
+.ssd-noresults {
+    padding: 0.6rem 0.75rem;
+    font-size: 11px;
+    color: #94a3b8;
+}

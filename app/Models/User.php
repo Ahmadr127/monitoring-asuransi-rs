@@ -22,6 +22,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
+        'organization_unit_id',
         'simutu_id',
         'simutu_status',
         'simutu_synced_at',
@@ -54,9 +55,40 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function organizationUnit()
+    {
+        return $this->belongsTo(OrganizationUnit::class, 'organization_unit_id');
+    }
+
+    public function department()
+    {
+        return $this->organizationUnit();
+    }
+
     public function isAdmin()
     {
-        return $this->role_id && $this->role?->key === 'admin';
+        // Berbasis permission dari database (bukan nama role).
+        return $this->hasPermission('roles') && $this->hasPermission('users');
+    }
+
+    /**
+     * Cek permission dari database melalui relasi role → permissions.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        return $this->role?->hasPermission($permission) ?? false;
+    }
+
+    /**
+     * Apakah user bisa bertindak sebagai approver pada sebuah approval step.
+     */
+    public function canApprove(\App\Models\ApprovalStep $step): bool
+    {
+        if (! $step->approver_user_id) {
+            return false;
+        }
+
+        return (int) $step->approver_user_id === (int) $this->id;
     }
 
     public function notifications()
