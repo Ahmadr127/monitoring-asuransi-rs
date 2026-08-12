@@ -27,16 +27,11 @@
                 <div class="form-body">
                     <form method="POST" action="{{ route('admin.diskon.store') }}">
                         @csrf
-                        <div class="form-group">
-                            <label>Nama Asuransi <span class="text-danger">*</span></label>
-                            <input type="hidden" name="ruang_lingkup_id" id="ruang_lingkup_id" value="">
-                            <div class="input-container">
-                                <input type="text" id="ruang_lingkup_input" class="form-input-minimal"
-                                       placeholder="Ketik nama asuransi..."
-                                       autocomplete="off">
-                                <div id="form_rl_autocomplete" class="rl-autocomplete"></div>
-                            </div>
-                        </div>
+                        <x-asuransi-select
+                            :ruangLingkups="$ruangLingkups"
+                            :disabled-ids="$existingRlIds"
+                            required
+                        />
                         <div class="form-group">
                             <label>Persentase Diskon (%) <span class="text-danger">*</span></label>
                             <input type="number" name="persentase_diskon" class="form-input-minimal" placeholder="Contoh: 15" min="0" max="100" step="1" required>
@@ -371,115 +366,5 @@
         $(document).click(function(e) {
             if ($(e.target).is('#editModal')) closeEditModal();
         });
-
-        // Autocomplete for Nama Asuransi
-        (function() {
-            const input = document.getElementById('ruang_lingkup_input');
-            const hidden = document.getElementById('ruang_lingkup_id');
-            const ac = document.getElementById('form_rl_autocomplete');
-            if (!input) return;
-
-            @php
-                $rlJsonData = $ruangLingkups->map(fn($rl) => [
-                    'id' => $rl->id,
-                    'nama' => $rl->nama_asuransi,
-                    'existing' => in_array($rl->id, $existingRlIds),
-                ])->values();
-            @endphp
-            const ruangLingkupData = @json($rlJsonData);
-            let selecting = false;
-
-            @if($ruangLingkups->isEmpty())
-                console.warn('Tidak ada asuransi aktif tersedia untuk dipilih.');
-            @endif
-
-            function renderDropdown(query) {
-                const q = query.toLowerCase();
-                const filtered = q
-                    ? ruangLingkupData.filter(rl => rl.nama.toLowerCase().includes(q))
-                    : ruangLingkupData;
-                const sorted = [...filtered].sort((a, b) => (a.existing === b.existing ? 0 : a.existing ? 1 : -1));
-                const matches = q ? sorted.slice(0, 10) : sorted;
-
-                if (matches.length === 0) {
-                    ac.style.display = 'none';
-                    return;
-                }
-
-                ac.innerHTML = matches.map((rl, i) =>
-                    `<div class="rl-autocomplete-item ${rl.existing ? 'disabled' : ''}" data-index="${i}" data-id="${rl.id}" data-nama="${rl.nama}" ${rl.existing ? 'data-disabled="1"' : ''}>${rl.nama}${rl.existing ? ' <span class="hint-existing">(sudah ada)</span>' : ''}</div>`
-                ).join('');
-                ac.style.display = 'block';
-                ac._index = -1;
-            }
-
-            input.addEventListener('focus', function () {
-                if (selecting) return;
-                renderDropdown(this.value);
-            });
-
-            input.addEventListener('click', function () {
-                if (selecting) return;
-                if (ac.style.display !== 'block') {
-                    renderDropdown(this.value);
-                }
-            });
-
-            input.addEventListener('input', function () {
-                if (selecting) { selecting = false; return; }
-                if (!this.value) hidden.value = '';
-                renderDropdown(this.value);
-            });
-
-            input.addEventListener('keydown', function (e) {
-                const items = ac.querySelectorAll('.rl-autocomplete-item:not(.disabled)');
-                if (items.length === 0) return;
-
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    if (ac._index >= 0) items[ac._index].classList.remove('active');
-                    ac._index = (ac._index + 1) % items.length;
-                    items[ac._index].classList.add('active');
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    if (ac._index >= 0) items[ac._index].classList.remove('active');
-                    ac._index = ac._index <= 0 ? items.length - 1 : ac._index - 1;
-                    items[ac._index].classList.add('active');
-                } else if (e.key === 'Enter') {
-                    const active = ac.querySelector('.rl-autocomplete-item.active');
-                    if (active) {
-                        e.preventDefault();
-                        selectItem(active);
-                    }
-                } else if (e.key === 'Escape') {
-                    ac.style.display = 'none';
-                }
-            });
-
-            ac.addEventListener('click', function (e) {
-                const item = e.target.closest('.rl-autocomplete-item');
-                if (item && !item.classList.contains('disabled')) selectItem(item);
-            });
-
-            document.addEventListener('click', function (e) {
-                if (!input.contains(e.target) && !ac.contains(e.target)) {
-                    ac.style.display = 'none';
-                }
-            });
-
-            function selectItem(item) {
-                selecting = true;
-                input.value = item.dataset.nama;
-                hidden.value = item.dataset.id;
-                ac.style.display = 'none';
-            }
-
-            input.closest('form')?.addEventListener('submit', function () {
-                if (input.value && !hidden.value) {
-                    input.value = '';
-                }
-            });
-
-        })();
     </script>
 </x-app-layout>

@@ -429,7 +429,7 @@
                                             </div>
                                         @endforeach
                                     @else
-                                        <a href="{{ route('admin.penagihan-pembayaran.index') }}" class="btn-tambah-inline" title="Tambah jangka waktu bayar">
+                                        <a href="{{ route('admin.penagihan-pembayaran.index', ['ruang_lingkup_id' => $rl->id]) }}" class="btn-tambah-inline" title="Tambah jangka waktu bayar">
                                             <x-icon name="plus-circle-solid" class="" />
                                             Tambah
                                         </a>
@@ -443,7 +443,7 @@
                                             </span>
                                         @endforeach
                                     @else
-                                        <a href="{{ route('admin.diskon.index') }}" class="btn-tambah-inline" title="Tambah diskon">
+                                        <a href="{{ route('admin.diskon.index', ['ruang_lingkup_id' => $rl->id]) }}" class="btn-tambah-inline" title="Tambah diskon">
                                             <x-icon name="plus-circle-solid" class="" />
                                             Tambah
                                         </a>
