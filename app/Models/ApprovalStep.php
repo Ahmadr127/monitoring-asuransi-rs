@@ -19,12 +19,16 @@ class ApprovalStep extends Model
         'approver_user_id',
         'status',
         'note',
+        'requires_attachment',
+        'attachment_path',
+        'attachment_original_name',
         'decided_by',
         'decided_at',
     ];
 
     protected $casts = [
         'decided_at' => 'datetime',
+        'requires_attachment' => 'boolean',
     ];
 
     public function request()

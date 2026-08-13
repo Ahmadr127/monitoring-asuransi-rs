@@ -66,6 +66,7 @@ class WorkflowService
                     'approver_type' => $step->approver_type,
                     'approver_value' => $step->approver_value,
                     'approver_user_id' => $approverId,
+                    'requires_attachment' => $step->requires_attachment,
                     'status' => $status,
                 ]);
 
@@ -96,7 +97,8 @@ class WorkflowService
     /**
      * Approve step saat ini; jika semua step selesai → kontrak menjadi aktif.
      */
-    public function approve(ApprovalRequest $request, User $user, ?string $note = null): ApprovalRequest
+    public function approve(ApprovalRequest $request, User $user, ?string $note = null,
+        ?string $attachmentPath = null, ?string $attachmentName = null): ApprovalRequest
     {
         if ($request->status === 'approved' || $request->status === 'rejected' || $request->status === 'cancelled') {
             throw new WorkflowException('Pengajuan sudah ditutup ('.strtoupper($request->status).').');
@@ -108,10 +110,16 @@ class WorkflowService
             throw new WorkflowException('Anda tidak berhak menyetujui langkah ini.');
         }
 
-        return DB::transaction(function () use ($request, $step, $user, $note) {
+        if ($step->requires_attachment && ! $attachmentPath) {
+            throw new WorkflowException('Lampiran PDF wajib diunggah untuk menyetujui langkah ini.');
+        }
+
+        return DB::transaction(function () use ($request, $step, $user, $note, $attachmentPath, $attachmentName) {
             $step->update([
                 'status' => 'approved',
                 'note' => $note,
+                'attachment_path' => $attachmentPath,
+                'attachment_original_name' => $attachmentName,
                 'decided_by' => $user->id,
                 'decided_at' => now(),
             ]);

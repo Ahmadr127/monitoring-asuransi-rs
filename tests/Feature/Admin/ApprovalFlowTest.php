@@ -109,7 +109,7 @@ class ApprovalFlowTest extends TestCase
         $request = ApprovalRequest::where('subject_id', $contract->id)->where('status', 'in_review')->first();
 
         $this->actingAs($this->setup['legalHead'])
-            ->post(route('admin.approvals.approve', $request), ['note' => 'ok'])
+            ->post(route('admin.approvals.approve', $request), ['catatan_keputusan' => 'ok'])
             ->assertSessionHas('success');
 
         $this->actingAs($this->setup['admin'])
@@ -133,7 +133,7 @@ class ApprovalFlowTest extends TestCase
         $request = ApprovalRequest::where('subject_id', $contract->id)->where('status', 'in_review')->first();
 
         $this->actingAs($this->setup['legalHead'])
-            ->post(route('admin.approvals.reject', $request), ['note' => 'Data belum lengkap'])
+            ->post(route('admin.approvals.reject', $request), ['catatan_keputusan' => 'Data belum lengkap'])
             ->assertSessionHas('success');
 
         $this->assertEquals('rejected', $request->refresh()->status);

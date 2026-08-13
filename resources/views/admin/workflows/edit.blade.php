@@ -88,6 +88,13 @@
                                 </div>
                                 <div class="wf-step-toggles">
                                     <label class="toggle-item">
+                                        <span>Lampiran PDF</span>
+                                        <span class="toggle-switch">
+                                            <input type="checkbox" name="requires_attachment" value="1" {{ $step->requires_attachment ? 'checked' : '' }}>
+                                            <span class="slider"></span>
+                                        </span>
+                                    </label>
+                                    <label class="toggle-item">
                                         <span>Aktif</span>
                                         <span class="toggle-switch">
                                             <input type="checkbox" name="is_active" value="1" {{ $step->is_active ? 'checked' : '' }}>
@@ -140,6 +147,13 @@
                         <div class="wf-step-top">
                             <div class="wf-step-badge">+</div>
                             <h3 class="wf-new-title">Tambah Langkah Baru</h3>
+                            <label class="toggle-item" style="margin-left:auto;align-self:center">
+                                <span>Lampiran PDF</span>
+                                <span class="toggle-switch">
+                                    <input type="checkbox" name="requires_attachment" value="1">
+                                    <span class="slider"></span>
+                                </span>
+                            </label>
                         </div>
                         <form method="POST" action="{{ route('admin.workflows.steps.store', $workflow) }}">
                             @csrf

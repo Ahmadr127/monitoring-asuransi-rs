@@ -6,76 +6,146 @@
     </script>
     @endpush
 
-    <div class="premium-container">
-        <!-- Menunggu Persetujuan Saya -->
-        <div class="premium-header">
-            <div class="header-left">
-                <h1>Menunggu Persetujuan Saya</h1>
-                <p>Kontrak yang menunggu keputusan Anda</p>
-            </div>
-            <span class="badge-premium badge-teal">{{ $pending->count() }} antrean</span>
-        </div>
+    @php
+        $statusBadge = function ($status) {
+            $map = [
+                'in_review' => ['badge-warning', 'IN REVIEW'],
+                'approved'  => ['badge-teal', 'APPROVED'],
+                'rejected'  => ['badge-danger', 'REJECTED'],
+                'cancelled' => ['badge-slate', 'CANCELLED'],
+            ];
+            [$cls, $label] = $map[$status] ?? ['badge-slate', strtoupper(str_replace('_', ' ', $status))];
+            return '<span class="badge-premium ' . $cls . '">' . $label . '</span>';
+        };
 
-        @forelse($pending as $req)
-        <div class="premium-card mb-3" style="margin-bottom:1rem">
-            <div class="form-body">
-                <div class="flex-between-center">
-                    <div>
-                        <div class="font-bold-700 color-slate-900 text-lg" style="font-size:14px">
-                            {{ $req->subject?->nama_asuransi ?? 'Kontrak' }}
-                        </div>
-                        <div class="text-xs-muted">
-                            Diajukan: {{ $req->requestor?->name ?? '-' }} &middot; {{ $req->submitted_at?->translatedFormat('d M Y H:i') }}
-                            &middot; Langkah {{ $req->current_step }}/{{ $req->steps()->count() }}
-                        </div>
-                    </div>
-                    <a href="{{ route('admin.approvals.show', $req) }}" class="btn-premium-submit w-auto">Tinjau & Putuskan</a>
-                </div>
-            </div>
-        </div>
-        @empty
-        <div class="premium-card" style="margin-bottom:1.5rem">
-            <div class="form-body"><p class="empty-state">Tidak ada pengajuan yang menunggu Anda.</p></div>
-        </div>
-        @endforelse
+        $pendingRows = $pending->map(function ($req) use ($statusBadge) {
+            $subject = $req->subject;
+            $totalSteps = $req->steps()->count();
+            return [
+                'search' => strtolower(
+                    ($subject?->nama_asuransi ?? '') . ' ' .
+                    ($req->requestor?->name ?? '') . ' ' .
+                    ($req->submitted_at?->format('d M Y H:i') ?? '')
+                ),
+                'cells' => [
+                    'nama_asuransi' => '<div class="font-bold-700 color-slate-900">' . e($subject?->nama_asuransi ?? 'Kontrak') . '</div>',
+                    'requestor' => '<span class="text-xs-muted">' . e($req->requestor?->name ?? '-') . '</span>',
+                    'tanggal' => '<span class="text-xs-muted">' . e($req->submitted_at?->translatedFormat('d M Y H:i') ?? '-') . '</span>',
+                    'step' => '<span class="badge-premium badge-slate">' . (int) $req->current_step . '/' . $totalSteps . '</span>',
+                    'status' => $statusBadge($req->status),
+                ],
+                'cols' => [
+                    'nama_asuransi' => strtolower($subject?->nama_asuransi ?? ''),
+                    'requestor' => strtolower($req->requestor?->name ?? ''),
+                    'tanggal' => strtolower($req->submitted_at?->format('d M Y H:i') ?? ''),
+                    'status' => strtolower($req->status),
+                ],
+                'actions' => '<a href="' . route('admin.approvals.show', $req) . '" class="btn-premium-submit w-auto">Tinjau</a>',
+            ];
+        })->values();
 
-        <div class="content-layout" style="margin-top:1.5rem">
-            <!-- Pengajuan oleh saya -->
-            <div class="premium-card">
-                <div class="card-header"><h2>Pengajuan Saya</h2></div>
-                <div class="form-body">
-                    @forelse($requestedByMe as $req)
-                    <div style="padding:0.5rem 0;border-bottom:1px solid #f1f5f9">
-                        <a href="{{ route('admin.approvals.show', $req) }}" class="font-bold-700 color-slate-900">{{ $req->subject?->nama_asuransi ?? '-' }}</a>
-                        <div class="text-xs-muted">{{ $req->created_at->translatedFormat('d M Y H:i') }}</div>
-                        <span class="badge-premium {{ $req->status === 'in_review' ? 'badge-warning' : ($req->status === 'approved' ? 'badge-teal' : 'badge-slate') }}">
-                            {{ strtoupper(str_replace('_', ' ', $req->status)) }}
-                        </span>
-                    </div>
-                    @empty
-                    <p class="empty-state">Belum ada pengajuan.</p>
-                    @endforelse
-                </div>
-            </div>
+        $myRows = $requestedByMe->map(function ($req) use ($statusBadge) {
+            $subject = $req->subject;
+            return [
+                'search' => strtolower(
+                    ($subject?->nama_asuransi ?? '') . ' ' .
+                    ($req->submitted_at?->format('d M Y H:i') ?? '') . ' ' .
+                    str_replace('_', ' ', $req->status)
+                ),
+                'cells' => [
+                    'nama_asuransi' => '<div class="font-bold-700 color-slate-900">' . e($subject?->nama_asuransi ?? 'Kontrak') . '</div>',
+                    'status' => $statusBadge($req->status),
+                ],
+                'cols' => [
+                    'nama_asuransi' => strtolower($subject?->nama_asuransi ?? ''),
+                    'status' => strtolower(str_replace('_', ' ', $req->status)),
+                ],
+                'url' => route('admin.approvals.show', $req),
+            ];
+        })->values();
+    @endphp
 
-            <!-- Riwayat keputusan saya -->
-            <div class="premium-card">
-                <div class="card-header"><h2>Riwayat Keputusan Saya</h2></div>
-                <div class="form-body">
-                    @forelse($decidedByMe as $step)
-                    <div style="padding:0.5rem 0;border-bottom:1px solid #f1f5f9">
-                        <div class="font-bold-700 color-slate-900">{{ $step->request?->subject?->nama_asuransi ?? '-' }}</div>
-                        <div class="text-xs-muted">
-                            {{ $step->title }} &middot;
-                            <span class="badge-premium {{ $step->status === 'approved' ? 'badge-teal' : 'badge-danger' }}">{{ ucfirst($step->status) }}</span>
-                            &middot; {{ $step->decided_at?->translatedFormat('d M Y H:i') }}
-                        </div>
-                    </div>
-                    @empty
-                    <p class="empty-state">Belum ada keputusan.</p>
-                    @endforelse
-                </div>
-            </div>
+    <style>
+        .approval-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2.8fr) minmax(0, 7.2fr);
+            gap: 1.5rem;
+            align-items: start;
+            width: 100%;
+            max-width: 100%;
+        }
+        .approval-grid > .data-table-root {
+            min-width: 0;
+            max-width: 100%;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .approval-grid .data-table-root .data-table-container {
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+            border-radius: 0;
+        }
+        .approval-grid .data-table-root .table-wrapper {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        .approval-grid .data-table-root .page-table {
+            min-width: max-content;
+            table-layout: fixed;
+        }
+        .approval-grid .data-table-root .page-table td.text-center {
+            white-space: nowrap;
+        }
+        @media (max-width: 1100px) {
+            .approval-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <div class="premium-container approval-page">
+        <div class="approval-grid">
+            <x-data-table
+                id="myRequestsTable"
+                title="Pengajuan Saya"
+                subtitle="Pengajuan kontrak yang pernah Anda buat"
+                :badge="$requestedByMe->count()"
+                :columns="[
+                    ['label' => 'No', 'key' => '__no', 'center' => true, 'width' => 50],
+                    ['label' => 'Kontrak', 'key' => 'nama_asuransi', 'searchable' => true, 'placeholder' => 'Cari kontrak...'],
+                    ['label' => 'Status', 'key' => 'status', 'center' => true, 'width' => 110, 'searchable' => true, 'placeholder' => 'Cari status...'],
+                ]"
+                :rows="$myRows"
+                empty-text="Belum ada pengajuan."
+            />
+
+            <x-data-table
+                id="pendingTable"
+                title="Menunggu Persetujuan Saya"
+                subtitle="Pengajuan yang terkait dengan persetujuan Anda"
+                :badge="$pending->count()"
+                :global-filters="[
+                    ['key' => 'status', 'all' => 'Semua status', 'options' => [
+                        ['value' => 'in_review', 'text' => 'IN REVIEW'],
+                        ['value' => 'approved', 'text' => 'APPROVED'],
+                        ['value' => 'rejected', 'text' => 'REJECTED'],
+                        ['value' => 'cancelled', 'text' => 'CANCELLED'],
+                    ]],
+                ]"
+                :columns="[
+                    ['label' => 'No', 'key' => '__no', 'center' => true, 'width' => 50],
+                    ['label' => 'Kontrak', 'key' => 'nama_asuransi', 'searchable' => true, 'placeholder' => 'Cari kontrak...'],
+                    ['label' => 'Pengaju', 'key' => 'requestor', 'width' => 140, 'searchable' => true, 'placeholder' => 'Cari pengaju...'],
+                    ['label' => 'Tgl Pengajuan', 'key' => 'tanggal', 'width' => 150, 'searchable' => true, 'placeholder' => 'Cari tanggal...'],
+                    ['label' => 'Langkah', 'key' => 'step', 'center' => true, 'width' => 80],
+                    ['label' => 'Status', 'key' => 'status', 'center' => true, 'width' => 110],
+                    ['label' => 'Aksi', 'key' => '__actions', 'center' => true, 'width' => 120],
+                ]"
+                :rows="$pendingRows"
+                empty-text="Tidak ada pengajuan yang menunggu Anda."
+            />
         </div>
     </div>
 </x-app-layout>

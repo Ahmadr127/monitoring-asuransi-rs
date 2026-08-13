@@ -70,7 +70,7 @@ body {
     flex-shrink: 0;
     z-index: 1005;
     position: relative;
-    margin: 0.75rem 1rem 0.5rem 1rem !important;
+    margin: 0.75rem 1rem 0.25rem 1rem !important;
     border-radius: 16px !important;
     box-shadow:
         0 4px 6px -1px rgba(0, 0, 0, 0.05),
@@ -474,7 +474,7 @@ body {
     flex: 1;
     overflow-y: auto !important;
     overflow-x: auto !important;
-    padding: 0.5rem 1rem 1rem 1rem;
+    padding: 0.25rem 1rem 1rem 1rem;
     position: relative;
     min-width: 0;
 }

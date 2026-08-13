@@ -84,6 +84,7 @@ class WorkflowController extends Controller
         $workflow->steps()->create(array_merge($validated, [
             'step_order' => $maxOrder + 1,
             'is_active' => true,
+            'requires_attachment' => $request->boolean('requires_attachment'),
         ]));
 
         return redirect()->back()->with('success', 'Langkah approval berhasil ditambahkan.');
@@ -95,6 +96,7 @@ class WorkflowController extends Controller
 
         $step->update(array_merge($validated, [
             'is_active' => $request->boolean('is_active'),
+            'requires_attachment' => $request->boolean('requires_attachment'),
         ]));
 
         return redirect()->back()->with('success', 'Langkah approval berhasil diperbarui.');
@@ -118,6 +120,7 @@ class WorkflowController extends Controller
             'approver_type' => 'required|in:role,user,department_head,department',
             'approver_value' => 'required|string|max:255',
             'is_active' => 'nullable|boolean',
+            'requires_attachment' => 'nullable|boolean',
         ]);
     }
 }

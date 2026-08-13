@@ -15,26 +15,30 @@ class ApprovalController extends Controller
     {
         $user = auth()->user();
 
-        $pending = $service->pendingFor($user)->values();
+        $pending = ApprovalRequest::with(['subject', 'requestor', 'workflow'])
+            ->whereHas('steps', function ($q) use ($user) {
+                $q->where('approver_user_id', $user->id);
+                if ($user->organization_unit_id) {
+                    $q->orWhere(function ($q2) use ($user) {
+                        $q2->where('approver_type', 'department')
+                            ->where('approver_value', (string) $user->organization_unit_id);
+                    });
+                }
+            })
+            ->orderByDesc('created_at')
+            ->get();
 
-        $requestedByMe = ApprovalRequest::with(['subject', 'workflow'])
+        $requestedByMe = ApprovalRequest::with(['subject', 'requestor', 'workflow'])
             ->where('requested_by', $user->id)
             ->orderByDesc('created_at')
-            ->limit(20)
             ->get();
 
-        $decidedByMe = \App\Models\ApprovalStep::with(['request.subject', 'request.workflow'])
-            ->where('decided_by', $user->id)
-            ->orderByDesc('decided_at')
-            ->limit(20)
-            ->get();
-
-        return view('admin.approvals.index', compact('pending', 'requestedByMe', 'decidedByMe'));
+        return view('admin.approvals.index', compact('pending', 'requestedByMe'));
     }
 
-    public function show(ApprovalRequest $request)
+    public function show(ApprovalRequest $approval)
     {
-        $request->load([
+        $approval->load([
             'subject',
             'requestor',
             'workflow',
@@ -42,13 +46,32 @@ class ApprovalController extends Controller
             'steps.decidedBy',
         ]);
 
-        return view('admin.approvals.show', compact('request'));
+        return view('admin.approvals.show', ['request' => $approval]);
     }
 
     public function approve(ApprovalRequest $approval, Request $httpRequest, WorkflowService $service)
     {
+        $currentStep = $approval->currentStepRecord()->first();
+
+        $rules = ['catatan_keputusan' => 'nullable|string|max:500'];
+        if ($currentStep?->requires_attachment) {
+            $rules['attachment'] = ['required', 'file', 'mimes:pdf', 'max:5120'];
+        } else {
+            $rules['attachment'] = ['nullable', 'file', 'mimes:pdf', 'max:5120'];
+        }
+
+        $validated = $httpRequest->validate($rules);
+
+        $attachmentPath = null;
+        $attachmentName = null;
+        if ($httpRequest->hasFile('attachment')) {
+            $file = $httpRequest->file('attachment');
+            $attachmentName = $file->getClientOriginalName();
+            $attachmentPath = $file->store('approval-attachments/' . $approval->id, 'public');
+        }
+
         try {
-            $service->approve($approval, $httpRequest->user(), $httpRequest->input('note'));
+            $service->approve($approval, $httpRequest->user(), $validated['catatan_keputusan'] ?? null, $attachmentPath, $attachmentName);
 
             return redirect()->back()->with('success', 'Langkah disetujui.');
         } catch (WorkflowException $e) {
@@ -58,10 +81,12 @@ class ApprovalController extends Controller
 
     public function reject(ApprovalRequest $approval, Request $httpRequest, WorkflowService $service)
     {
-        $httpRequest->validate(['note' => 'nullable|string|max:500']);
+        $validated = $httpRequest->validate([
+            'catatan_keputusan' => 'required|string|max:500',
+        ]);
 
         try {
-            $service->reject($approval, $httpRequest->user(), $httpRequest->input('note'));
+            $service->reject($approval, $httpRequest->user(), $validated['catatan_keputusan']);
 
             return redirect()->back()->with('success', 'Pengajuan ditolak.');
         } catch (WorkflowException $e) {

@@ -15,11 +15,13 @@ class WorkflowStep extends Model
         'name',
         'approver_type',
         'approver_value',
+        'requires_attachment',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'requires_attachment' => 'boolean',
     ];
 
     public function workflow()
