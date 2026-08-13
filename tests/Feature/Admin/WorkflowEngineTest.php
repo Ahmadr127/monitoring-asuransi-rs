@@ -50,9 +50,7 @@ class WorkflowEngineTest extends TestCase
             $wf->steps()->create(array_merge([
                 'step_order' => $i + 1,
                 'name' => 'Langkah '.($i + 1),
-                'can_reject' => true,
                 'is_active' => true,
-                'skip_if' => $step['skip_if'] ?? null,
             ], $step));
         }
 
@@ -108,26 +106,6 @@ class WorkflowEngineTest extends TestCase
         $this->assertEquals('approved', $request->status);
         $this->assertEquals('approved', $contract->approval_status->value);
         $this->assertEquals('aktif', $contract->status);
-    }
-
-    public function test_skip_if_condition_skips_step(): void
-    {
-        $admin = $this->makeUserWithRole('admin');
-        $wf = $this->createActiveWorkflow([
-            // Step ini akan di-skip karena is_high_profile === false
-            ['name' => 'Hanya High Profile', 'approver_type' => 'user', 'approver_value' => (string) $admin->id,
-                'skip_if' => ['field' => 'is_high_profile', 'op' => '==', 'value' => false]],
-            ['name' => 'Step Biasa', 'approver_type' => 'user', 'approver_value' => (string) $admin->id],
-        ]);
-
-        $contract = $this->makeDraftContract(['is_high_profile' => false]);
-
-        $request = $this->service->start($contract, $this->makeUserWithRole('inputor'));
-        $request->load('steps');
-
-        $this->assertEquals('skipped', $request->steps->get(0)->status);
-        $this->assertEquals('pending', $request->steps->get(1)->status);
-        $this->assertEquals(2, $request->current_step);
     }
 
     public function test_self_approval_is_skipped(): void

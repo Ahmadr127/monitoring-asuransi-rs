@@ -36,15 +36,6 @@
 
         </div>
 
-        @if($errors->any())
-            <div class="alert-premium error">
-                <div class="font-bold-700 mb-1">Aksi Gagal</div>
-                <ul class="pl-5 m-0">
-                    @foreach($errors->all() as $error) <li>{{ $error }}</li> @endforeach
-                </ul>
-            </div>
-        @endif
-
         <div class="content-layout">
             <div class="premium-card">
                 <div class="card-header">

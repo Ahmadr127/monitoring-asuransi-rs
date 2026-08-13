@@ -18,13 +18,6 @@
             </span>
         </div>
 
-        @if(session('success'))
-            <div class="alert-premium success"><strong>{{ session('success') }}</strong></div>
-        @endif
-        @if(session('error'))
-            <div class="alert-premium error"><strong>{{ session('error') }}</strong></div>
-        @endif
-
         <div class="content-layout">
             <div class="premium-card">
                 <div class="card-header"><h2>Ringkasan Kontrak</h2></div>

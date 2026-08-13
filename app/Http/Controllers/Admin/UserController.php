@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\OrganizationUnit;
 use App\Models\ReminderRecipient;
 use App\Models\Role;
 use App\Models\User;
@@ -16,10 +17,11 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::with('role')->get();
+        $users = User::with(['role', 'organizationUnit'])->orderBy('name')->get();
         $roles = Role::all();
+        $departments = OrganizationUnit::orderBy('name')->get();
 
-        return view('admin.master.users', compact('users', 'roles'));
+        return view('admin.master.users', compact('users', 'roles', 'departments'));
     }
 
     public function store(Request $request)
@@ -28,17 +30,21 @@ class UserController extends Controller
             $validated = $request->validate([
                 'name' => ['required', 'string', 'max:255'],
                 'username' => ['required', 'string', 'max:255', 'unique:users'],
+                'nip' => ['nullable', 'string', 'max:50'],
                 'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
                 'password' => ['required', Rules\Password::defaults()],
                 'role_id' => ['required', 'exists:roles,id'],
+                'organization_unit_id' => ['nullable', 'exists:organization_units,id'],
             ]);
 
             $user = User::create([
                 'name' => $validated['name'],
                 'username' => $validated['username'],
+                'nip' => $validated['nip'] ?? null,
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
                 'role_id' => $validated['role_id'],
+                'organization_unit_id' => $validated['organization_unit_id'] ?? null,
             ]);
 
             $role = Role::find($validated['role_id']);
@@ -72,16 +78,20 @@ class UserController extends Controller
             $validated = $request->validate([
                 'name' => ['required', 'string', 'max:255'],
                 'username' => ['required', 'string', 'max:255', 'unique:users,username,'.$user->id],
+                'nip' => ['nullable', 'string', 'max:50'],
                 'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
                 'password' => ['nullable', Rules\Password::defaults()],
                 'role_id' => ['required', 'exists:roles,id'],
+                'organization_unit_id' => ['nullable', 'exists:organization_units,id'],
             ]);
 
             $user->update([
                 'name' => $validated['name'],
                 'username' => $validated['username'],
+                'nip' => $validated['nip'] ?? null,
                 'email' => $validated['email'],
                 'role_id' => $validated['role_id'],
+                'organization_unit_id' => $validated['organization_unit_id'] ?? null,
             ]);
 
             if ($request->filled('password')) {

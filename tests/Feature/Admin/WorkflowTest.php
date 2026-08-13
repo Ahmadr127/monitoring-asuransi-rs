@@ -57,7 +57,7 @@ class WorkflowTest extends TestCase
         $wf = WorkflowDefinition::factory()->create();
         $step = $wf->steps()->create([
             'step_order' => 1, 'name' => 'Review', 'approver_type' => 'role',
-            'approver_value' => 'admin', 'can_reject' => true,
+            'approver_value' => 'admin', 'is_active' => true,
         ]);
 
         $this->post(route('admin.workflows.steps.destroy', $step))->assertRedirect()->assertSessionHas('success');

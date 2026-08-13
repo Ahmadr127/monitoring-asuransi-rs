@@ -83,7 +83,6 @@ class WorkflowController extends Controller
 
         $workflow->steps()->create(array_merge($validated, [
             'step_order' => $maxOrder + 1,
-            'can_reject' => $request->boolean('can_reject'),
             'is_active' => true,
         ]));
 
@@ -95,7 +94,6 @@ class WorkflowController extends Controller
         $validated = $this->validateStep($request);
 
         $step->update(array_merge($validated, [
-            'can_reject' => $request->boolean('can_reject'),
             'is_active' => $request->boolean('is_active'),
         ]));
 
@@ -119,9 +117,7 @@ class WorkflowController extends Controller
             'name' => 'required|string|max:255',
             'approver_type' => 'required|in:role,user,department_head,department',
             'approver_value' => 'required|string|max:255',
-            'can_reject' => 'nullable|boolean',
             'is_active' => 'nullable|boolean',
-            'skip_if' => 'nullable|string',
-        ]) + ['skip_if' => $request->filled('skip_if') ? json_decode($request->skip_if, true) : null];
+        ]);
     }
 }

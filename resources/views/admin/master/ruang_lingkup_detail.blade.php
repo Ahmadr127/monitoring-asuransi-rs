@@ -59,22 +59,41 @@
             @endif
 
             @if(in_array('status', $visibleColumns))
+            @php
+                $approvalBadge = $ruangLingkup->approval_badge;
+                $approvalPending = $ruangLingkup->approval_status !== null
+                    && $ruangLingkup->approval_status->value !== \App\Enums\ApprovalStatus::APPROVED->value;
+                $effectiveStatus = $ruangLingkup->status_effective;
+            @endphp
+            @if($approvalPending)
             <div class="status-card">
-                <div class="status-icon {{ $ruangLingkup->status === 'aktif' ? 'icon-success' : 'icon-danger' }}">
+                <div class="status-icon icon-warning">
+                    <x-icon name="clock" class="icon-16" />
+                </div>
+                <div class="status-content">
+                    <div class="status-label">Pengajuan</div>
+                    <div class="status-value">
+                        <span class="status-badge {{ $approvalBadge['class'] }}">{{ $approvalBadge['label'] }}</span>
+                    </div>
+                </div>
+            </div>
+            @endif
+            <div class="status-card">
+                <div class="status-icon {{ $effectiveStatus === 'aktif' ? 'icon-success' : 'icon-danger' }}">
                     <x-icon name="check-circle" class="icon-16" />
                 </div>
                 <div class="status-content">
                     <div class="status-label">Status</div>
                     <div class="status-value">
                         <span
-                            class="status-badge {{ $ruangLingkup->status === 'aktif' ? 'status-active' : 'status-expired' }}">
-                            {{ $ruangLingkup->status === 'aktif' ? 'Aktif' : 'Tidak Aktif' }}
+                            class="status-badge {{ $effectiveStatus === 'aktif' ? 'status-active' : 'status-expired' }}">
+                            {{ $effectiveStatus === 'aktif' ? 'Aktif' : 'Tidak Aktif' }}
                         </span>
                     </div>
                 </div>
             </div>
 
-            @if($ruangLingkup->status === 'aktif')
+            @if($effectiveStatus === 'aktif')
                 <div class="status-card">
                     @php
                         $remaining = floor(now()->diffInDays($ruangLingkup->tanggal_berakhir, false));

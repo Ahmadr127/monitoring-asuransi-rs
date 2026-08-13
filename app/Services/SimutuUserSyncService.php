@@ -165,6 +165,7 @@ class SimutuUserSyncService
         $data = [
             'name' => $simutu['nama_lengkap'] ?? ($local?->name),
             'username' => $simutu['username'] ?? ($local?->username),
+            'nip' => $simutu['nip'] ?? ($local?->nip),
             'email' => ($simutu['email'] ?? null) ?: ($local?->email),
             'simutu_id' => $simutu['simutu_id'] ?? null,
             'simutu_status' => $simutu['status_user'] ?? null,

@@ -17,6 +17,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Administrator',
                 'username' => 'admin',
+                'nip' => '198501012006011001',
                 'email' => 'admin@azra.com',
                 'password' => Hash::make('rsazra'),
                 'role_id' => $roles['admin'],
@@ -24,6 +25,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Penginput Kontrak',
                 'username' => 'penginput',
+                'nip' => '199003152011022002',
                 'email' => 'penginput@azra.com',
                 'password' => Hash::make('rsazra'),
                 'role_id' => $roles['inputor'],
@@ -31,6 +33,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Legal Staff',
                 'username' => 'legal',
+                'nip' => '198702122009031003',
                 'email' => 'legal@azra.com',
                 'password' => Hash::make('rsazra'),
                 'role_id' => $roles['legal'],
@@ -38,6 +41,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Marketing Staff',
                 'username' => 'marketing',
+                'nip' => '199205202012042004',
                 'email' => 'marketing@azra.com',
                 'password' => Hash::make('rsazra'),
                 'role_id' => $roles['marketing'],
@@ -45,6 +49,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Farmasi Staff',
                 'username' => 'farmasi',
+                'nip' => '198811252010051005',
                 'email' => 'farmasi@azra.com',
                 'password' => Hash::make('rsazra'),
                 'role_id' => $roles['farmasi'],
@@ -52,6 +57,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Kasir Staff',
                 'username' => 'kasir',
+                'nip' => '199501072016061006',
                 'email' => 'kasir@azra.com',
                 'password' => Hash::make('rsazra'),
                 'role_id' => $roles['kasir'],
@@ -59,6 +65,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Pendaftaran Staff',
                 'username' => 'pendaftaran',
+                'nip' => '199802182017071007',
                 'email' => 'pendaftaran@azra.com',
                 'password' => Hash::make('rsazra'),
                 'role_id' => $roles['pendaftaran'],

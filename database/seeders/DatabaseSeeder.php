@@ -31,6 +31,8 @@ class DatabaseSeeder extends Seeder
         $this->command->info('Seeding Ruang Lingkup...');
         $this->call([
             RuangLingkupSeeder::class,
+            ContractHistorySeeder::class,
+            WorkflowSeeder::class,
         ]);
         $this->command->newLine();
 

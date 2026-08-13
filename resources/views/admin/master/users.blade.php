@@ -68,6 +68,10 @@
                             <input type="text" name="name" class="form-input-minimal" placeholder="Nama lengkap" required>
                         </div>
                         <div class="form-group">
+                            <label>NIP</label>
+                            <input type="text" name="nip" class="form-input-minimal" placeholder="NIP pegawai">
+                        </div>
+                        <div class="form-group">
                             <label>Username <span class="text-danger">*</span></label>
                             <input type="text" name="username" class="form-input-minimal" placeholder="Username" required>
                         </div>
@@ -79,6 +83,16 @@
                             <label>Password <span class="text-danger">*</span></label>
                             <input type="password" name="password" class="form-input-minimal" placeholder="********" required minlength="8" oninput="validatePasswordLength(this)">
                             <span class="password-hint" id="password-hint-create">Minimal 8 karakter</span>
+                        </div>
+                        <div class="form-group">
+                            <label>Departemen</label>
+                            <x-searchable-select
+                                name="organization_unit_id"
+                                :options="$departments->map(fn ($d) => ['value' => $d->id, 'text' => $d->name])"
+                                :value="old('organization_unit_id', '')"
+                                placeholder="Pilih Departemen"
+                                nullable
+                            />
                         </div>
                         <div class="form-group">
                             <label>Role <span class="text-danger">*</span></label>
@@ -127,14 +141,58 @@
                                 <tr>
                                     <th class="text-center th-min-50">No</th>
                                     <th class="th-min-300">Profil Pengguna</th>
-                                    <th class="th-min-160">Username</th>
+                                    <th class="th-min-120">NIP</th>
+                                    <th class="th-min-140">Username</th>
+                                    <th class="th-min-140">Departemen</th>
                                     <th class="text-center th-min-120">Role</th>
                                     <th class="text-center th-min-70">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
+                                <tr class="table-filter-row">
+                                    <td></td>
+                                    <td>
+                                        <div class="filter-input-container" id="wrap-filterNama">
+                                            <input type="text" id="filterNama" oninput="handleFilterInput(this)" autocomplete="off" class="filter-select" placeholder="Cari nama...">
+                                            <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('filterNama')" title="Clear"><x-icon name="close" class="" /></button>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="filter-input-container" id="wrap-filterNip">
+                                            <input type="text" id="filterNip" oninput="handleFilterInput(this)" autocomplete="off" class="filter-select" placeholder="Cari NIP...">
+                                            <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('filterNip')" title="Clear"><x-icon name="close" class="" /></button>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="filter-input-container" id="wrap-filterUsername">
+                                            <input type="text" id="filterUsername" oninput="handleFilterInput(this)" autocomplete="off" class="filter-select" placeholder="Cari username...">
+                                            <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('filterUsername')" title="Clear"><x-icon name="close" class="" /></button>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="filter-input-container" id="wrap-filterDept">
+                                            <input type="text" id="filterDept" oninput="handleFilterInput(this)" autocomplete="off" class="filter-select" placeholder="Cari departemen...">
+                                            <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('filterDept')" title="Clear"><x-icon name="close" class="" /></button>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="filter-input-container" id="wrap-filterRole">
+                                            <input type="text" id="filterRole" oninput="handleFilterInput(this)" autocomplete="off" class="filter-select" placeholder="Cari role...">
+                                            <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('filterRole')" title="Clear"><x-icon name="close" class="" /></button>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
                                 @forelse($users as $index => $user)
-                                <tr class="table-row" data-role="{{ $user->role_id }}" data-search="{{ strtolower($user->name . ' ' . $user->username . ' ' . $user->email) }}" data-nama="{{ strtolower($user->name . ' ' . $user->email) }}" data-username="{{ strtolower($user->username) }}">
+                                <tr class="table-row"
+                                    data-nama="{{ strtolower($user->name . ' ' . $user->email) }}"
+                                    data-nip="{{ strtolower($user->nip ?? '') }}"
+                                    data-username="{{ strtolower($user->username) }}"
+                                    data-dept="{{ $user->organization_unit_id ?? '' }}"
+                                    data-role="{{ $user->role_id }}"
+                                    data-dept-nama="{{ strtolower($user->organizationUnit?->name ?? '') }}"
+                                    data-role-nama="{{ strtolower($user->role?->name ?? '') }}"
+                                    data-search="{{ strtolower($user->name . ' ' . $user->username . ' ' . $user->email . ' ' . ($user->nip ?? '') . ' ' . ($user->organizationUnit?->name ?? '')) }}">
                                     <td class="number-cell text-center font-bold-700 text-muted-premium"><span class="row-number">{{ $index + 1 }}</span></td>
                                     <td>
                                         <div class="flex-col">
@@ -142,7 +200,15 @@
                                             <div class="text-xs-muted">{{ $user->email }}</div>
                                         </div>
                                     </td>
+                                    <td><code class="username-tag">{{ $user->nip ?? '-' }}</code></td>
                                     <td><code class="username-tag">@<span>{{ $user->username }}</span></code></td>
+                                    <td>
+                                        @if($user->organizationUnit)
+                                            <span class="badge-premium badge-slate">{{ $user->organizationUnit->name }}</span>
+                                        @else
+                                            <span class="text-xs-muted">-</span>
+                                        @endif
+                                    </td>
                                     <td class="text-center">
                                         @php $isAdmin = $user->isAdmin(); @endphp
                                         <span class="badge-premium {{ $isAdmin ? 'badge-purple' : 'badge-teal' }}">
@@ -154,7 +220,7 @@
                                     </td>
                                     <td class="actions-cell text-center">
                                         <div class="action-buttons flex-col-center">
-                                            <button onclick="openEditModal({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ addslashes($user->username) }}', '{{ addslashes($user->email) }}', '{{ $user->role_id }}')" class="action-btn edit-btn" title="Edit User">
+                                            <button onclick="openEditModal({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ addslashes($user->username) }}', '{{ addslashes($user->email) }}', '{{ $user->role_id }}', '{{ addslashes($user->nip ?? '') }}', '{{ $user->organization_unit_id }}')" class="action-btn edit-btn" title="Edit User">
                                                 <x-icon name="edit" />
                                             </button>
                                             @if($user->id !== auth()->id())
@@ -171,9 +237,9 @@
                                     </td>
                                 </tr>
                                 @empty
-                                <tr id="emptyRow"><td colspan="5" class="empty-state"><div class="empty-icon"><x-icon name="document" /></div><div class="empty-text"><h3>Belum ada user yang terdaftar</h3><p>Mulai dengan menambahkan user pertama.</p></div></td></tr>
+                                <tr id="emptyRow"><td colspan="7" class="empty-state"><div class="empty-icon"><x-icon name="document" /></div><div class="empty-text"><h3>Belum ada user yang terdaftar</h3><p>Mulai dengan menambahkan user pertama.</p></div></td></tr>
                                 @endforelse
-                                <tr id="searchEmptyRow" class="hidden"><td colspan="5" class="empty-state"><div class="empty-icon text-muted-premium"><x-icon name="search-empty" class="empty-icon-large-svg" /></div><div class="empty-text text-center"><h3 class="empty-title">Tidak ada data yang cocok</h3><p class="empty-subtitle">Coba ubah kata kunci pencarian Anda.</p></div></td></tr>
+                                <tr id="searchEmptyRow" class="hidden"><td colspan="7" class="empty-state"><div class="empty-icon text-muted-premium"><x-icon name="search-empty" class="empty-icon-large-svg" /></div><div class="empty-text text-center"><h3 class="empty-title">Tidak ada data yang cocok</h3><p class="empty-subtitle">Coba ubah kata kunci pencarian Anda.</p></div></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -203,12 +269,27 @@
                         <input type="text" id="edit_name" name="name" class="form-input-minimal" required>
                     </div>
                     <div class="form-group">
+                        <label>NIP</label>
+                        <input type="text" id="edit_nip" name="nip" class="form-input-minimal">
+                    </div>
+                    <div class="form-group">
                         <label>Username</label>
                         <input type="text" id="edit_username" name="username" class="form-input-minimal" required>
                     </div>
                     <div class="form-group">
                         <label>Email</label>
                         <input type="email" id="edit_email" name="email" class="form-input-minimal" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Departemen</label>
+                        <x-searchable-select
+                            name="organization_unit_id"
+                            id="edit_dept_select"
+                            input-id="edit_dept"
+                            :options="$departments->map(fn ($d) => ['value' => $d->id, 'text' => $d->name])"
+                            placeholder="Pilih Departemen"
+                            nullable
+                        />
                     </div>
                     <div class="form-group">
                         <label>Role</label>
@@ -241,6 +322,42 @@
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .page-table tr.table-filter-row td {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0.4rem 0.4rem !important;
+        }
+        .page-table .table-filter-row .filter-input-container {
+            width: 100%;
+        }
+        .page-table .table-filter-row .filter-input-container input.filter-select,
+        .page-table .table-filter-row .filter-input-container select.filter-select {
+            min-height: 30px;
+            padding: 0.35rem 2rem 0.35rem 0.75rem;
+            font-size: 11px;
+            border: 1px solid #94a3b8 !important;
+            color: #000000 !important;
+        }
+        .page-table .table-filter-row .filter-input-container input.filter-select::placeholder {
+            color: #000000 !important;
+            opacity: 1;
+        }
+        .page-table .table-filter-row .filter-input-container .filter-select {
+            min-width: 0;
+        }
+        .page-table .table-filter-row .ssd-trigger.filter-select {
+            min-height: 30px;
+            padding: 0.35rem 0.75rem;
+            font-size: 11px;
+            background: #ffffff;
+            border: 1px solid #94a3b8 !important;
+            color: #000000 !important;
+        }
+        .page-table .table-filter-row .ssd-trigger.filter-select .ssd-value.is-placeholder {
+            color: #000000 !important;
+        }
+    </style>
     <script>
         // Pagination Variables
         let allRows = [];
@@ -263,12 +380,52 @@
         window.filterDataTable = function() {
             const searchValue = document.getElementById('tableSearchInput').value.toLowerCase();
             document.getElementById('clearSearch').style.display = searchValue.length > 0 ? 'flex' : 'none';
+
+            const fNama = (document.getElementById('filterNama').value || '').toLowerCase();
+            const fNip = (document.getElementById('filterNip').value || '').toLowerCase();
+            const fUsername = (document.getElementById('filterUsername').value || '').toLowerCase();
+            const fDept = (document.getElementById('filterDept').value || '').toLowerCase();
+            const fRole = (document.getElementById('filterRole').value || '').toLowerCase();
+
             filteredRows = allRows.filter(row => {
                 const searchData = row.getAttribute('data-search') || '';
-                return searchData.includes(searchValue);
+                if (searchValue && !searchData.includes(searchValue)) return false;
+                if (fNama && !(row.getAttribute('data-nama') || '').includes(fNama)) return false;
+                if (fNip && !(row.getAttribute('data-nip') || '').includes(fNip)) return false;
+                if (fUsername && !(row.getAttribute('data-username') || '').includes(fUsername)) return false;
+                if (fDept && !(row.getAttribute('data-dept-nama') || '').includes(fDept)) return false;
+                if (fRole && !(row.getAttribute('data-role-nama') || '').includes(fRole)) return false;
+                return true;
             });
             currentPage = 1;
             updatePagination();
+        };
+
+        window.handleFilterInput = function(el) {
+            const wrap = document.getElementById('wrap-' + el.id);
+            if (wrap) {
+                const btn = wrap.querySelector('.clear-filter-btn');
+                if (btn) btn.style.display = el.value ? 'flex' : 'none';
+            }
+            filterDataTable();
+        };
+
+        window.applyUserFilter = function(value, text, inputEl) {
+            handleFilterInput(inputEl);
+        };
+
+        window.clearFilterWrap = function(id) {
+            const el = document.getElementById(id);
+            if (el && el.value !== undefined) el.value = '';
+            const wrap = document.getElementById('wrap-' + id);
+            if (wrap) {
+                const btn = wrap.querySelector('.clear-filter-btn');
+                if (btn) btn.style.display = 'none';
+            }
+            if (window.__searchableSelects && window.__searchableSelects[id]) {
+                window.__searchableSelects[id].select(null);
+            }
+            filterDataTable();
         };
 
         window.clearSearchInput = function() {
@@ -368,13 +525,17 @@
             container.innerHTML = html;
         }
 
-        window.openEditModal = function(id, name, username, email, role) {
+        window.openEditModal = function(id, name, username, email, role, nip, dept) {
             $('#editForm').attr('action', '{{ route('admin.users.update', '__ID__') }}'.replace('__ID__', id));
             $('#edit_name').val(name);
             $('#edit_username').val(username);
             $('#edit_email').val(email);
+            $('#edit_nip').val(nip || '');
             if (window.__searchableSelects && window.__searchableSelects['edit_role']) {
                 window.__searchableSelects['edit_role'].select(role);
+            }
+            if (window.__searchableSelects && window.__searchableSelects['edit_dept']) {
+                window.__searchableSelects['edit_dept'].select(dept || null);
             }
             const pwInput = document.querySelector('#editForm input[name="password"]');
             if (pwInput) {

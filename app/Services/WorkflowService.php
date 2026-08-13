@@ -54,9 +54,7 @@ class WorkflowService
                 $approverId = $this->resolveApproverUserId($step, $requestor);
 
                 $status = 'pending';
-                if ($this->shouldSkip($step, $contract, $requestor)) {
-                    $status = 'skipped';
-                } elseif ($approverId && (int) $approverId === (int) $requestor->id) {
+                if ($approverId && (int) $approverId === (int) $requestor->id) {
                     // anti self-approval
                     $status = 'skipped';
                 }
@@ -333,37 +331,6 @@ class WorkflowService
             default:
                 throw new WorkflowException("Tipe approver tidak dikenal: {$step->approver_type}");
         }
-    }
-
-    /**
-     * Evaluasi kondisi skip_if (JSON) terhadap data kontrak.
-     * Contoh: {"field":"is_high_profile","op":"!=","value":true}
-     */
-    protected function shouldSkip(WorkflowStep $step, RuangLingkup $contract, User $requestor): bool
-    {
-        $skipIf = $step->skip_if;
-
-        if (empty($skipIf) || ! isset($skipIf['field'])) {
-            return false;
-        }
-
-        $actual = $contract->{$skipIf['field']} ?? null;
-        $expected = $skipIf['value'] ?? null;
-        $op = $skipIf['op'] ?? '==';
-
-        if (is_bool($expected)) {
-            $actual = (bool) $actual;
-        } elseif (is_int($expected)) {
-            $actual = $actual !== null ? (int) $actual : null;
-        }
-
-        return match ($op) {
-            '==' => $actual == $expected,
-            '!=' => $actual != $expected,
-            '>' => $actual > $expected,
-            '<' => $actual < $expected,
-            default => false,
-        };
     }
 
     protected function logHistory(RuangLingkup $contract, string $action, $oldStatus, $newStatus,

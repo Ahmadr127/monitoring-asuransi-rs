@@ -15,15 +15,11 @@ class WorkflowStep extends Model
         'name',
         'approver_type',
         'approver_value',
-        'can_reject',
         'is_active',
-        'skip_if',
     ];
 
     protected $casts = [
-        'can_reject' => 'boolean',
         'is_active' => 'boolean',
-        'skip_if' => 'array',
     ];
 
     public function workflow()

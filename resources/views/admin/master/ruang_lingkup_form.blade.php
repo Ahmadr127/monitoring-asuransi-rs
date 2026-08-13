@@ -25,6 +25,8 @@
             <input type="hidden" name="from" value="{{ $from }}">
             @endif
 
+            <div id="form_validation_summary" class="rl-validation-summary rl-hidden" role="alert"></div>
+
             <!-- Step Progress Indicator -->
             <div class="step-indicator-wrapper">
                 <div class="step-indicator-line">
@@ -370,16 +372,10 @@
                     Selanjutnya
                     <x-icon name="chevron-right" class="icon-14 rl-btn-nav-svg ml-3" />
                 </button>
-                <button type="submit" class="btn-primary rl-hidden" id="btn_submit">
-                    <x-icon name="check" class="icon-14" />
-                    {{ $isEdit ? 'Update' : 'Simpan' }}
-                </button>
-                @if(auth()->user()->hasPermission('kerjasama'))
                 <button type="submit" name="submit" value="1" class="btn-primary rl-hidden" id="btn_submit_approval">
                     <x-icon name="send" class="icon-14" />
-                    Simpan & Ajukan Persetujuan
+                    {{ $isEdit ? 'Simpan Perubahan & Ajukan Persetujuan' : 'Simpan & Ajukan Persetujuan' }}
                 </button>
-                @endif
                 </div>
             </div>
         </form>
@@ -402,13 +398,20 @@
 
 </x-app-layout>
 
-<!-- jQuery (dipakai helper HTML escaping) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 <script>
     // Icon helpers (avoid raw SVG path strings in template literals)
     const ICON_PLUS = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>';
     const ICON_CLOSE = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>';
+
+    // HTML escape helper (pengganti helper jQuery: $('<span>').text(x).html())
+    function escapeHtml(str) {
+        return String(str == null ? '' : str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
 
     let currentStep = 1;
     let buGroupIndex = {{ count(old('bu_groups', $isEdit && $ruangLingkup->relationLoaded('badanUsahaPivot') ? $ruangLingkup->badanUsahaPivot : [['']])) }};
@@ -565,7 +568,7 @@
         const benefitHtml = group && group.benefit && group.benefit.length
             ? group.benefit.map(function(val, bi) {
                 return '<div class="rl-dyn-row">' +
-                    '<input type="text" name="bu_groups[' + index + '][benefit][]" value="' + $('<span>').text(val).html() + '" class="rl-input" placeholder="Contoh: Obat-obatan">' +
+                    '<input type="text" name="bu_groups[' + index + '][benefit][]" value="' + escapeHtml(val) + '" class="rl-input" placeholder="Contoh: Obat-obatan">' +
                     (bi === 0
                         ? '<button type="button" class="rl-btn-add" onclick="addBenefitInGroup(this)" title="Tambah benefit">' + ICON_PLUS + '</button>'
                         : '<button type="button" onclick="this.parentElement.remove()" class="rl-btn-rem" title="Hapus benefit">' + ICON_CLOSE + '</button>') +
@@ -576,7 +579,7 @@
         const cakupanHtml = group && group.cakupan && group.cakupan.length
             ? group.cakupan.map(function(val, ci) {
                 return '<div class="rl-dyn-row">' +
-                    '<input type="text" name="bu_groups[' + index + '][cakupan][]" value="' + $('<span>').text(val).html() + '" class="rl-input" placeholder="Contoh: Karyawan">' +
+                    '<input type="text" name="bu_groups[' + index + '][cakupan][]" value="' + escapeHtml(val) + '" class="rl-input" placeholder="Contoh: Karyawan">' +
                     (ci === 0
                         ? '<button type="button" class="rl-btn-add" onclick="addCakupanInGroup(this)" title="Tambah cakupan">' + ICON_PLUS + '</button>'
                         : '<button type="button" onclick="this.parentElement.remove()" class="rl-btn-rem" title="Hapus cakupan">' + ICON_CLOSE + '</button>') +
@@ -603,7 +606,7 @@
                 '<div class="rl-field s2">' +
                     '<label class="rl-label req">Badan Usaha</label>' +
                     '<div class="input-container">' +
-                        '<input type="text" class="rl-input bu-autocomplete-input" value="' + $('<span>').text(buName).html() + '" placeholder="Cari Badan Usaha..." data-target-id="bu_groups[' + index + '][badan_usaha_id]" autocomplete="off">' +
+                        '<input type="text" class="rl-input bu-autocomplete-input" value="' + escapeHtml(buName) + '" placeholder="Cari Badan Usaha..." data-target-id="bu_groups[' + index + '][badan_usaha_id]" autocomplete="off">' +
                         '<input type="hidden" name="bu_groups[' + index + '][badan_usaha_id]" class="bu-autocomplete-hidden" value="' + buId + '">' +
                         '<div class="rl-autocomplete bu-autocomplete-dropdown"></div>' +
                     '</div>' +
@@ -650,7 +653,7 @@
             '</div>' +
             '<div class="rl-field full rl-field-mt">' +
                 '<label class="rl-label">Deskripsi / Catatan Tambahan</label>' +
-                '<textarea name="bu_groups[' + index + '][deskripsi]" rows="2" class="rl-textarea" placeholder="...">' + $('<span>').text(groupDeskripsi).html() + '</textarea>' +
+                '<textarea name="bu_groups[' + index + '][deskripsi]" rows="2" class="rl-textarea" placeholder="...">' + escapeHtml(groupDeskripsi) + '</textarea>' +
             '</div>';
 
         container.appendChild(div);
@@ -727,7 +730,8 @@
 
     // --- BU Autocomplete (shared by all groups) ---
     function initBuAutocomplete(inputEl) {
-        if (!inputEl) return;
+        if (!inputEl || inputEl.dataset.rlInit) return;
+        inputEl.dataset.rlInit = '1';
         const container = inputEl.closest('.input-container');
         const hidden = container.querySelector('.bu-autocomplete-hidden');
         const dropdown = container.querySelector('.bu-autocomplete-dropdown');
@@ -820,7 +824,8 @@
 
     // --- Obat Autocomplete (per-group) ---
     function initObatAutocomplete(inputEl) {
-        if (!inputEl) return;
+        if (!inputEl || inputEl.dataset.rlInit) return;
+        inputEl.dataset.rlInit = '1';
         const container = inputEl.closest('.input-container');
         const groupContainer = inputEl.closest('.obat-group-container');
         if (!groupContainer) return;
@@ -991,30 +996,36 @@
             document.getElementById('btn_cancel').style.display = 'inline-flex';
             document.getElementById('btn_prev').style.display = 'none';
             document.getElementById('btn_next').style.display = 'inline-flex';
-            document.getElementById('btn_submit').style.display = 'none';
-            var bsa = document.getElementById('btn_submit_approval'); if (bsa) bsa.style.display = 'none';
+            document.getElementById('btn_submit_approval').style.display = 'none';
         } else if (step === 2) {
             document.getElementById('btn_cancel').style.display = 'none';
             document.getElementById('btn_prev').style.display = 'inline-flex';
             document.getElementById('btn_next').style.display = 'inline-flex';
-            document.getElementById('btn_submit').style.display = 'none';
-            var bsa = document.getElementById('btn_submit_approval'); if (bsa) bsa.style.display = 'none';
+            document.getElementById('btn_submit_approval').style.display = 'none';
         } else if (step === 3) {
             document.getElementById('btn_cancel').style.display = 'none';
             document.getElementById('btn_prev').style.display = 'inline-flex';
             document.getElementById('btn_next').style.display = 'none';
-            document.getElementById('btn_submit').style.display = 'inline-flex';
-            var bsa = document.getElementById('btn_submit_approval'); if (bsa) bsa.style.display = 'inline-flex';
+            document.getElementById('btn_submit_approval').style.display = 'inline-flex';
             renderReviewData();
         }
         updateStepIndicator();
     }
 
     function nextStep() {
-        if (currentStep === 2) {
+        if (currentStep === 1) {
             clearErrors();
-            if (!validateStep(1) || !validateStep(2)) {
-                showStep(currentStep);
+            if (!validateStep(1)) {
+                showStep(1);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+        } else if (currentStep === 2) {
+            clearErrors();
+            const s1ok = validateStep(1);
+            const s2ok = validateStep(2);
+            if (!s1ok || !s2ok) {
+                showStep(!s1ok ? 1 : 2);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
@@ -1026,6 +1037,7 @@
 
     function prevStep() {
         currentStep--;
+        clearErrors();
         showStep(currentStep);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1033,82 +1045,83 @@
     function clearErrors() {
         document.querySelectorAll('.rl-input.error, .rl-select.error, .rl-textarea.error, .rl-chk-grid.error')
             .forEach(el => el.classList.remove('error'));
+        const box = document.getElementById('form_validation_summary');
+        if (box) { box.classList.add('rl-hidden'); box.innerHTML = ''; }
+    }
+
+    function showValidationMessages(messages) {
+        const box = document.getElementById('form_validation_summary');
+        if (!box) return;
+        if (!messages.length) { box.classList.add('rl-hidden'); box.innerHTML = ''; return; }
+        const list = messages.map(m => '<li>' + escapeHtml(m) + '</li>').join('');
+        box.innerHTML = '<strong>Periksa kembali data berikut sebelum melanjutkan:</strong><ul>' + list + '</ul>';
+        box.classList.remove('rl-hidden');
     }
 
     function validateStep(step) {
+        const messages = [];
         if (step === 1) {
             const asuransiInput = document.getElementById('form_nama_asuransi');
             const aliasInput = document.getElementById('alias_versi_tera');
             const penjaminSelect = document.getElementById('penjamin_category');
             const tglMulai = document.getElementById('form_tanggal_mulai');
             const tglAkhir = document.getElementById('form_tanggal_berakhir');
-            let valid = true;
 
             if (!asuransiInput.value.trim()) {
                 asuransiInput.classList.add('error');
-                if (valid) asuransiInput.focus();
-                valid = false;
+                messages.push('Nama Asuransi wajib diisi.');
             }
 
             if (!aliasInput.value.trim()) {
                 aliasInput.classList.add('error');
-                if (valid) aliasInput.focus();
-                valid = false;
+                messages.push('Alias Versi Tera wajib diisi.');
             }
 
             if (!penjaminSelect.value) {
                 penjaminSelect.classList.add('error');
                 const penjaminTrigger = penjaminSelect.closest('.ssd')?.querySelector('.ssd-trigger');
-                if (penjaminTrigger) {
-                    penjaminTrigger.classList.add('error');
-                    if (valid) penjaminTrigger.focus();
-                }
-                valid = false;
+                if (penjaminTrigger) penjaminTrigger.classList.add('error');
+                messages.push('TPA / PAYOR wajib dipilih.');
             }
 
             if (!tglMulai.value) {
                 tglMulai.classList.add('error');
-                if (valid) tglMulai.focus();
-                valid = false;
+                messages.push('Tanggal Mulai wajib diisi.');
             }
 
             if (!tglAkhir.value) {
                 tglAkhir.classList.add('error');
-                if (valid) tglAkhir.focus();
-                valid = false;
+                messages.push('Tanggal Berakhir wajib diisi.');
             }
 
             if (tglMulai.value && tglAkhir.value) {
                 if (new Date(tglMulai.value) > new Date(tglAkhir.value)) {
                     tglAkhir.classList.add('error');
-                    tglAkhir.focus();
-                    valid = false;
+                    messages.push('Tanggal Berakhir harus sama atau setelah Tanggal Mulai.');
                 }
             }
-
-            return valid;
         } else if (step === 2) {
-            let allValid = true;
+            let gi = 1;
             document.querySelectorAll('#bu_groups_container .bu-group-card').forEach(function(card) {
-                // Check each BU group has a BU selected
+                const groupLabel = 'Badan Usaha #' + gi;
                 const hidden = card.querySelector('.bu-autocomplete-hidden');
                 if (!hidden || !hidden.value) {
                     const input = card.querySelector('.bu-autocomplete-input');
                     if (input) input.classList.add('error');
-                    allValid = false;
+                    messages.push(groupLabel + ': pilih Badan Usaha terlebih dahulu.');
                 }
 
-                // Check each BU group has at least one layanan selected
                 const checkedLayanan = card.querySelectorAll('input[name$="[jenis_layanan_ids][]"]:checked');
                 if (checkedLayanan.length === 0) {
                     const grid = card.querySelector('.rl-chk-grid');
                     if (grid) grid.classList.add('error');
-                    allValid = false;
+                    messages.push(groupLabel + ': pilih minimal 1 Jenis Layanan.');
                 }
+                gi++;
             });
-            if (!allValid) return false;
         }
-        return true;
+        showValidationMessages(messages);
+        return messages.length === 0;
     }
 
     function renderReviewData() {
@@ -1219,7 +1232,7 @@
             const deskripsiVal = deskripsiEl ? deskripsiEl.value.trim() : '';
 
             cardReview.innerHTML =
-                '<h4 class="rl-review-card-heading">Badan Usaha ' + (gi + 1) + ': ' + $('<span>').text(buName).html() + '</h4>' +
+                '<h4 class="rl-review-card-heading">Badan Usaha ' + (gi + 1) + ': ' + escapeHtml(buName) + '</h4>' +
                 '<div class="rl-review-grid-2col">' +
                     '<div><strong>Benefit:</strong> ' + benefitsHtml + '</div>' +
                     '<div><strong>Cakupan:</strong> ' + cakupansHtml + '</div>' +
@@ -1228,7 +1241,7 @@
                     '<div><strong>Jenis Layanan:</strong><br>' + layananHtml + '</div>' +
                     '<div><strong>Daftar Obat:</strong><br>' + obatHtml + '</div>' +
                 '</div>' +
-                (deskripsiVal ? '<div class="rl-review-deskripsi"><strong>Deskripsi:</strong> ' + $('<span>').text(deskripsiVal).html() + '</div>' : '');
+                (deskripsiVal ? '<div class="rl-review-deskripsi"><strong>Deskripsi:</strong> ' + escapeHtml(deskripsiVal) + '</div>' : '');
             revBuContainer.appendChild(cardReview);
         });
     }
@@ -1292,16 +1305,21 @@
             if (draft.step && draft.step >= 1 && draft.step <= 3) {
                 currentStep = draft.step;
             }
-        } else {
-            // Initialize BU autocompletes for server-rendered groups
-            initAllBuAutocompletes();
-            initAllObatAutocompletes();
         }
+        // Ensure autocompletes attached to any server-rendered group.
+        // (idempotent: initBuAutocomplete/initObatAutocomplete guard with data-rl-init)
+        initAllBuAutocompletes();
+        initAllObatAutocompletes();
         showResetButton();
 
         // Auto-save on input changes
         document.getElementById('ruang_lingkup_form')?.addEventListener('input', saveFormDraft);
         document.getElementById('ruang_lingkup_form')?.addEventListener('change', saveFormDraft);
+
+        // Clear localStorage draft on submit (tidak boleh ter-bawa setelah pengajuan).
+        document.getElementById('ruang_lingkup_form')?.addEventListener('submit', function () {
+            clearFormDraft();
+        });
 
         // Leave confirmation
         var leaveUrl = '';

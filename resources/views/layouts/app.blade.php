@@ -232,6 +232,8 @@
                 showToast("{{ session('error') }}", 'error');
             @elseif(session('info'))
                 showToast("{{ session('info') }}", 'success');
+            @elseif($errors->any())
+                showToast("{{ collect($errors->all())->implode(' • ') }}", 'error');
             @endif
         });
 

@@ -371,7 +371,7 @@
                                 data-obat="{{ $searchObat }}"
                                 data-deskripsi="{{ $searchDeskripsi }}"
                                 data-diskon="{{ $searchDiskon }}"
-                                data-status="{{ $rl->status }}"
+                                data-status="{{ $rl->status_effective }}"
                                 data-penjamin-category="{{ $rl->penjamin_category }}"
                                 data-high-profile="{{ $rl->is_high_profile ? '1' : '0' }}"
                                 data-tanggal-mulai="{{ $rl->tanggal_mulai->format('Y-m-d') }}"
@@ -431,7 +431,7 @@
                                             @endphp
                                             <div class="flex-col-start">
                                                 <span class="duration text-xs-muted">Total: {{ $duration }} Hari</span>
-                                                @if($rl->status === 'aktif')
+                                                @if($rl->status_effective === 'aktif')
                                                     <span class="remaining status-badge {{ $remaining <= 30 ? 'status-critical' : ($remaining <= 90 ? 'status-warning-badge' : 'status-active') }} font-bold-700 text-xs-medium"
                                                           data-expiration="{{ $rl->tanggal_berakhir }}">Tersisa: {{ max(0, $remaining) }} Hari
                                                     </span>
@@ -525,10 +525,12 @@
                                     @endif
                                 </td>
                                 <td class="status-cell text-center">
-                                    @if($rl->status === 'aktif' && !$rl->is_expired)
+                                    @if($rl->status_effective === 'aktif')
                                         <span class="status-badge status-active">Aktif</span>
+                                    @elseif($rl->approval_status !== null && $rl->approval_status->value !== 'approved')
+                                        <span class="status-badge {{ $rl->approval_badge['class'] }}">{{ $rl->approval_badge['label'] }}</span>
                                     @else
-                                        <span class="status-badge status-expired">Expired</span>
+                                        <span class="status-badge status-expired">Tidak Aktif</span>
                                     @endif
                                 </td>
                                 <td class="actions-cell text-center">

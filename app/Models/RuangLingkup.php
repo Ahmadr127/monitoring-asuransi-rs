@@ -145,6 +145,34 @@ class RuangLingkup extends Model
         ];
     }
 
+    /**
+     * Status efektif: kerjasama hanya dianggap aktif jika sudah disetujui.
+     * Selama pengajuan berlangsung (draft/in_review/rejected) → belum aktif.
+     */
+    public function getStatusEffectiveAttribute(): string
+    {
+        $approval = $this->approval_status;
+
+        if ($approval !== null && $approval->value !== \App\Enums\ApprovalStatus::APPROVED->value) {
+            return 'tidak_aktif';
+        }
+
+        return $this->status === 'aktif' ? 'aktif' : 'tidak_aktif';
+    }
+
+    /**
+     * Badge & label untuk status pengajuan (draft/in_review/approved/rejected).
+     */
+    public function getApprovalBadgeAttribute(): array
+    {
+        $approval = $this->approval_status ?? \App\Enums\ApprovalStatus::APPROVED;
+
+        return [
+            'label' => $approval->label(),
+            'class' => $approval->badgeClass(),
+        ];
+    }
+
     public function updateExpiredStatus()
     {
         // Atribut bisa null untuk data lama di memori; perlakukan sebagai approved.

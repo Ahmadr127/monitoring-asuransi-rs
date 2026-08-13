@@ -15,9 +15,6 @@
                 </a>
             </div>
             <div class="form-body">
-                @if($errors->any())
-                    <div class="alert-premium error"><ul class="pl-5 m-0">@foreach($errors->all() as $e) <li>{{ $e }}</li> @endforeach</ul></div>
-                @endif
                 @include('admin.departments._form', ['unit' => $unit])
             </div>
         </div>

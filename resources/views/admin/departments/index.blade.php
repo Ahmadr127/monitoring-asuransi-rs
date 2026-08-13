@@ -7,16 +7,6 @@
     @endpush
 
     <div class="premium-container">
-        @if(session('success'))
-            <div class="alert-premium success"><strong>{{ session('success') }}</strong></div>
-        @endif
-        @if(session('error'))
-            <div class="alert-premium error"><strong>{{ session('error') }}</strong></div>
-        @endif
-        @if(session('info'))
-            <div class="alert-premium success"><strong>{{ session('info') }}</strong></div>
-        @endif
-
         <div class="premium-card">
             <!-- Header + Aksi -->
             <div class="card-header flex-between-center">

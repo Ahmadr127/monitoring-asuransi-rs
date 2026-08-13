@@ -95,6 +95,7 @@
     })"
     @if($wrapperId) id="{{ $wrapperId }}" @endif
     class="ssd"
+    :class="{ 'drop-up': dropUp }"
     @click.away="close()"
 >
     @if($label)
@@ -132,8 +133,6 @@
         x-transition:leave-end="opacity-0"
         x-ref="dropdown"
         class="ssd-panel"
-        :style="dropdownStyle"
-        style="z-index: 99999;"
         x-cloak
     >
         <div class="ssd-search">
@@ -201,7 +200,6 @@ function searchableDropdown(config) {
         open: false,
         search: '',
         dropUp: false,
-        dropdownPosition: { top: 0, left: 0, width: 0 },
         options: config.options || [],
         selectedValue: config.selected,
         placeholder: config.placeholder || 'Pilih...',
@@ -234,31 +232,13 @@ function searchableDropdown(config) {
             return found ? found.label : this.placeholder;
         },
 
-        get dropdownStyle() {
-            if (this.dropUp) {
-                return `bottom: ${window.innerHeight - this.dropdownPosition.top + 4}px; left: ${this.dropdownPosition.left}px; width: ${this.dropdownPosition.width}px;`;
-            }
-            return `top: ${this.dropdownPosition.top + this.dropdownPosition.height + 4}px; left: ${this.dropdownPosition.left}px; width: ${this.dropdownPosition.width}px;`;
-        },
-
-        updatePosition() {
-            const rect = this.$el.getBoundingClientRect();
-            this.dropdownPosition = {
-                top: rect.top,
-                left: rect.left,
-                width: rect.width,
-                height: rect.height
-            };
-
-            const spaceBelow = window.innerHeight - rect.bottom;
-            const spaceAbove = rect.top;
-            this.dropUp = spaceBelow < 250 && spaceAbove > spaceBelow;
-        },
-
         toggle() {
             this.open = !this.open;
             if (this.open) {
-                this.updatePosition();
+                const rect = this.$el.getBoundingClientRect();
+                const spaceBelow = window.innerHeight - rect.bottom;
+                const spaceAbove = rect.top;
+                this.dropUp = spaceBelow < 250 && spaceAbove > spaceBelow;
                 this.$nextTick(() => {
                     this.$refs.searchInput?.focus();
                 });

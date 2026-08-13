@@ -78,7 +78,10 @@
 }
 
 .ssd-panel {
-    position: fixed;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 100%;
     z-index: 99999;
     background: #ffffff;
     border: 1px solid var(--border-color, #e2e8f0);
@@ -88,6 +91,11 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+}
+
+.ssd.drop-up .ssd-panel {
+    top: auto;
+    bottom: calc(100% + 4px);
 }
 
 .ssd-search {

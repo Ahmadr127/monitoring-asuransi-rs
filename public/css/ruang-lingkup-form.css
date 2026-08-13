@@ -323,12 +323,36 @@
 }
 
 /* ---- Modal Error ---- */
-.rl-modal-error {
-    display: none;
-    color: #dc2626;
-    font-size: 0.75rem;
-    margin-bottom: 0.75rem;
-}
+  .rl-modal-error {
+      display: none;
+      color: #dc2626;
+      font-size: 0.75rem;
+      margin-bottom: 0.75rem;
+  }
+
+  /* ---- Validasi Form (Ringkasan Error) ---- */
+  .rl-validation-summary {
+      background: #fef2f2;
+      border: 1px solid #fee2e2;
+      border-left: 4px solid #dc2626;
+      color: #b91c1c;
+      font-size: 0.8rem;
+      padding: 0.625rem 0.875rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+  }
+  .rl-validation-summary ul {
+      margin: 0.4rem 0 0 0;
+      padding-left: 1.2rem;
+  }
+  .rl-validation-summary li {
+      margin-bottom: 0.2rem;
+      line-height: 1.4;
+  }
+  .ssd-trigger.error {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15) !important;
+  }
 
 /* ---- Modal Primary Btn ---- */
 .rl-modal-btn-primary {

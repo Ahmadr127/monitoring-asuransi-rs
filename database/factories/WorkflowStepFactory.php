@@ -18,9 +18,7 @@ class WorkflowStepFactory extends Factory
             'name' => fake()->unique()->words(3, true),
             'approver_type' => 'role',
             'approver_value' => 'admin',
-            'can_reject' => true,
             'is_active' => true,
-            'skip_if' => null,
         ];
     }
 }

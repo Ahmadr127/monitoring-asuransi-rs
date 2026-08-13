@@ -7,19 +7,6 @@
     @endpush
 
     <div class="premium-container">
-        @if(session('success'))
-            <div class="alert-premium success"><strong>{{ session('success') }}</strong></div>
-        @endif
-        @if(session('error'))
-            <div class="alert-premium error"><strong>{{ session('error') }}</strong></div>
-        @endif
-        @if(session('info'))
-            <div class="alert-premium success"><strong>{{ session('info') }}</strong></div>
-        @endif
-        @if($errors->any())
-            <div class="alert-premium error"><ul class="pl-5 m-0">@foreach($errors->all() as $e) <li>{{ $e }}</li> @endforeach</ul></div>
-        @endif
-
         <!-- Header -->
         <div class="premium-card" style="margin-bottom:1.25rem">
             <div class="form-body flex-between-center">

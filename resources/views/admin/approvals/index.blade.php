@@ -7,13 +7,6 @@
     @endpush
 
     <div class="premium-container">
-        @if(session('success'))
-            <div class="alert-premium success"><strong>{{ session('success') }}</strong></div>
-        @endif
-        @if(session('error'))
-            <div class="alert-premium error"><strong>{{ session('error') }}</strong></div>
-        @endif
-
         <!-- Menunggu Persetujuan Saya -->
         <div class="premium-header">
             <div class="header-left">

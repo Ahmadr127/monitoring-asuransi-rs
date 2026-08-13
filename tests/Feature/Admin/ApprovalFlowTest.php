@@ -43,9 +43,9 @@ class ApprovalFlowTest extends TestCase
 
         $wf = WorkflowDefinition::factory()->create(['is_active' => true, 'code' => 'kerjasama_baru']);
         $wf->steps()->create(['step_order' => 1, 'name' => 'Review Legal',
-            'approver_type' => 'department_head', 'approver_value' => (string) $dept->id, 'can_reject' => true]);
+            'approver_type' => 'department_head', 'approver_value' => (string) $dept->id, 'is_active' => true]);
         $wf->steps()->create(['step_order' => 2, 'name' => 'Persetujuan Admin',
-            'approver_type' => 'user', 'approver_value' => (string) $this->setup['admin']->id, 'can_reject' => true]);
+            'approver_type' => 'user', 'approver_value' => (string) $this->setup['admin']->id, 'is_active' => true]);
 
         $this->setup['penginput'] = $penginput;
         $this->setup['legalHead'] = $legalHead;
