@@ -65,38 +65,12 @@
                 'actions' => '<a href="' . route('admin.approvals.show', $req) . '" class="btn-premium-submit w-auto">' . ($req->my_step_status === 'approved' ? 'Lihat' : 'Tinjau') . '</a>',
             ];
         })->values();
-
-        $myRows = $requestedByMe->map(function ($req) use ($statusBadge) {
-            $subject = $req->subject;
-            $totalSteps = $req->steps_count ?? $req->steps->count();
-            $isRunning = $req->status === 'in_review';
-
-            return [
-                'search' => strtolower(
-                    ($subject?->nama_asuransi ?? '') . ' ' .
-                    ($req->submitted_at?->format('d M Y H:i') ?? '') . ' ' .
-                    str_replace('_', ' ', $req->status)
-                ),
-                'cells' => [
-                    'nama_asuransi' => '<div class="font-bold-700 color-slate-900">' . e($subject?->nama_asuransi ?? 'Kontrak') . '</div>',
-                    'step' => '<span class="badge-premium badge-slate">' . (int) $req->current_step . '/' . (int) $totalSteps . '</span>',
-                    'status' => $isRunning
-                        ? '<span class="badge-premium badge-warning">SEDANG PROSES</span>'
-                        : $statusBadge($req->status),
-                ],
-                'cols' => [
-                    'nama_asuransi' => strtolower($subject?->nama_asuransi ?? ''),
-                    'status' => strtolower($req->status),
-                ],
-                'url' => route('admin.approvals.show', $req),
-            ];
-        })->values();
     @endphp
 
     <style>
         .approval-grid {
             display: grid;
-            grid-template-columns: minmax(0, 2.8fr) minmax(0, 7.2fr);
+            grid-template-columns: minmax(0, 1fr);
             gap: 1.5rem;
             align-items: start;
             width: 100%;
@@ -134,29 +108,7 @@
     </style>
 
     <div class="premium-container approval-page">
-        
-        
         <div class="approval-grid">
-            <x-data-table
-                id="myRequestsTable"
-                title="Pengajuan Saya"
-                subtitle="Pengajuan kontrak yang pernah Anda buat"
-                :columns="[
-                    ['label' => 'No', 'key' => '__no', 'center' => true, 'width' => 50],
-                    ['label' => 'Kontrak', 'key' => 'nama_asuransi', 'searchable' => true, 'placeholder' => 'Cari kontrak...'],
-                    ['label' => 'Progress', 'key' => 'step', 'center' => true, 'width' => 90],
-                    ['label' => 'Status', 'key' => 'status', 'center' => true, 'width' => 150, 'searchable' => true, 'placeholder' => 'Cari status...'],
-                ]"
-                :rows="$myRows"
-                empty-text="Belum ada pengajuan."
-            >
-                <x-slot name="headerAction">
-                    <a href="{{ route('admin.ruang-lingkup.create') }}" class="btn-premium-submit w-auto" style="padding:0.4rem 0.9rem;font-size:0.75rem">
-                        <x-icon name="plus-circle-solid" class="icon-14" /> Tambah
-                    </a>
-                </x-slot>
-            </x-data-table>
-
             <x-data-table
                 id="pendingTable"
                 title="Menunggu Persetujuan Saya"
@@ -182,7 +134,16 @@
                 ]"
                 :rows="$pendingRows"
                 empty-text="Tidak ada pengajuan yang menunggu Anda."
-            />
+            >
+                <x-slot name="headerAction">
+                    <a href="{{ route('admin.approvals.my') }}" class="btn-secondary">
+                        <x-icon name="document" class="icon-16" /> Pengajuan Saya
+                    </a>
+                    <a href="{{ route('admin.ruang-lingkup.create') }}" class="btn-premium-submit w-auto">
+                        <x-icon name="plus-circle-solid" class="icon-18" /> Tambah Kerjasama
+                    </a>
+                </x-slot>
+            </x-data-table>
         </div>
     </div>
 </x-app-layout>

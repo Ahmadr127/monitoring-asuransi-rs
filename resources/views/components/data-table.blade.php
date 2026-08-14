@@ -238,6 +238,12 @@
             font-size: 11px;
             color: #64748b;
         }
+        .data-table-header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: none;
+        }
         .data-table-row[onclick] {
             transition: background 0.15s ease;
         }

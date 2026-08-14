@@ -46,6 +46,9 @@
             width: 100%;
             max-width: 100%;
         }
+        .approval-show-grid.single-col {
+            grid-template-columns: minmax(0, 1fr);
+        }
         .approval-show-grid > * {
             min-width: 0;
             max-width: 100%;
@@ -204,7 +207,7 @@
             </span>
         </div>
 
-        <div class="approval-show-grid">
+        <div class="approval-show-grid {{ $showDecision ? '' : 'single-col' }}">
             <div class="premium-card">
                 <div class="card-header flex-between-center">
                     <h2>Ringkasan Kontrak</h2>

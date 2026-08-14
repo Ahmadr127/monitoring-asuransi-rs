@@ -202,6 +202,7 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     // Approval — antrean & keputusan (approver), detail & cancel boleh oleh pengaju
     Route::middleware(['permission:approval'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals.index');
+        Route::get('/approvals/my', [ApprovalController::class, 'myRequests'])->name('approvals.my');
         Route::post('/approvals/{approval}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
         Route::post('/approvals/{approval}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
     });

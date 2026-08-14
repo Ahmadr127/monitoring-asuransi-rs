@@ -17,13 +17,19 @@ class ApprovalController extends Controller
         $user = auth()->user();
 
         $pending = $service->pendingForMe($user);
-        $requestedByMe = $service->requestedByMe($user);
 
         $pending->each(function (ApprovalRequest $req) use ($user, $service) {
             $req->my_step_status = $service->myStepStatus($req, $user);
         });
 
-        return view('admin.approvals.index', compact('pending', 'requestedByMe'));
+        return view('admin.approvals.index', compact('pending'));
+    }
+
+    public function myRequests(WorkflowService $service)
+    {
+        $requestedByMe = $service->requestedByMe(auth()->user());
+
+        return view('admin.approvals.my', compact('requestedByMe'));
     }
 
     public function show(ApprovalRequest $approval, WorkflowService $service)
