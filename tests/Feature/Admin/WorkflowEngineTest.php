@@ -108,21 +108,30 @@ class WorkflowEngineTest extends TestCase
         $this->assertEquals('aktif', $contract->status);
     }
 
-    public function test_self_approval_is_skipped(): void
+    public function test_self_approval_is_allowed(): void
     {
         $admin = $this->makeUserWithRole('admin');
         $wf = $this->createActiveWorkflow([
             ['name' => 'Step Admin', 'approver_type' => 'user', 'approver_value' => (string) $admin->id],
         ]);
 
-        // Submitter adalah admin juga → langkahnya otomatis di-skip (anti self-approval) → langsung approved.
+        // Submitter adalah admin juga → langkahnya TIDAK di-skip, ia boleh menyetujui sendiri.
         $contract = $this->makeDraftContract();
 
         $request = $this->service->start($contract, $admin);
+        $request->load('steps');
 
+        $this->assertEquals('in_review', $request->status);
+        $this->assertEquals('pending', $request->steps->first()->status);
+        $this->assertEquals('in_review', $contract->refresh()->approval_status->value);
+
+        $this->service->approve($request->fresh(), $admin);
+
+        $request->refresh();
+        $contract->refresh();
         $this->assertEquals('approved', $request->status);
-        $this->assertEquals('approved', $contract->refresh()->approval_status->value);
-        $this->assertEquals('aktif', $contract->refresh()->status);
+        $this->assertEquals('approved', $contract->approval_status->value);
+        $this->assertEquals('aktif', $contract->status);
     }
 
     public function test_department_type_any_member_can_approve(): void
@@ -175,6 +184,11 @@ class WorkflowEngineTest extends TestCase
         $contract->refresh();
         $this->assertEquals('rejected', $request->status);
         $this->assertEquals('rejected', $contract->approval_status->value);
+
+        // Step yang ditolak = rejected, step berikutnya yang masih menunggu ikut di-skip.
+        $request->load('steps');
+        $this->assertEquals('rejected', $request->steps->get(0)->status);
+        $this->assertEquals('skipped', $request->steps->get(1)->status);
 
         // Re-submit membuat request baru
         $request2 = $this->service->start($contract->fresh(), $penginput->fresh());

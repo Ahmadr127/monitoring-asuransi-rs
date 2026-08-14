@@ -10,6 +10,8 @@ use App\Models\RuangLingkup;
 use App\Models\User;
 use App\Models\WorkflowDefinition;
 use App\Models\WorkflowStep;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -53,12 +55,6 @@ class WorkflowService
             foreach ($workflow->steps as $step) {
                 $approverId = $this->resolveApproverUserId($step, $requestor);
 
-                $status = 'pending';
-                if ($approverId && (int) $approverId === (int) $requestor->id) {
-                    // anti self-approval
-                    $status = 'skipped';
-                }
-
                 $request->steps()->create([
                     'workflow_step_id' => $step->id,
                     'step_order' => $step->step_order,
@@ -67,10 +63,10 @@ class WorkflowService
                     'approver_value' => $step->approver_value,
                     'approver_user_id' => $approverId,
                     'requires_attachment' => $step->requires_attachment,
-                    'status' => $status,
+                    'status' => 'pending',
                 ]);
 
-                if ($status === 'pending' && $nextPendingOrder === null) {
+                if ($nextPendingOrder === null) {
                     $nextPendingOrder = $step->step_order;
                 }
             }
@@ -85,9 +81,9 @@ class WorkflowService
 
             $this->logHistory($contract, 'submitted', null, 'kontrak', $requestor, 'Pengajuan persetujuan kontrak');
 
-            // Jika seluruh step terlewat (skip/self-approval) → langsung final.
+            // Jika seluruh step terlewat (tidak ada step pending) → langsung final.
             if ($this->pendingSteps($request)->isEmpty()) {
-                $this->finalizeApproved($request, $requestor, 'Seluruh step dilalui otomatis (skip/self-approval).');
+                $this->finalizeApproved($request, $requestor, 'Seluruh step dilalui otomatis.');
             }
 
             return $request->fresh(['steps']);
@@ -98,7 +94,7 @@ class WorkflowService
      * Approve step saat ini; jika semua step selesai → kontrak menjadi aktif.
      */
     public function approve(ApprovalRequest $request, User $user, ?string $note = null,
-        ?string $attachmentPath = null, ?string $attachmentName = null): ApprovalRequest
+        ?UploadedFile $attachment = null): ApprovalRequest
     {
         if ($request->status === 'approved' || $request->status === 'rejected' || $request->status === 'cancelled') {
             throw new WorkflowException('Pengajuan sudah ditutup ('.strtoupper($request->status).').');
@@ -110,8 +106,15 @@ class WorkflowService
             throw new WorkflowException('Anda tidak berhak menyetujui langkah ini.');
         }
 
-        if ($step->requires_attachment && ! $attachmentPath) {
+        if ($step->requires_attachment && ! $attachment) {
             throw new WorkflowException('Lampiran PDF wajib diunggah untuk menyetujui langkah ini.');
+        }
+
+        $attachmentPath = null;
+        $attachmentName = null;
+        if ($attachment) {
+            $attachmentName = $attachment->getClientOriginalName();
+            $attachmentPath = $attachment->store('approval-attachments/'.$request->id, 'public');
         }
 
         return DB::transaction(function () use ($request, $step, $user, $note, $attachmentPath, $attachmentName) {
@@ -162,6 +165,16 @@ class WorkflowService
                 'decided_at' => now(),
             ]);
 
+            // Step lain yang masih menunggu ikut di-skip karena alur sudah ditolak.
+            $request->steps()
+                ->where('status', 'pending')
+                ->where('id', '!=', $step->id)
+                ->update([
+                    'status' => 'skipped',
+                    'decided_by' => $user->id,
+                    'decided_at' => now(),
+                ]);
+
             $request->update([
                 'status' => 'rejected',
                 'decided_at' => now(),
@@ -170,7 +183,10 @@ class WorkflowService
             $contract = $request->subject;
 
             if ($contract) {
-                $contract->update(['approval_status' => ApprovalStatus::REJECTED]);
+                $contract->update([
+                    'approval_status' => ApprovalStatus::REJECTED,
+                    'current_approval_request_id' => null,
+                ]);
                 $this->logHistory($contract, 'rejected', null, 'approval', $user,
                     'Pengajuan ditolak pada langkah: '.$step->title.($note ? " — $note" : ''));
             }
@@ -238,10 +254,6 @@ class WorkflowService
             return false;
         }
 
-        if ((int) $request->requested_by === (int) $user->id) {
-            return false; // anti self-approval
-        }
-
         if ($user->isAdmin()) {
             return true; // admin override
         }
@@ -255,6 +267,63 @@ class WorkflowService
         }
 
         return false;
+    }
+
+    /**
+     * Antrean pengajuan yang menjadi tugas persetujuan user (approver langsung
+     * atau anggota departemen). Dilengkapi eager-loading + withCount agar tanpa N+1.
+     */
+    public function pendingForMe(User $user): Collection
+    {
+        return ApprovalRequest::pendingForMe($user)->get();
+    }
+
+    /**
+     * Seluruh pengajuan yang dibuat oleh user.
+     */
+    public function requestedByMe(User $user): Collection
+    {
+        return ApprovalRequest::requestedByMe($user)->get();
+    }
+
+    /**
+     * Muat relasi lengkap untuk halaman detail pengajuan.
+     */
+    public function detail(ApprovalRequest $approval): ApprovalRequest
+    {
+        return $approval->load([
+            'subject',
+            'requestor',
+            'workflow',
+            'steps.approver',
+            'steps.decidedBy',
+        ]);
+    }
+
+    /**
+     * Status step milik user pada sebuah pengajuan.
+     *
+     * @return string|null pending | approved | skipped | rejected | cancelled | null
+     */
+    public function myStepStatus(ApprovalRequest $request, User $user): ?string
+    {
+        if ($user->isAdmin()) {
+            return null;
+        }
+
+        $step = $request->steps->first(function (ApprovalStep $step) use ($user) {
+            if ($step->approver_user_id) {
+                return (int) $step->approver_user_id === (int) $user->id;
+            }
+
+            if ($step->approver_type === 'department' && $user->organization_unit_id) {
+                return (int) $step->approver_value === (int) $user->organization_unit_id;
+            }
+
+            return false;
+        });
+
+        return $step?->status;
     }
 
     /**

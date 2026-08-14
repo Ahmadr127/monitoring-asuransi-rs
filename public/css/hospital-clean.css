@@ -1300,6 +1300,12 @@ html.sidebar-is-collapsed .header-color-strip,
     color: #dc2626;
 }
 
+.alert-info {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+}
+
 .alert-icon {
     width: 18px;
     height: 18px;

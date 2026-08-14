@@ -95,7 +95,7 @@
     })"
     @if($wrapperId) id="{{ $wrapperId }}" @endif
     class="ssd"
-    :class="{ 'drop-up': dropUp }"
+    :class="{ 'drop-up': dropUp, 'ssd-open': open }"
     @click.away="close()"
 >
     @if($label)

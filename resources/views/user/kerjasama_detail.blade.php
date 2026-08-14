@@ -346,6 +346,13 @@
                                     'rollover' => 'Perpanjangan Kontrak',
                                     'updated' => 'Perubahan Kontrak',
                                     'status_change' => 'Perubahan Status',
+                                    'submitted' => 'Pengajuan Persetujuan',
+                                    'step_approved' => 'Langkah Disetujui',
+                                    'approved' => 'Kontrak Disetujui',
+                                    'rejected' => 'Pengajuan Ditolak',
+                                    'cancelled' => 'Pengajuan Dibatalkan',
+                                    'reminder_sent' => 'Reminder Terkirim',
+                                    'expired_reminder_sent' => 'Reminder Kontrak Berakhir',
                                     default => 'Perubahan Kontrak',
                                 };
                                 $showDates = $history->old_end_date || $history->new_end_date;

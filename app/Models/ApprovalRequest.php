@@ -50,4 +50,38 @@ class ApprovalRequest extends Model
         return $this->hasOne(ApprovalStep::class)->where('step_order', $this->current_step)
             ->where('status', 'pending');
     }
+
+    /**
+     * Pengajuan yang menjadi tugas persetujuan user (approver langsung atau
+     * anggota departemen). Eager-load + withCount disiapkan di sini.
+     */
+    public function scopePendingForMe($query, User $user)
+    {
+        return $query
+            ->with(['subject', 'requestor', 'workflow', 'steps'])
+            ->withCount('steps')
+            ->whereHas('steps', function ($q) use ($user) {
+                $q->where('approver_user_id', $user->id);
+
+                if ($user->organization_unit_id) {
+                    $q->orWhere(function ($q2) use ($user) {
+                        $q2->where('approver_type', 'department')
+                            ->where('approver_value', (string) $user->organization_unit_id);
+                    });
+                }
+            })
+            ->orderByDesc('created_at');
+    }
+
+    /**
+     * Pengajuan yang dibuat oleh user.
+     */
+    public function scopeRequestedByMe($query, User $user)
+    {
+        return $query
+            ->with(['subject', 'requestor', 'workflow', 'steps'])
+            ->withCount('steps')
+            ->where('requested_by', $user->id)
+            ->orderByDesc('created_at');
+    }
 }

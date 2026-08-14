@@ -59,4 +59,11 @@ return [
     'role_key_map' => [
         'ADMINISTRATOR' => 'admin',
     ],
+
+    /*
+    | Role simutu (tbl_role.nama_role) yang menandakan KEPALA DEPARTEMEN.
+    | Saat sync departemen, user ber-role ini di unit terkait dijadikan
+    | organization_units.head_id (cocok via users.unit_id -> tbl_unit -> kode_unit).
+    */
+    'head_role_names' => ['Kepala unit', 'Kepala'],
 ];

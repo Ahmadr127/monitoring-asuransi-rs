@@ -50,7 +50,7 @@
 
         <!-- User Info -->
         <div class="navbar-user">
-            <span class="user-name">👋 Hi, {{ auth()->user()->role->name ?? 'User' }}</span>
+            <span class="user-name">👋 Hi, {{ auth()->user()->name ?? 'User' }}</span>
         </div>
 
         <div class="action-divider"></div>

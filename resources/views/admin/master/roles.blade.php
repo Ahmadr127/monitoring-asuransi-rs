@@ -155,52 +155,45 @@
     </div>
 
     <!-- Edit Modal -->
-    <div id="editModal" class="modal-overlay">
-        <div class="modal-container">
-            <div class="card-header rounded-t-16">
-                <h2>Edit Role</h2>
-                <button onclick="closeEditModal()" class="modal-close-btn">
-                    <x-icon name="close" class="icon-20" />
-                </button>
+    <x-modal id="editModal" title="Edit Role">
+        <form id="editForm" method="POST">
+            @csrf @method('PUT')
+            <div class="form-group">
+                <label>Nama Role <span class="text-danger">*</span></label>
+                <input type="text" id="edit_name" name="name" class="form-input-minimal" required>
             </div>
-            <div class="form-body">
-                <form id="editForm" method="POST">
-                    @csrf @method('PUT')
-                    <div class="form-group">
-                        <label>Nama Role <span class="text-danger">*</span></label>
-                        <input type="text" id="edit_name" name="name" class="form-input-minimal" required>
-                    </div>
-                    <div class="form-group mb-8">
-                        <label>Key Sistem <span class="text-danger">*</span></label>
-                        <input type="text" id="edit_key" name="key" class="form-input-minimal" required>
-                        <div class="text-xs-muted mt-1">Kunci internal (huruf
-                            kecil, tanpa spasi)</div>
-                    </div>
-                    <div class="form-group mb-8">
-                        <label>Permissions</label>
-                        <div class="flex-between-center mb-1">
-                            <span class="text-xs-muted">Centang permission yang dimiliki role ini</span>
-                            <span>
-                                <button type="button" onclick="toggleAllPerms(true)" class="btn-secondary" style="font-size:11px;padding:2px 8px">Semua</button>
-                                <button type="button" onclick="toggleAllPerms(false)" class="btn-secondary" style="font-size:11px;padding:2px 8px">Kosongkan</button>
-                            </span>
-                        </div>
-                        <div class="perm-checklist" style="max-height:200px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;padding:0.75rem">
-                            @forelse($permissions as $perm)
-                                <label class="flex-between-center" style="padding:3px 0;cursor:pointer">
-                                    <span><code class="key-badge">{{ $perm->name }}</code></span>
-                                    <input type="checkbox" name="permissions[]" value="{{ $perm->id }}" class="perm-check">
-                                </label>
-                            @empty
-                                <p class="text-xs-muted">Belum ada permission.</p>
-                            @endforelse
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-premium-submit">Simpan Perubahan</button>
-                </form>
+            <div class="form-group mb-8">
+                <label>Key Sistem <span class="text-danger">*</span></label>
+                <input type="text" id="edit_key" name="key" class="form-input-minimal" required>
+                <div class="text-xs-muted mt-1">Kunci internal (huruf
+                    kecil, tanpa spasi)</div>
             </div>
-        </div>
-    </div>
+            <div class="form-group mb-8">
+                <label>Permissions</label>
+                <div class="flex-between-center mb-1">
+                    <span class="text-xs-muted">Centang permission yang dimiliki role ini</span>
+                    <span>
+                        <button type="button" onclick="toggleAllPerms(true)" class="btn-secondary" style="font-size:11px;padding:2px 8px">Semua</button>
+                        <button type="button" onclick="toggleAllPerms(false)" class="btn-secondary" style="font-size:11px;padding:2px 8px">Kosongkan</button>
+                    </span>
+                </div>
+                <div class="perm-checklist" style="max-height:220px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;padding:0.75rem">
+                    @forelse($permissions as $perm)
+                        <label class="flex-between-center" style="padding:3px 0;cursor:pointer">
+                            <span><code class="key-badge">{{ $perm->name }}</code></span>
+                            <input type="checkbox" name="permissions[]" value="{{ $perm->id }}" class="perm-check">
+                        </label>
+                    @empty
+                        <p class="text-xs-muted">Belum ada permission.</p>
+                    @endforelse
+                </div>
+            </div>
+        </form>
+
+        <x-slot name="footer">
+            <button type="submit" form="editForm" class="btn-premium-submit">Simpan Perubahan</button>
+        </x-slot>
+    </x-modal>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
@@ -337,17 +330,11 @@
                 const el = document.querySelector('.perm-check[value="' + pid + '"]');
                 if (el) { el.checked = true; }
             });
-            $('#editModal').addClass('active');
+            XModal.open('editModal');
         };
 
         window.closeEditModal = function () {
-            $('#editModal').removeClass('active');
+            XModal.close('editModal');
         };
-
-
-
-        $(document).click(function (e) {
-            if ($(e.target).is('#editModal')) closeEditModal();
-        });
     </script>
 </x-app-layout>

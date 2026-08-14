@@ -158,29 +158,47 @@
         </a>
         @endif
 
-        @if(auth()->user()->hasPermission('roles'))
-        <a href="{{ route('admin.roles.index') }}" class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}" title="Manajemen Role">
-            <div class="nav-icon">
-                <x-icon name="shield-check-solid" class="icon-lg" />
-            </div>
-            <span class="nav-text">Manajemen Role</span>
-        </a>
+        @if(auth()->user()->hasPermission('roles') || auth()->user()->hasPermission('users'))
+        @php
+            $isUserMgmtActive = request()->routeIs('admin.users.*') ||
+                                request()->routeIs('admin.roles.*') ||
+                                request()->routeIs('admin.permissions.*');
+        @endphp
 
-        <a href="{{ route('admin.permissions.index') }}" class="nav-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}" title="Manajemen Permission">
-            <div class="nav-icon">
-                <x-icon name="list" class="icon-lg" />
-            </div>
-            <span class="nav-text">Manajemen Permission</span>
-        </a>
-        @endif
+        <div class="nav-submenu-wrapper">
+            <a href="#" class="nav-link nav-link-parent {{ $isUserMgmtActive ? 'active' : '' }}" title="Manajemen User" onclick="toggleSubmenu(event, this)">
+                <div class="nav-icon">
+                    <x-icon name="users-solid" class="icon-lg" />
+                </div>
+                <span class="nav-text">Manajemen User</span>
+                <x-icon name="chevron-down" class="submenu-arrow" />
+            </a>
+            <div class="nav-submenu {{ $isUserMgmtActive ? 'open' : '' }}">
+                @if(auth()->user()->hasPermission('users'))
+                <a href="{{ route('admin.users.index') }}" class="nav-link nav-link-sub {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" title="Data User">
+                    <div class="nav-icon">
+                        <x-icon name="user-group" class="icon-lg" />
+                    </div>
+                    <span class="nav-text">Data User</span>
+                </a>
+                @endif
 
-        @if(auth()->user()->hasPermission('users'))
-        <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" title="Manajemen User">
-            <div class="nav-icon">
-                <x-icon name="users-solid" class="icon-lg" />
+                @if(auth()->user()->hasPermission('roles'))
+                <a href="{{ route('admin.roles.index') }}" class="nav-link nav-link-sub {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}" title="Manajemen Role">
+                    <div class="nav-icon">
+                        <x-icon name="shield-check-solid" class="icon-lg" />
+                    </div>
+                    <span class="nav-text">Manajemen Role</span>
+                </a>
+                <a href="{{ route('admin.permissions.index') }}" class="nav-link nav-link-sub {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}" title="Manajemen Permission">
+                    <div class="nav-icon">
+                        <x-icon name="list" class="icon-lg" />
+                    </div>
+                    <span class="nav-text">Manajemen Permission</span>
+                </a>
+                @endif
             </div>
-            <span class="nav-text">Manajemen User</span>
-        </a>
+        </div>
         @endif
     </nav>
 </aside>

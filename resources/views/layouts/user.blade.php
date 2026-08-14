@@ -29,7 +29,6 @@
     <link rel="stylesheet" href="{{ asset('css/master-data.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('css/ruang-lingkup.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('css/settings.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/roles.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('css/kerjasama-list.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('css/notifications.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard-admin.css') }}?v={{ time() }}">

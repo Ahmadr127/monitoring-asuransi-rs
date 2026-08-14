@@ -137,7 +137,16 @@ class UserController extends Controller
             $stats = app(SimutuUserSyncService::class)->sync();
 
             return redirect()->route('admin.users.index')
-                ->with('success', "Simutu sync selesai: {$stats['checked']} dicek, {$stats['created']} dibuat, {$stats['updated']} diperbarui.");
+                ->with('success', sprintf(
+                    'Simutu sync selesai: %d user dicek, %d dibuat, %d diperbarui; %d departemen dicek, %d dibuat, %d diperbarui, %d kepala dihubungkan.',
+                    $stats['checked'],
+                    $stats['created'],
+                    $stats['updated'],
+                    $stats['units_checked'],
+                    $stats['units_created'],
+                    $stats['units_updated'],
+                    $stats['heads_mapped']
+                ));
         } catch (\Exception $e) {
             Log::error('Gagal sync dari Simutu: '.$e->getMessage());
 

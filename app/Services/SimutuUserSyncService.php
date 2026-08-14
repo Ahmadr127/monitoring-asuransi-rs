@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\OrganizationType;
+use App\Models\OrganizationUnit;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +30,159 @@ class SimutuUserSyncService
     }
 
     /**
+     * Ambil seluruh departemen/unit dari simutu.
+     */
+    protected function fetchSimutuUnits(): \Illuminate\Support\Collection
+    {
+        return DB::connection($this->connection())
+            ->table('tbl_unit')
+            ->select(
+                'tbl_unit.id as simutu_unit_id',
+                'tbl_unit.kode_unit',
+                'tbl_unit.nama_unit',
+                'tbl_unit.deskripsi_unit',
+                'tbl_unit.status_unit'
+            )
+            ->get();
+    }
+
+    /**
+     * Ambil calon kepala departemen (user simutu dengan role kepala) + unit-nya.
+     */
+    protected function fetchSimutuHeads(): \Illuminate\Support\Collection
+    {
+        $headRoleNames = config('simutu_sync.head_role_names', ['Kepala unit', 'Kepala']);
+
+        return DB::connection($this->connection())
+            ->table('users')
+            ->join('tbl_role', 'users.role_id', '=', 'tbl_role.id')
+            ->select(
+                'users.id as simutu_user_id',
+                'users.unit_id as simutu_unit_id'
+            )
+            ->whereIn('tbl_role.nama_role', $headRoleNames)
+            ->whereNotNull('users.unit_id')
+            ->orderBy('users.updated_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Cache id organization_units lokal per kode unit.
+     */
+    protected ?array $localUnitIdsByCode = null;
+
+    protected function localUnitIdByCode(?string $code): ?int
+    {
+        if ($this->localUnitIdsByCode === null) {
+            $this->localUnitIdsByCode = OrganizationUnit::pluck('id', 'code')->all();
+        }
+
+        return $code ? ($this->localUnitIdsByCode[$code] ?? null) : null;
+    }
+
+    /**
+     * Sinkronisasi departemen (tbl_unit) ke tabel organization_units lokal.
+     *
+     * @return array{units_checked:int, units_created:int, units_updated:int}
+     */
+    public function syncDepartments(bool $dryRun = false): array
+    {
+        $stats = ['units_checked' => 0, 'units_created' => 0, 'units_updated' => 0];
+
+        if (! $this->enabled()) {
+            return $stats;
+        }
+
+        $type = OrganizationType::firstOrCreate(
+            ['name' => 'departemen'],
+            [
+                'display_name' => 'Departemen',
+                'level' => 3,
+                'description' => 'Unit/departemen hasil sinkronisasi dari Simutu.',
+            ]
+        );
+
+        foreach ($this->fetchSimutuUnits() as $unit) {
+            $u = (array) $unit;
+            $stats['units_checked']++;
+
+            $data = [
+                'name' => $u['nama_unit'],
+                'type_id' => $type->id,
+                'description' => $u['deskripsi_unit'] ?? null,
+                'is_active' => ($u['status_unit'] ?? '') === 'aktif',
+            ];
+
+            $existing = OrganizationUnit::where('code', $u['kode_unit'])->first();
+
+            if ($existing) {
+                if (! $dryRun) {
+                    $existing->update($data);
+                }
+                $stats['units_updated']++;
+            } else {
+                if (! $dryRun) {
+                    OrganizationUnit::create(array_merge(['code' => $u['kode_unit']], $data));
+                }
+                $stats['units_created']++;
+            }
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Pasang organization_units.head_id dari user simutu ber-role kepala.
+     * Jalankan SETELAH sinkronisasi users agar kepala sudah ada di tabel users lokal.
+     *
+     * @return array{heads_mapped:int}
+     */
+    public function syncDepartmentHeads(bool $dryRun = false): array
+    {
+        $stats = ['heads_mapped' => 0];
+
+        if (! $this->enabled()) {
+            return $stats;
+        }
+
+        $codeBySimutuUnitId = [];
+        foreach ($this->fetchSimutuUnits() as $unit) {
+            $u = (array) $unit;
+            $codeBySimutuUnitId[$u['simutu_unit_id']] = $u['kode_unit'];
+        }
+
+        $unitIdsByCode = OrganizationUnit::pluck('id', 'code')->all();
+
+        foreach ($this->fetchSimutuHeads() as $head) {
+            $h = (array) $head;
+
+            $code = $codeBySimutuUnitId[$h['simutu_unit_id']] ?? null;
+            $unitId = $code ? ($unitIdsByCode[$code] ?? null) : null;
+
+            if (! $unitId) {
+                continue;
+            }
+
+            $headUser = User::where('simutu_id', $h['simutu_user_id'])->first();
+            if (! $headUser) {
+                continue;
+            }
+
+            $unit = OrganizationUnit::find($unitId);
+            if (! $unit || (int) $unit->head_id === (int) $headUser->id) {
+                continue;
+            }
+
+            $stats['heads_mapped']++;
+            if (! $dryRun) {
+                $unit->update(['head_id' => $headUser->id]);
+            }
+        }
+
+        return $stats;
+    }
+
+    /**
      * Ambil seluruh pegawai aktif/pending dari simutu (dengan nama unit & role).
      */
     protected function fetchSimutuUsers(): \Illuminate\Support\Collection
@@ -46,7 +201,9 @@ class SimutuUserSyncService
                 'users.profesi',
                 'users.status_user',
                 'users.updated_at',
+                'users.unit_id as simutu_unit_id',
                 'tbl_unit.nama_unit',
+                'tbl_unit.kode_unit',
                 'tbl_role.nama_role'
             )
             ->get();
@@ -75,7 +232,9 @@ class SimutuUserSyncService
                     'users.password',
                     'users.profesi',
                     'users.status_user',
+                    'users.unit_id as simutu_unit_id',
                     'tbl_unit.nama_unit',
+                    'tbl_unit.kode_unit',
                     'tbl_role.nama_role'
                 )
                 ->where('users.username', $username)
@@ -172,6 +331,11 @@ class SimutuUserSyncService
             'simutu_synced_at' => now(),
         ];
 
+        $unitId = $this->localUnitIdByCode($simutu['kode_unit'] ?? null);
+        if ($unitId) {
+            $data['organization_unit_id'] = $unitId;
+        }
+
         if (config('simutu_sync.sync_password', true) && ! empty($simutu['password'])) {
             $data['password'] = $simutu['password'];
         }
@@ -198,18 +362,25 @@ class SimutuUserSyncService
     }
 
     /**
-     * Jalankan sinkronisasi penuh.
+     * Jalankan sinkronisasi penuh (departemen + users + kepala departemen).
      *
-     * @return array{created:int, updated:int, checked:int}
+     * @return array{checked:int, created:int, updated:int,
+     *               units_checked:int, units_created:int, units_updated:int,
+     *               heads_mapped:int}
      */
     public function sync(bool $dryRun = false): array
     {
         $stats = ['checked' => 0, 'created' => 0, 'updated' => 0];
 
         if (! $this->enabled()) {
-            return $stats;
+            return $this->emptyStats();
         }
 
+        // 1) Departemen dulu agar FK organization_unit_id valid saat user disinkron.
+        $stats = array_merge($stats, $this->syncDepartments($dryRun));
+        $this->localUnitIdsByCode = null;
+
+        // 2) Users (sekaligus relasi organization_unit_id).
         foreach ($this->fetchSimutuUsers() as $simutu) {
             $stats['checked']++;
             $simutuArr = (array) $simutu;
@@ -233,6 +404,22 @@ class SimutuUserSyncService
             }
         }
 
+        // 3) Kepala departemen (butuh users lokal sudah tersinkron).
+        $stats = array_merge($stats, $this->syncDepartmentHeads($dryRun));
+
         return $stats;
+    }
+
+    protected function emptyStats(): array
+    {
+        return [
+            'checked' => 0,
+            'created' => 0,
+            'updated' => 0,
+            'units_checked' => 0,
+            'units_created' => 0,
+            'units_updated' => 0,
+            'heads_mapped' => 0,
+        ];
     }
 }

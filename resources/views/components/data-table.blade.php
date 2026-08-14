@@ -8,15 +8,17 @@
         title="Menunggu Persetujuan Saya"
         subtitle="Kontrak yang menunggu keputusan Anda"
         :badge="$pending->count()"
-        :columns="[
-            ['label' => 'No', 'key' => '__no', 'center' => true, 'min' => 50],
-            ['label' => 'Kontrak', 'key' => 'nama_asuransi', 'min' => 260, 'searchable' => true, 'placeholder' => 'Cari kontrak...'],
-            ['label' => 'Aksi', 'key' => '__actions', 'center' => true, 'min' => 110],
-        ]"
+        :columns="[...]"
         :rows="$pendingRows"
         empty-text="Tidak ada pengajuan."
         :per-page="10"
-    />
+    >
+        <x-slot name="headerAction">
+            <a href="..." class="btn-premium-submit w-auto">Tambah</a>
+        </x-slot>
+    </x-data-table>
+
+    $headerAction (optional named slot): konten pengganti badge di kanan atas header tabel.
 
     $rows: collection of arrays with:
         'cells'   => [columnKey => rendered HTML],
@@ -53,9 +55,13 @@
                 <h1>{{ $title }}</h1>
                 @if($subtitle)<p>{{ $subtitle }}</p>@endif
             </div>
-            @if($badge !== null)
-                <span class="badge-premium badge-teal">{{ $badge }}</span>
-            @endif
+            <div class="data-table-header-right">
+                @isset($headerAction)
+                    {{ $headerAction }}
+                @elseif($badge !== null)
+                    <span class="badge-premium badge-teal">{{ $badge }}</span>
+                @endif
+            </div>
         </div>
         @endif
 
@@ -237,6 +243,13 @@
         }
         .data-table-row[onclick]:hover {
             background: #f0fdfa !important;
+        }
+        .dt-truncate {
+            display: block;
+            max-width: 240px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     </style>
 

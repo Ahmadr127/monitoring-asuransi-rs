@@ -10,6 +10,53 @@
     </script>
     @endpush
 
+    @php
+        $editIcon = '<svg class="icon-14" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>';
+        $trashIcon = '<svg class="icon-14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>';
+        $shieldIcon = '<svg class="icon-14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>';
+
+        $userRows = $users->map(function ($user) use ($editIcon, $trashIcon, $shieldIcon) {
+            $isAdmin = $user->isAdmin();
+
+            $actions = '<button onclick="openEditModal('
+                .(int) $user->id.', \''
+                .e(addslashes($user->name)).'\', \''
+                .e(addslashes($user->username)).'\', \''
+                .e(addslashes($user->email)).'\', \''
+                .(string) $user->role_id.'\', \''
+                .e(addslashes($user->nip ?? '')).'\', \''
+                .(string) ($user->organization_unit_id ?? '').'\')" class="action-btn edit-btn" title="Edit User">'.$editIcon.'</button>';
+
+            if ($user->id !== auth()->id()) {
+                $actions .= '<button type="button" data-dm-trigger data-dm-action="'.route('admin.users.destroy', $user).'" data-dm-label="'.e($user->name).'" class="action-btn delete-btn" title="Hapus">'.$trashIcon.'</button>';
+            }
+
+            return [
+                'search' => strtolower(
+                    $user->name.' '.$user->username.' '.$user->email.' '.($user->nip ?? '').' '.($user->organizationUnit?->name ?? '')
+                ),
+                'cells' => [
+                    'name' => '<div class="flex-col"><div class="font-bold-700 color-slate-900">'.e($user->name).'</div><div class="text-xs-muted">'.e($user->email).'</div></div>',
+                    'nip' => '<code class="username-tag">'.e($user->nip ?? '-').'</code>',
+                    'username' => '<code class="username-tag">@<span>'.e($user->username).'</span></code>',
+                    'dept' => $user->organizationUnit
+                        ? '<span class="badge-premium badge-slate">'.e($user->organizationUnit->name).'</span>'
+                        : '<span class="text-xs-muted">-</span>',
+                    'role' => '<span class="badge-premium '.($isAdmin ? 'badge-purple' : 'badge-teal').'">'
+                        .($isAdmin ? $shieldIcon : '').e($user->role?->name ?? 'No Role').'</span>',
+                ],
+                'cols' => [
+                    'name' => strtolower($user->name.' '.$user->email),
+                    'nip' => strtolower($user->nip ?? ''),
+                    'username' => strtolower($user->username),
+                    'dept' => strtolower($user->organizationUnit?->name ?? ''),
+                    'role' => strtolower($user->role?->name ?? ''),
+                ],
+                'actions' => '<div class="action-buttons flex-col-center">'.$actions.'</div>',
+            ];
+        })->values();
+    @endphp
+
     <div class="premium-container">
 
         <!-- Stats -->
@@ -114,326 +161,89 @@
             </div>
 
             <!-- Main Panel: Table -->
-            <div class="data-table-container mb-0">
-                <div class="filter-search-section">
-                    <div class="search-container">
-                        <div class="search-box-advanced sb-max-400">
-                            <div class="search-icon">
-                                <x-icon name="search" />
-                            </div>
-                            <input type="text" id="tableSearchInput" oninput="filterDataTable()" placeholder="Cari user..." class="form-input-search">
-                            <button id="clearSearch" onclick="clearSearchInput()" class="clear-search-btn">
-                                <x-icon name="close" />
-                            </button>
-                        </div>
-                        <select id="itemsPerPage" class="filter-select fs-110" onchange="changeItemsPerPage()">
-                            <option value="10">10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="table-view">
-                    <div class="table-wrapper">
-                        <table class="page-table">
-                            <thead>
-                                <tr>
-                                    <th class="text-center th-min-50">No</th>
-                                    <th class="th-min-300">Profil Pengguna</th>
-                                    <th class="th-min-120">NIP</th>
-                                    <th class="th-min-140">Username</th>
-                                    <th class="th-min-140">Departemen</th>
-                                    <th class="text-center th-min-120">Role</th>
-                                    <th class="text-center th-min-70">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tableBody">
-                                <tr class="table-filter-row">
-                                    <td></td>
-                                    <td>
-                                        <div class="filter-input-container" id="wrap-filterNama">
-                                            <input type="text" id="filterNama" oninput="handleFilterInput(this)" autocomplete="off" class="filter-select" placeholder="Cari nama...">
-                                            <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('filterNama')" title="Clear"><x-icon name="close" class="" /></button>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="filter-input-container" id="wrap-filterNip">
-                                            <input type="text" id="filterNip" oninput="handleFilterInput(this)" autocomplete="off" class="filter-select" placeholder="Cari NIP...">
-                                            <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('filterNip')" title="Clear"><x-icon name="close" class="" /></button>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="filter-input-container" id="wrap-filterUsername">
-                                            <input type="text" id="filterUsername" oninput="handleFilterInput(this)" autocomplete="off" class="filter-select" placeholder="Cari username...">
-                                            <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('filterUsername')" title="Clear"><x-icon name="close" class="" /></button>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="filter-input-container" id="wrap-filterDept">
-                                            <input type="text" id="filterDept" oninput="handleFilterInput(this)" autocomplete="off" class="filter-select" placeholder="Cari departemen...">
-                                            <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('filterDept')" title="Clear"><x-icon name="close" class="" /></button>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="filter-input-container" id="wrap-filterRole">
-                                            <input type="text" id="filterRole" oninput="handleFilterInput(this)" autocomplete="off" class="filter-select" placeholder="Cari role...">
-                                            <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('filterRole')" title="Clear"><x-icon name="close" class="" /></button>
-                                        </div>
-                                    </td>
-                                    <td></td>
-                                </tr>
-                                @forelse($users as $index => $user)
-                                <tr class="table-row"
-                                    data-nama="{{ strtolower($user->name . ' ' . $user->email) }}"
-                                    data-nip="{{ strtolower($user->nip ?? '') }}"
-                                    data-username="{{ strtolower($user->username) }}"
-                                    data-dept="{{ $user->organization_unit_id ?? '' }}"
-                                    data-role="{{ $user->role_id }}"
-                                    data-dept-nama="{{ strtolower($user->organizationUnit?->name ?? '') }}"
-                                    data-role-nama="{{ strtolower($user->role?->name ?? '') }}"
-                                    data-search="{{ strtolower($user->name . ' ' . $user->username . ' ' . $user->email . ' ' . ($user->nip ?? '') . ' ' . ($user->organizationUnit?->name ?? '')) }}">
-                                    <td class="number-cell text-center font-bold-700 text-muted-premium"><span class="row-number">{{ $index + 1 }}</span></td>
-                                    <td>
-                                        <div class="flex-col">
-                                            <div class="font-bold-700 color-slate-900">{{ $user->name }}</div>
-                                            <div class="text-xs-muted">{{ $user->email }}</div>
-                                        </div>
-                                    </td>
-                                    <td><code class="username-tag">{{ $user->nip ?? '-' }}</code></td>
-                                    <td><code class="username-tag">@<span>{{ $user->username }}</span></code></td>
-                                    <td>
-                                        @if($user->organizationUnit)
-                                            <span class="badge-premium badge-slate">{{ $user->organizationUnit->name }}</span>
-                                        @else
-                                            <span class="text-xs-muted">-</span>
-                                        @endif
-                                    </td>
-                                    <td class="text-center">
-                                        @php $isAdmin = $user->isAdmin(); @endphp
-                                        <span class="badge-premium {{ $isAdmin ? 'badge-purple' : 'badge-teal' }}">
-                                            @if($isAdmin)
-                                                <x-icon name="shield-check-solid" />
-                                            @endif
-                                            {{ $user->role?->name ?? 'No Role' }}
-                                        </span>
-                                    </td>
-                                    <td class="actions-cell text-center">
-                                        <div class="action-buttons flex-col-center">
-                                            <button onclick="openEditModal({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ addslashes($user->username) }}', '{{ addslashes($user->email) }}', '{{ $user->role_id }}', '{{ addslashes($user->nip ?? '') }}', '{{ $user->organization_unit_id }}')" class="action-btn edit-btn" title="Edit User">
-                                                <x-icon name="edit" />
-                                            </button>
-                                            @if($user->id !== auth()->id())
-                                                <x-delete-modal
-                                                    action="{{ route('admin.users.destroy', $user) }}"
-                                                    label="{{ $user->name }}"
-                                                    class="action-btn delete-btn"
-                                                    title="Hapus"
-                                                >
-                                                    <x-icon name="trash" class="icon-14" />
-                                                </x-delete-modal>
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr id="emptyRow"><td colspan="7" class="empty-state"><div class="empty-icon"><x-icon name="document" /></div><div class="empty-text"><h3>Belum ada user yang terdaftar</h3><p>Mulai dengan menambahkan user pertama.</p></div></td></tr>
-                                @endforelse
-                                <tr id="searchEmptyRow" class="hidden"><td colspan="7" class="empty-state"><div class="empty-icon text-muted-premium"><x-icon name="search-empty" class="empty-icon-large-svg" /></div><div class="empty-text text-center"><h3 class="empty-title">Tidak ada data yang cocok</h3><p class="empty-subtitle">Coba ubah kata kunci pencarian Anda.</p></div></td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="pagination-container" id="paginationContainer">
-                    <div class="pagination-info" id="paginationInfo">Menampilkan 0-0 dari 0 data</div>
-                    <div class="pagination-controls" id="paginationControls"></div>
-                </div>
-            </div>
+            <x-data-table
+                id="usersTable"
+                title="Daftar User"
+                subtitle="Profil dan hak akses seluruh pengguna"
+                :badge="$users->count()"
+                :columns="[
+                    ['label' => 'No', 'key' => '__no', 'center' => true, 'width' => 50],
+                    ['label' => 'Profil Pengguna', 'key' => 'name', 'searchable' => true, 'placeholder' => 'Cari nama/email...'],
+                    ['label' => 'NIP', 'key' => 'nip', 'width' => 120, 'searchable' => true, 'placeholder' => 'Cari NIP...'],
+                    ['label' => 'Username', 'key' => 'username', 'width' => 140, 'searchable' => true, 'placeholder' => 'Cari username...'],
+                    ['label' => 'Departemen', 'key' => 'dept', 'width' => 160, 'searchable' => true, 'placeholder' => 'Cari departemen...'],
+                    ['label' => 'Role', 'key' => 'role', 'center' => true, 'width' => 130, 'searchable' => true, 'placeholder' => 'Cari role...'],
+                    ['label' => 'Aksi', 'key' => '__actions', 'center' => true, 'width' => 100],
+                ]"
+                :rows="$userRows"
+                empty-text="Belum ada user yang terdaftar. Mulai dengan menambahkan user pertama."
+            />
         </div>
     </div>
 
     <!-- Edit Modal -->
-    <div id="editModal" class="modal-overlay">
-        <div class="modal-container">
-            <div class="card-header rounded-t-16">
-                <h2>Edit User Profile</h2>
-                <button onclick="closeEditModal()" class="modal-close-btn">
-                    <x-icon name="close" class="icon-20" />
-                </button>
+    <x-modal id="editModal" title="Edit User Profile">
+        <form id="editForm" method="POST">
+            @csrf @method('PUT')
+            <div class="form-group">
+                <label>Nama Lengkap</label>
+                <input type="text" id="edit_name" name="name" class="form-input-minimal" required>
             </div>
-            <div class="form-body">
-                <form id="editForm" method="POST">
-                    @csrf @method('PUT')
-                    <div class="form-group">
-                        <label>Nama Lengkap</label>
-                        <input type="text" id="edit_name" name="name" class="form-input-minimal" required>
-                    </div>
-                    <div class="form-group">
-                        <label>NIP</label>
-                        <input type="text" id="edit_nip" name="nip" class="form-input-minimal">
-                    </div>
-                    <div class="form-group">
-                        <label>Username</label>
-                        <input type="text" id="edit_username" name="username" class="form-input-minimal" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="edit_email" name="email" class="form-input-minimal" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Departemen</label>
-                        <x-searchable-select
-                            name="organization_unit_id"
-                            id="edit_dept_select"
-                            input-id="edit_dept"
-                            :options="$departments->map(fn ($d) => ['value' => $d->id, 'text' => $d->name])"
-                            placeholder="Pilih Departemen"
-                            nullable
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label>Role</label>
-                        <x-searchable-select
-                            name="role_id"
-                            id="edit_role_select"
-                            input-id="edit_role"
-                            :options="$roles->map(fn ($role) => ['value' => $role->id, 'text' => $role->name])"
-                            placeholder="Pilih Role"
-                            required
-                        />
-                    </div>
-                    <div class="form-group mb-8">
-                        <label>Password Baru <small class="text-xs-muted">(Kosongkan jika tidak ganti)</small></label>
-                        <input type="password" name="password" class="form-input-minimal" placeholder="********" minlength="8" oninput="validatePasswordLength(this)">
-                        <span class="password-hint" id="password-hint-edit">Minimal 8 karakter</span>
-                    </div>
-                    
-                    <div class="form-actions-premium">
-                        <button type="button" onclick="closeEditModal()" class="btn-secondary">
-                            Batal
-                        </button>
-                        <button type="submit" class="btn-premium-submit">
-                            Simpan Perubahan
-                        </button>
-                    </div>
-                </form>
+            <div class="form-group">
+                <label>NIP</label>
+                <input type="text" id="edit_nip" name="nip" class="form-input-minimal">
             </div>
-        </div>
-    </div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="edit_username" name="username" class="form-input-minimal" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="edit_email" name="email" class="form-input-minimal" required>
+            </div>
+            <div class="form-group">
+                <label>Departemen</label>
+                <x-searchable-select
+                    name="organization_unit_id"
+                    id="edit_dept_select"
+                    input-id="edit_dept"
+                    :options="$departments->map(fn ($d) => ['value' => $d->id, 'text' => $d->name])"
+                    placeholder="Pilih Departemen"
+                    nullable
+                />
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <x-searchable-select
+                    name="role_id"
+                    id="edit_role_select"
+                    input-id="edit_role"
+                    :options="$roles->map(fn ($role) => ['value' => $role->id, 'text' => $role->name])"
+                    placeholder="Pilih Role"
+                    required
+                />
+            </div>
+            <div class="form-group mb-8">
+                <label>Password Baru <small class="text-xs-muted">(Kosongkan jika tidak ganti)</small></label>
+                <input type="password" name="password" class="form-input-minimal" placeholder="********" minlength="8" oninput="validatePasswordLength(this)">
+                <span class="password-hint" id="password-hint-edit">Minimal 8 karakter</span>
+            </div>
+        </form>
+
+        <x-slot name="footer">
+            <button type="button" onclick="closeEditModal()" class="btn-secondary">
+                Batal
+            </button>
+            <button type="submit" form="editForm" class="btn-premium-submit w-auto">
+                Simpan Perubahan
+            </button>
+        </x-slot>
+    </x-modal>
+
+    <div style="display:none"><x-delete-modal action="#" label=""></x-delete-modal></div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        .page-table tr.table-filter-row td {
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 0.4rem 0.4rem !important;
-        }
-        .page-table .table-filter-row .filter-input-container {
-            width: 100%;
-        }
-        .page-table .table-filter-row .filter-input-container input.filter-select,
-        .page-table .table-filter-row .filter-input-container select.filter-select {
-            min-height: 30px;
-            padding: 0.35rem 2rem 0.35rem 0.75rem;
-            font-size: 11px;
-            border: 1px solid #94a3b8 !important;
-            color: #000000 !important;
-        }
-        .page-table .table-filter-row .filter-input-container input.filter-select::placeholder {
-            color: #000000 !important;
-            opacity: 1;
-        }
-        .page-table .table-filter-row .filter-input-container .filter-select {
-            min-width: 0;
-        }
-        .page-table .table-filter-row .ssd-trigger.filter-select {
-            min-height: 30px;
-            padding: 0.35rem 0.75rem;
-            font-size: 11px;
-            background: #ffffff;
-            border: 1px solid #94a3b8 !important;
-            color: #000000 !important;
-        }
-        .page-table .table-filter-row .ssd-trigger.filter-select .ssd-value.is-placeholder {
-            color: #000000 !important;
-        }
-    </style>
     <script>
-        // Pagination Variables
-        let allRows = [];
-        let filteredRows = [];
-        let currentPage = 1;
-        let itemsPerPage = 10;
-
-        $(document).ready(function() {
-            // Init Pagination
-            allRows = Array.from(document.querySelectorAll('.table-row'));
-            filteredRows = [...allRows];
-            
-            if (allRows.length > 0) {
-                updatePagination();
-            } else {
-                document.getElementById('paginationContainer').style.display = 'none';
-            }
-        });
-
-        window.filterDataTable = function() {
-            const searchValue = document.getElementById('tableSearchInput').value.toLowerCase();
-            document.getElementById('clearSearch').style.display = searchValue.length > 0 ? 'flex' : 'none';
-
-            const fNama = (document.getElementById('filterNama').value || '').toLowerCase();
-            const fNip = (document.getElementById('filterNip').value || '').toLowerCase();
-            const fUsername = (document.getElementById('filterUsername').value || '').toLowerCase();
-            const fDept = (document.getElementById('filterDept').value || '').toLowerCase();
-            const fRole = (document.getElementById('filterRole').value || '').toLowerCase();
-
-            filteredRows = allRows.filter(row => {
-                const searchData = row.getAttribute('data-search') || '';
-                if (searchValue && !searchData.includes(searchValue)) return false;
-                if (fNama && !(row.getAttribute('data-nama') || '').includes(fNama)) return false;
-                if (fNip && !(row.getAttribute('data-nip') || '').includes(fNip)) return false;
-                if (fUsername && !(row.getAttribute('data-username') || '').includes(fUsername)) return false;
-                if (fDept && !(row.getAttribute('data-dept-nama') || '').includes(fDept)) return false;
-                if (fRole && !(row.getAttribute('data-role-nama') || '').includes(fRole)) return false;
-                return true;
-            });
-            currentPage = 1;
-            updatePagination();
-        };
-
-        window.handleFilterInput = function(el) {
-            const wrap = document.getElementById('wrap-' + el.id);
-            if (wrap) {
-                const btn = wrap.querySelector('.clear-filter-btn');
-                if (btn) btn.style.display = el.value ? 'flex' : 'none';
-            }
-            filterDataTable();
-        };
-
-        window.applyUserFilter = function(value, text, inputEl) {
-            handleFilterInput(inputEl);
-        };
-
-        window.clearFilterWrap = function(id) {
-            const el = document.getElementById(id);
-            if (el && el.value !== undefined) el.value = '';
-            const wrap = document.getElementById('wrap-' + id);
-            if (wrap) {
-                const btn = wrap.querySelector('.clear-filter-btn');
-                if (btn) btn.style.display = 'none';
-            }
-            if (window.__searchableSelects && window.__searchableSelects[id]) {
-                window.__searchableSelects[id].select(null);
-            }
-            filterDataTable();
-        };
-
-        window.clearSearchInput = function() {
-            document.getElementById('tableSearchInput').value = '';
-            document.getElementById('clearSearch').style.display = 'none';
-            filterDataTable();
-        };
-
         window.validatePasswordLength = function(input) {
             const hint = input.nextElementSibling;
             const len = input.value.length;
@@ -448,82 +258,6 @@
                 hint.textContent = 'cukup';
             }
         };
-
-        window.changeItemsPerPage = function() {
-            itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
-            currentPage = 1;
-            updatePagination();
-        };
-
-        window.goToPage = function(page) {
-            currentPage = page;
-            updatePagination();
-        };
-
-        function updatePagination() {
-            const totalItems = filteredRows.length;
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
-            
-            allRows.forEach(row => row.style.display = 'none');
-            
-            const emptyRow = document.getElementById('emptyRow');
-            const searchEmptyRow = document.getElementById('searchEmptyRow');
-            if (emptyRow) emptyRow.style.display = (allRows.length === 0) ? '' : 'none';
-            if (searchEmptyRow) searchEmptyRow.style.display = (allRows.length > 0 && totalItems === 0) ? '' : 'none';
-
-            if (totalItems === 0) {
-                document.getElementById('paginationContainer').style.display = 'none';
-                return;
-            }
-
-            document.getElementById('paginationContainer').style.display = 'flex';
-
-            const startIdx = (currentPage - 1) * itemsPerPage;
-            const endIdx = Math.min(startIdx + itemsPerPage, totalItems);
-
-            filteredRows.slice(startIdx, endIdx).forEach((row, index) => {
-                row.style.display = '';
-                const noCell = row.querySelector('.row-number');
-                if (noCell) noCell.textContent = startIdx + index + 1;
-            });
-
-            document.getElementById('paginationInfo').textContent = `Menampilkan ${startIdx + 1}-${endIdx} dari ${totalItems} data`;
-            renderPaginationButtons(totalPages);
-        }
-
-        function renderPaginationButtons(totalPages) {
-            const container = document.getElementById('paginationControls');
-            let html = '';
-
-            html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">
-                        <x-icon name="chevron-left" class="icon-16" />
-                     </button>`;
-
-            let startPage = Math.max(1, currentPage - 2);
-            let endPage = Math.min(totalPages, startPage + 4);
-            
-            if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
-
-            if (startPage > 1) {
-                html += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
-                if (startPage > 2) html += `<span class="pagination-ellipsis">...</span>`;
-            }
-
-            for (let i = startPage; i <= endPage; i++) {
-                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
-            }
-
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) html += `<span class="pagination-ellipsis">...</span>`;
-                html += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
-            }
-
-            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">
-                        <x-icon name="chevron-right" class="icon-16" />
-                     </button>`;
-
-            container.innerHTML = html;
-        }
 
         window.openEditModal = function(id, name, username, email, role, nip, dept) {
             $('#editForm').attr('action', '{{ route('admin.users.update', '__ID__') }}'.replace('__ID__', id));
@@ -542,15 +276,11 @@
                 pwInput.value = '';
                 pwInput.dispatchEvent(new Event('input'));
             }
-            $('#editModal').addClass('active');
+            XModal.open('editModal');
         };
 
         window.closeEditModal = function() {
-            $('#editModal').removeClass('active');
+            XModal.close('editModal');
         };
-
-        $(document).click(function(e) {
-            if ($(e.target).is('#editModal')) closeEditModal();
-        });
     </script>
 </x-app-layout>

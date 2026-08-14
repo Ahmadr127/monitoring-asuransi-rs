@@ -6,6 +6,26 @@
     </script>
     @endpush
 
+    @php
+        $trashIcon = '<svg class="icon-14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>';
+
+        $permissionRows = $permissions->map(function ($perm) use ($trashIcon) {
+            return [
+                'search' => strtolower(($perm->name.' '.($perm->display_name ?? '')).' '.(int) $perm->roles_count),
+                'cells' => [
+                    'name' => '<code class="key-badge">'.e($perm->name).'</code>',
+                    'display_name' => e($perm->display_name ?: '-'),
+                    'roles_count' => '<span class="badge-premium badge-teal">'.(int) $perm->roles_count.'</span>',
+                ],
+                'cols' => [
+                    'name' => strtolower($perm->name),
+                    'display_name' => strtolower($perm->display_name ?? ''),
+                ],
+                'actions' => '<button type="button" data-dm-trigger data-dm-action="'.route('admin.permissions.destroy', $perm).'" data-dm-label="permission '.e($perm->name).'" class="action-btn delete-btn" title="Hapus">'.$trashIcon.'</button>',
+            ];
+        })->values();
+    @endphp
+
     <div class="premium-container">
         <div class="content-layout">
             <div class="premium-card">
@@ -32,44 +52,23 @@
                 </div>
             </div>
 
-            <div class="data-table-container mb-0">
-                <div class="table-view">
-                    <div class="table-wrapper">
-                        <table class="page-table">
-                            <thead>
-                                <tr>
-                                    <th class="text-center th-min-50">No</th>
-                                    <th class="th-min-250">Nama</th>
-                                    <th class="th-min-250">Tampilan</th>
-                                    <th class="text-center th-min-90">Jml Role</th>
-                                    <th class="text-center th-min-70">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($permissions as $index => $perm)
-                                <tr class="table-row" data-search="{{ strtolower($perm->name . ' ' . $perm->display_name) }}">
-                                    <td class="number-cell text-center font-bold-700 text-muted-premium">{{ $index + 1 }}</td>
-                                    <td><code class="key-badge">{{ $perm->name }}</code></td>
-                                    <td>{{ $perm->display_name ?: '-' }}</td>
-                                    <td class="text-center"><span class="badge-premium badge-teal">{{ $perm->roles_count }}</span></td>
-                                    <td class="actions-cell text-center">
-                                        <x-delete-modal
-                                            action="{{ route('admin.permissions.destroy', $perm) }}"
-                                            label="permission {{ $perm->name }}"
-                                            class="action-btn delete-btn"
-                                            title="Hapus">
-                                            <x-icon name="trash" class="icon-14" />
-                                        </x-delete-modal>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="5" class="empty-state"><p>Belum ada permission. Tambahkan permission pertama.</p></td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <x-data-table
+                id="permissionsTable"
+                title="Daftar Permission"
+                subtitle="Identifier permission yang dipakai authorization (database)"
+                :badge="$permissions->count()"
+                :columns="[
+                    ['label' => 'No', 'key' => '__no', 'center' => true, 'width' => 50],
+                    ['label' => 'Nama', 'key' => 'name', 'searchable' => true, 'placeholder' => 'Cari nama...'],
+                    ['label' => 'Tampilan', 'key' => 'display_name', 'searchable' => true, 'placeholder' => 'Cari tampilan...'],
+                    ['label' => 'Jml Role', 'key' => 'roles_count', 'center' => true, 'width' => 90],
+                    ['label' => 'Aksi', 'key' => '__actions', 'center' => true, 'width' => 70],
+                ]"
+                :rows="$permissionRows"
+                empty-text="Belum ada permission. Tambahkan permission pertama."
+            />
         </div>
     </div>
+
+    <div style="display:none"><x-delete-modal action="#" label=""></x-delete-modal></div>
 </x-app-layout>

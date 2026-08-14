@@ -9,7 +9,7 @@ class SyncSimutuUsers extends Command
 {
     protected $signature = 'simutu:sync-users {--dry-run : Tampilkan perkiraan tanpa menulis ke database}';
 
-    protected $description = 'Menarik data pegawai dari database Simutu ke tabel users lokal (tanpa menghapus data lokal).';
+    protected $description = 'Menarik data pegawai + departemen dari database Simutu ke tabel users dan organization_units lokal (tanpa menghapus data lokal).';
 
     public function handle(SimutuUserSyncService $service): int
     {
@@ -29,11 +29,15 @@ class SyncSimutuUsers extends Command
 
         $this->info(
             sprintf(
-                'Simutu sync selesai (%s): %d dicek, %d dibuat, %d diperbarui.',
+                'Simutu sync selesai (%s): %d user dicek, %d dibuat, %d diperbarui; %d departemen dicek, %d dibuat, %d diperbarui, %d kepala dihubungkan.',
                 $dryRun ? 'dry-run, tanpa menulis' : 'live',
                 $stats['checked'],
                 $stats['created'],
-                $stats['updated']
+                $stats['updated'],
+                $stats['units_checked'],
+                $stats['units_created'],
+                $stats['units_updated'],
+                $stats['heads_mapped']
             )
         );
 

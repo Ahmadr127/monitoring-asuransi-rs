@@ -11,8 +11,9 @@
     --mon-text: #334155;
     --mon-text-light: #64748b;
 
-    padding: 0.75rem 1rem 1rem;
-    max-width: 1600px;
+    padding: 0.75rem 0 1rem;
+    width: 100%;
+    max-width: none;
     margin: 0 auto;
     background: var(--mon-bg);
     min-height: 100vh;

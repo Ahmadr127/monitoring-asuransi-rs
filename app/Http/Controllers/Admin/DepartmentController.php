@@ -10,24 +10,9 @@ use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $query = OrganizationUnit::with(['type', 'parent', 'head', 'members'])->withCount('members');
-
-        if ($request->filled('type_id')) {
-            $query->where('type_id', $request->integer('type_id'));
-        }
-
-        if ($request->filled('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
-
-        if ($request->filled('search')) {
-            $query->where(fn ($q) => $q->where('name', 'ilike', "%{$request->search}%")
-                ->orWhere('code', 'ilike', "%{$request->search}%"));
-        }
-
-        $units = $query->orderBy('name')->get();
+        $units = OrganizationUnit::with(['type', 'parent', 'head', 'members'])->withCount('members')->orderBy('name')->get();
         $types = OrganizationType::orderBy('level')->orderBy('name')->get();
         $typeCount = $types->count();
 

@@ -10,6 +10,14 @@
     @endpush
 
     <div class="premium-container">
+        <div class="alert alert-info wf-active-info">
+            <x-icon name="information-circle" class="alert-icon" />
+            <span>
+                <strong>Info pemilihan workflow:</strong> alur persetujuan memakai workflow aktif <strong>pertama</strong>
+                (urut data). Nonaktifkan workflow lain agar hanya satu yang benar-benar terpakai.
+            </span>
+        </div>
+
         <div class="content-layout">
             <div class="premium-card">
                 <div class="card-header flex-between-center">
