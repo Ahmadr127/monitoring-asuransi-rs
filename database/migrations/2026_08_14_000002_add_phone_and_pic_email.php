@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('no_telpon', 30)->nullable()->after('email');
+        });
+
+        Schema::table('ruang_lingkup', function (Blueprint $table) {
+            $table->string('pic_email')->nullable()->after('pic_kontak');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('ruang_lingkup', function (Blueprint $table) {
+            $table->dropColumn(['pic_email']);
+        });
+
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['no_telpon']);
+        });
+    }
+};

@@ -74,7 +74,7 @@ class KerjasamaController extends Controller
 
             fputcsv($file, [
                 'Nama Asuransi', 'Badan Usaha', 'Periode Mulai', 'Periode Berakhir',
-                'Status', 'Jenis Layanan', 'Diskon',
+                'Status', 'Jenis Layanan', 'Diskon', 'PIC Nama', 'Kontak PIC', 'Email PIC', 'Alamat Penagihan',
             ]);
 
             foreach ($ruangLingkup as $rl) {
@@ -90,6 +90,10 @@ class KerjasamaController extends Controller
                     $rl->status,
                     $layanan,
                     $diskon ? $diskon.'%' : '',
+                    $rl->pic_nama ?? '',
+                    $rl->pic_kontak ?? '',
+                    $rl->pic_email ?? '',
+                    $rl->alamat_penagihan ?? '',
                 ]);
             }
 

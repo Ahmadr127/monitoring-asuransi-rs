@@ -158,6 +158,42 @@
                 </div>
             </div>
 
+            <!-- PIC Asuransi & Penagihan -->
+            <div class="detail-section">
+                <div class="section-header-minimal">
+                    <x-icon name="user-group" class="icon-14 color-muted" />
+                    <h3>PIC Asuransi &amp; Penagihan</h3>
+                </div>
+                <div class="detail-grid-4">
+                    <div class="detail-item">
+                        <div class="detail-label">Nama PIC</div>
+                        <div class="detail-value">{{ $ruangLingkup->pic_nama ?? '-' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Kontak PIC</div>
+                        <div class="detail-value">{{ $ruangLingkup->pic_kontak ?? '-' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Email PIC</div>
+                        <div class="detail-value">{{ $ruangLingkup->pic_email ?? '-' }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Link Portal</div>
+                        <div class="detail-value">
+                            @if(!empty($ruangLingkup->pic_portal))
+                                <a href="{{ $ruangLingkup->pic_portal }}" target="_blank" rel="noopener">{{ $ruangLingkup->pic_portal }}</a>
+                            @else
+                                -
+                            @endif
+                        </div>
+                    </div>
+                    <div class="detail-item span-4">
+                        <div class="detail-label">Alamat Penagihan</div>
+                        <div class="detail-value">{{ $ruangLingkup->alamat_penagihan ?? '-' }}</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Layanan & Cakupan per Badan Usaha -->
             <div class="detail-section">
                 <div class="section-header-minimal">

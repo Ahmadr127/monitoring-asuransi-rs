@@ -97,6 +97,17 @@ class RuangLingkupController extends Controller
             $validated['is_high_profile'] = $request->has('is_high_profile');
             $validated['created_by'] = auth()->id();
 
+            // Auto-fill PIC dari user penginput bila dikosongkan.
+            if (empty($validated['pic_nama'])) {
+                $validated['pic_nama'] = auth()->user()->name;
+            }
+            if (empty($validated['pic_kontak'])) {
+                $validated['pic_kontak'] = auth()->user()->no_telpon;
+            }
+            if (empty($validated['pic_email'])) {
+                $validated['pic_email'] = auth()->user()->email;
+            }
+
             $buGroups = $validated['bu_groups'];
             unset($validated['bu_groups']);
 
@@ -168,6 +179,16 @@ class RuangLingkupController extends Controller
 
             $validated['is_high_profile'] = $request->has('is_high_profile');
             $validated['updated_by'] = auth()->id();
+
+            if (empty($validated['pic_nama'])) {
+                $validated['pic_nama'] = auth()->user()->name;
+            }
+            if (empty($validated['pic_kontak'])) {
+                $validated['pic_kontak'] = auth()->user()->no_telpon;
+            }
+            if (empty($validated['pic_email'])) {
+                $validated['pic_email'] = auth()->user()->email;
+            }
 
             $buGroups = $validated['bu_groups'];
             unset($validated['bu_groups']);
@@ -332,6 +353,11 @@ class RuangLingkupController extends Controller
             'is_high_profile' => 'nullable|boolean',
             'penjamin_category' => 'nullable|string|in:TPA,PAYOR,TPA & PAYOR',
             'alias_versi_tera' => 'nullable|string|max:255',
+            'pic_nama' => 'nullable|string|max:255',
+            'pic_kontak' => 'nullable|string|max:30',
+            'pic_email' => 'nullable|email|max:255',
+            'pic_portal' => 'nullable|string|max:500',
+            'alamat_penagihan' => 'nullable|string',
             'bu_groups' => 'required|array|min:1',
             'bu_groups.*.badan_usaha_id' => 'required|exists:master_badan_usaha,id',
             'bu_groups.*.benefit' => 'nullable|array',

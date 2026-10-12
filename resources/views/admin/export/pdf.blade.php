@@ -25,6 +25,7 @@
                 <th>Alias</th>
                 <th>High Profile</th>
                 <th>TPA &amp; PAYOR</th>
+                <th>PIC</th>
                 <th>Badan Usaha</th>
                 <th>Diskon</th>
                 <th>Mulai</th>
@@ -41,6 +42,7 @@
                 <td>{{ $c->alias_versi_tera ?? '-' }}</td>
                 <td>{{ $c->is_high_profile ? 'Ya' : 'Tidak' }}</td>
                 <td>{{ $c->penjamin_category ?? '-' }}</td>
+                <td>{{ $c->pic_nama ?? '-' }}{{ $c->pic_kontak ? ' / '.$c->pic_kontak : '' }}</td>
                 <td>
                     @php
                         $buNames = $c->badanUsahaPivot->map(fn($p) => $p->badanUsaha?->nama_bu)->filter();

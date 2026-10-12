@@ -26,6 +26,8 @@ trait PreparesDashboardData
 
         $item->obat = $item->obatRelasi->pluck('nama')->toArray();
 
+        $item->deskripsi_list = $item->badanUsahaPivot->pluck('deskripsi')->filter()->values()->toArray();
+
         return $item;
     }
 

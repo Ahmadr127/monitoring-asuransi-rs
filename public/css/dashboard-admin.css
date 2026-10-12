@@ -622,6 +622,8 @@
     border-color: var(--mon-success);
 }
 
+.td-aksi .aksi-btns { display: inline-flex; gap: 6px; align-items: center; justify-content: center; }
+
 /* Sidebar Blocks */
 .sidebar-block {
     background: white;

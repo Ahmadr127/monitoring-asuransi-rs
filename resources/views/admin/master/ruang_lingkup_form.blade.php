@@ -122,6 +122,48 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="rl-section">
+                    <div class="rl-section-header">
+                        <div class="rl-section-icon"><x-icon name="user-group" class="" /></div>
+                        <h3>PIC Asuransi &amp; Penagihan</h3>
+                    </div>
+                    <div class="rl-grid">
+                        <div class="rl-field s1">
+                            <label class="rl-label">Nama PIC</label>
+                            <input type="text" name="pic_nama" id="form_pic_nama" class="rl-input"
+                                   value="{{ old('pic_nama', ($isEdit ? $ruangLingkup->pic_nama : null) ?: (auth()->user()->name ?? '')) }}"
+                                   placeholder="Otomatis dari penginput, bisa diubah">
+                        </div>
+
+                        <div class="rl-field s1">
+                            <label class="rl-label">Kontak PIC</label>
+                            <input type="text" name="pic_kontak" id="form_pic_kontak" class="rl-input"
+                                   value="{{ old('pic_kontak', ($isEdit ? $ruangLingkup->pic_kontak : null) ?: (auth()->user()->no_telpon ?? '')) }}"
+                                   placeholder="Terisi otomatis, bisa diubah" maxlength="30">
+                        </div>
+
+                        <div class="rl-field s2">
+                            <label class="rl-label">Email PIC</label>
+                            <input type="text" name="pic_email" id="form_pic_email" class="rl-input"
+                                   value="{{ old('pic_email', ($isEdit ? $ruangLingkup->pic_email : null) ?: (auth()->user()->email ?? '')) }}"
+                                   placeholder="Terisi otomatis, bisa diubah" maxlength="255">
+                        </div>
+
+                        <div class="rl-field s2">
+                            <label class="rl-label">Link Portal</label>
+                            <input type="text" name="pic_portal" id="form_pic_portal" class="rl-input"
+                                   value="{{ old('pic_portal', $isEdit ? ($ruangLingkup->pic_portal ?? '') : '') }}"
+                                   placeholder="https://portal.asuransi.example">
+                        </div>
+
+                        <div class="rl-field s2">
+                            <label class="rl-label">Alamat Penagihan</label>
+                            <textarea name="alamat_penagihan" id="form_alamat_penagihan" rows="2" class="rl-input"
+                                      placeholder="Alamat lengkap untuk penagihan">{{ old('alamat_penagihan', $isEdit ? ($ruangLingkup->alamat_penagihan ?? '') : '') }}</textarea>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- STEP 2: BADAN USAHA & LAYANAN -->
@@ -1098,6 +1140,28 @@
                 if (new Date(tglMulai.value) > new Date(tglAkhir.value)) {
                     tglAkhir.classList.add('error');
                     messages.push('Tanggal Berakhir harus sama atau setelah Tanggal Mulai.');
+                }
+            }
+
+            const picKontak = document.getElementById('form_pic_kontak');
+            if (picKontak && picKontak.value.trim() && !/^[0-9+\-\s]+$/.test(picKontak.value.trim())) {
+                picKontak.classList.add('error');
+                messages.push('Kontak PIC hanya boleh berisi angka, +, - dan spasi.');
+            }
+
+            const picEmail = document.getElementById('form_pic_email');
+            if (picEmail && picEmail.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(picEmail.value.trim())) {
+                picEmail.classList.add('error');
+                messages.push('Email PIC tidak valid.');
+            }
+
+            const picPortal = document.getElementById('form_pic_portal');
+            if (picPortal && picPortal.value.trim()) {
+                try {
+                    new URL(picPortal.value.trim());
+                } catch (e) {
+                    picPortal.classList.add('error');
+                    messages.push('Link Portal harus URL valid (contoh: https://portal.asuransi.example).');
                 }
             }
         } else if (step === 2) {

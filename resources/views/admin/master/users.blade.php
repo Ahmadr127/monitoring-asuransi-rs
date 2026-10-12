@@ -25,7 +25,8 @@
                 .e(addslashes($user->email)).'\', \''
                 .(string) $user->role_id.'\', \''
                 .e(addslashes($user->nip ?? '')).'\', \''
-                .(string) ($user->organization_unit_id ?? '').'\')" class="action-btn edit-btn" title="Edit User">'.$editIcon.'</button>';
+                .(string) ($user->organization_unit_id ?? '').'\', \''
+                .e(addslashes($user->no_telpon ?? '')).'\')" class="action-btn edit-btn" title="Edit User">'.$editIcon.'</button>';
 
             if ($user->id !== auth()->id()) {
                 $actions .= '<button type="button" data-dm-trigger data-dm-action="'.route('admin.users.destroy', $user).'" data-dm-label="'.e($user->name).'" class="action-btn delete-btn" title="Hapus">'.$trashIcon.'</button>';
@@ -33,10 +34,10 @@
 
             return [
                 'search' => strtolower(
-                    $user->name.' '.$user->username.' '.$user->email.' '.($user->nip ?? '').' '.($user->organizationUnit?->name ?? '')
+                    $user->name.' '.$user->username.' '.$user->email.' '.($user->nip ?? '').' '.($user->no_telpon ?? '').' '.($user->organizationUnit?->name ?? '')
                 ),
                 'cells' => [
-                    'name' => '<div class="flex-col"><div class="font-bold-700 color-slate-900">'.e($user->name).'</div><div class="text-xs-muted">'.e($user->email).'</div></div>',
+                    'name' => '<div class="flex-col"><div class="font-bold-700 color-slate-900">'.e($user->name).'</div><div class="text-xs-muted">'.e($user->email).($user->no_telpon ? ' · '.e($user->no_telpon) : '').'</div></div>',
                     'nip' => '<code class="username-tag">'.e($user->nip ?? '-').'</code>',
                     'username' => '<code class="username-tag">@<span>'.e($user->username).'</span></code>',
                     'dept' => $user->organizationUnit
@@ -127,6 +128,10 @@
                             <input type="email" name="email" class="form-input-minimal" placeholder="email@example.com" required>
                         </div>
                         <div class="form-group">
+                            <label>No. Telepon / WA</label>
+                            <input type="tel" name="no_telpon" class="form-input-minimal" placeholder="08xxxxxxxxxx" maxlength="30">
+                        </div>
+                        <div class="form-group">
                             <label>Password <span class="text-danger">*</span></label>
                             <input type="password" name="password" class="form-input-minimal" placeholder="********" required minlength="8" oninput="validatePasswordLength(this)">
                             <span class="password-hint" id="password-hint-create">Minimal 8 karakter</span>
@@ -202,6 +207,10 @@
                 <input type="email" id="edit_email" name="email" class="form-input-minimal" required>
             </div>
             <div class="form-group">
+                <label>No. Telepon / WA</label>
+                <input type="tel" id="edit_no_telpon" name="no_telpon" class="form-input-minimal" placeholder="08xxxxxxxxxx" maxlength="30">
+            </div>
+            <div class="form-group">
                 <label>Departemen</label>
                 <x-searchable-select
                     name="organization_unit_id"
@@ -259,12 +268,13 @@
             }
         };
 
-        window.openEditModal = function(id, name, username, email, role, nip, dept) {
+        window.openEditModal = function(id, name, username, email, role, nip, dept, noTelpon) {
             $('#editForm').attr('action', '{{ route('admin.users.update', '__ID__') }}'.replace('__ID__', id));
             $('#edit_name').val(name);
             $('#edit_username').val(username);
             $('#edit_email').val(email);
             $('#edit_nip').val(nip || '');
+            $('#edit_no_telpon').val(noTelpon || '');
             if (window.__searchableSelects && window.__searchableSelects['edit_role']) {
                 window.__searchableSelects['edit_role'].select(role);
             }

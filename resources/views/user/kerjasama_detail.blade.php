@@ -105,7 +105,7 @@
                     </div>
                     @endif
                     @if(in_array('badan_usaha', $visibleColumns))
-                    <div class="detail-item span-2 start-col-3">
+                    <div class="detail-item span-3">
                         <div class="detail-label">Badan Usaha</div>
                         <div class="detail-value">
                             @if($ruangLingkup->badanUsahaPivot && $ruangLingkup->badanUsahaPivot->count() > 0)
@@ -120,6 +120,35 @@
                         </div>
                     </div>
                     @endif
+                    <div class="detail-item span-4 detail-section-divider">
+                        <div class="detail-label">PIC Asuransi &amp; Penagihan</div>
+                    </div>
+                    <div class="detail-item span-2">
+                        <div class="detail-label">Nama PIC</div>
+                        <div class="detail-value">{{ $ruangLingkup->pic_nama ?? '-' }}</div>
+                    </div>
+                    <div class="detail-item span-2">
+                        <div class="detail-label">Kontak PIC</div>
+                        <div class="detail-value">{{ $ruangLingkup->pic_kontak ?? '-' }}</div>
+                    </div>
+                    <div class="detail-item span-2">
+                        <div class="detail-label">Email PIC</div>
+                        <div class="detail-value">{{ $ruangLingkup->pic_email ?? '-' }}</div>
+                    </div>
+                    <div class="detail-item span-2">
+                        <div class="detail-label">Link Portal</div>
+                        <div class="detail-value">
+                            @if(!empty($ruangLingkup->pic_portal))
+                                <a href="{{ $ruangLingkup->pic_portal }}" target="_blank" rel="noopener">{{ $ruangLingkup->pic_portal }}</a>
+                            @else
+                                -
+                            @endif
+                        </div>
+                    </div>
+                    <div class="detail-item span-4">
+                        <div class="detail-label">Alamat Penagihan</div>
+                        <div class="detail-value">{{ $ruangLingkup->alamat_penagihan ?? '-' }}</div>
+                    </div>
                 </div>
             </div>
 

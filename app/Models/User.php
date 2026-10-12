@@ -21,6 +21,7 @@ class User extends Authenticatable
         'username',
         'nip',
         'email',
+        'no_telpon',
         'password',
         'role_id',
         'organization_unit_id',

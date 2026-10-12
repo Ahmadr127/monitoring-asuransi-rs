@@ -230,9 +230,9 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 </svg>
-                                Cakupan Peserta
+                                Deskripsi
                             </h4>
-                            <div id="detail_cakupan" class="pill-group"></div>
+                            <div id="detail_deskripsi" class="text-xs color-slate-600"></div>
                         </div>
                         <div class="data-group">
                             <h4>
@@ -243,6 +243,37 @@
                         </div>
                     </div>
                     <div class="content-right">
+                        <div class="data-group">
+                            <h4>
+                                <x-icon name="user-group" class="icon-sm" />
+                                PIC Asuransi
+                            </h4>
+                            <div class="detail-list">
+                                <div class="detail-item">
+                                    <span class="detail-label">Nama</span>
+                                    <span class="detail-value" id="detail_pic_nama">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Kontak</span>
+                                    <span class="detail-value" id="detail_pic_kontak">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Email</span>
+                                    <span class="detail-value" id="detail_pic_email">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Portal</span>
+                                    <span class="detail-value" id="detail_pic_portal">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="data-group">
+                            <h4>
+                                <x-icon name="building" class="icon-sm" />
+                                Alamat Penagihan
+                            </h4>
+                            <div class="text-xs color-slate-600" id="detail_alamat_penagihan">-</div>
+                        </div>
                         <div class="data-group">
                             <h4>
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -351,6 +382,9 @@
                             <tr>
                                 <th class="th-no">NO</th>
                                 <th>NAMA ASURANSI</th>
+                                <th>PIC ASURANSI</th>
+                                <th>ALAMAT PENAGIHAN</th>
+                                <th>DESKRIPSI</th>
                                 ${visibleColumns.includes('periode') ? '<th>PERIODE KONTRAK</th>' : ''}
                                 ${visibleColumns.includes('jangka_waktu') ? '<th class="th-jangka">JANGKA WAKTU</th>' : ''}
                                 ${visibleColumns.includes('status') ? '<th class="th-status">STATUS</th>' : ''}
@@ -382,9 +416,17 @@
                         <td>
                             <div class="entitas-cell">
                                 <span class="entitas-name">${item.nama_asuransi}</span>
-                                ${visibleColumns.includes('alias_versi_tera') && item.alias_versi_tera ? `<span class="tera-badge">${item.alias_versi_tera}</span>` : ''}
+                                ${visibleColumns.includes('alias_versi_tera') && item.alias_versi_tera ? `` : ''}
                             </div>
                         </td>
+                        <td>
+                            <div class="entitas-cell">
+                                <span class="entitas-name">${item.pic_nama || '-'}</span>
+                                <span class="text-xs-muted">${item.pic_kontak || ''}</span>
+                            </div>
+                        </td>
+                        <td><span class="text-xs-muted">${item.alamat_penagihan || '-'}</span></td>
+                        <td><span class="text-xs-muted">${(Array.isArray(item.deskripsi_list) && item.deskripsi_list.length ? item.deskripsi_list.join(' | ') : (item.deskripsi || '-')).toString().substring(0, 100)}</span></td>
                         ${visibleColumns.includes('periode') ? `
                         <td>
                             <div class="period-info">
@@ -409,9 +451,14 @@
                             <span class="monitor-status-badge ${getBadgeClass(item)}">${statusLabel}</span>
                         </td>` : ''}
                         <td class="td-aksi">
-                            <a href="/user/kerjasama/detail/${item.id}" class="btn-view-detail" title="Lihat Detail">
-                                <x-icon name="eye" class="icon-btn" />
-                            </a>
+                            <span class="aksi-btns">
+                                <a href="/user/kerjasama/detail/${item.id}" class="btn-view-detail" title="Lihat Detail">
+                                    <x-icon name="eye" class="icon-btn" />
+                                </a>
+                                ${item.pic_portal ? `<a href="${item.pic_portal}" target="_blank" rel="noopener" class="btn-view-detail" title="Buka Portal Asuransi">
+                                    <x-icon name="link" class="icon-btn" />
+                                </a>` : ''}
+                            </span>
                         </td>
                     </tr>
                 `;
@@ -463,6 +510,18 @@
                                 <label>Diskon:</label>
                                 <span>${item.diskon_persen ? item.diskon_persen + '%' : '-'}</span>
                             </div>` : ''}
+                            <div class="mon-card-row">
+                                <label>PIC:</label>
+                                <span>${item.pic_nama ? `${item.pic_nama}${item.pic_kontak ? ' (' + item.pic_kontak + ')' : ''}` : '-'}</span>
+                            </div>
+                            <div class="mon-card-row">
+                                <label>Deskripsi:</label>
+                                <span>${(Array.isArray(item.deskripsi_list) && item.deskripsi_list.length ? item.deskripsi_list[0] : (item.deskripsi || '-')).toString().substring(0, 80)}</span>
+                            </div>
+                            <div class="mon-card-row">
+                                <label>Alamat Tagih:</label>
+                                <span>${(item.alamat_penagihan || '-').toString().substring(0, 80)}</span>
+                            </div>
                         </div>
                         <a href="/user/kerjasama/detail/${item.id}" class="btn-mon-full no-underline flex-center">BUKA DETAIL</a>
                     </div>
@@ -525,8 +584,18 @@
             document.getElementById('detail_versi_tera').textContent = item.alias_versi_tera || '-';
             const lys = Array.isArray(item.jenis_layanan) ? item.jenis_layanan : [];
             document.getElementById('detail_jenis_layanan').innerHTML = lys.map(l => `<span class="tag-pill">${l}</span>`).join('') || '-';
-            const ckp = Array.isArray(item.cakupan) ? item.cakupan : [];
-            document.getElementById('detail_cakupan').innerHTML = ckp.map(c => `<span class="tag-pill">${c}</span>`).join('') || '-';
+            const dsc = Array.isArray(item.deskripsi_list) ? item.deskripsi_list : (item.deskripsi ? [item.deskripsi] : []);
+            document.getElementById('detail_deskripsi').textContent = dsc.filter(Boolean).join(' | ') || '-';
+            document.getElementById('detail_pic_nama').textContent = item.pic_nama || '-';
+            document.getElementById('detail_pic_kontak').textContent = item.pic_kontak || '-';
+            document.getElementById('detail_pic_email').textContent = item.pic_email || '-';
+            const portalEl = document.getElementById('detail_pic_portal');
+            if (item.pic_portal) {
+                portalEl.innerHTML = `<a href="${item.pic_portal}" target="_blank" rel="noopener">${item.pic_portal}</a>`;
+            } else {
+                portalEl.textContent = '-';
+            }
+            document.getElementById('detail_alamat_penagihan').textContent = item.alamat_penagihan || '-';
             let bnf = [];
             try { bnf = typeof item.benefit === 'string' ? JSON.parse(item.benefit) : (Array.isArray(item.benefit) ? item.benefit : [item.benefit]); } catch (e) { bnf = Array.isArray(item.benefit) ? item.benefit : [item.benefit]; }
             document.getElementById('detail_benefit').innerHTML = (bnf || []).filter(b => b).map(b => `<li>${b}</li>`).join('') || '-';

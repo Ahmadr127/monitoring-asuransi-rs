@@ -18,6 +18,7 @@ class UserFactory extends Factory
             'username' => fake()->unique()->userName(),
             'nip' => fake()->numerify('################'),
             'email' => fake()->unique()->safeEmail(),
+            'no_telpon' => fake()->numerify('08##########'),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'role_id' => Role::factory(),

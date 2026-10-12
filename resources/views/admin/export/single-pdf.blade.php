@@ -47,6 +47,17 @@
     </div>
 
     <div class="section">
+        <div class="section-title">PIC Asuransi &amp; Penagihan</div>
+        <table>
+            <tr><td class="label">Nama PIC</td><td>{{ $rl->pic_nama ?? '-' }}</td></tr>
+            <tr><td class="label">Kontak PIC</td><td>{{ $rl->pic_kontak ?? '-' }}</td></tr>
+            <tr><td class="label">Email PIC</td><td>{{ $rl->pic_email ?? '-' }}</td></tr>
+            <tr><td class="label">Link Portal</td><td>{{ $rl->pic_portal ?? '-' }}</td></tr>
+            <tr><td class="label">Alamat Penagihan</td><td>{{ $rl->alamat_penagihan ?? '-' }}</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
         <div class="section-title">Layanan & Cakupan</div>
         @php $pivots = $rl->badanUsahaPivot; @endphp
         @if($pivots->isNotEmpty())

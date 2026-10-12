@@ -29,13 +29,14 @@ class ExportImportController extends Controller
 
         $headers = [
             'Nama Asuransi', 'Alias/Versi Tera', 'High Profile', 'TPA/PAYOR',
+            'PIC Nama', 'Kontak PIC', 'Email PIC', 'Link Portal', 'Alamat Penagihan',
             'Badan Usaha', 'Nama Layanan', 'Kode Layanan', 'Benefit', 'Cakupan', 'Obat',
             'Deskripsi',
             'Diskon (%)', 'Jangka Waktu (Hari)', 'Tipe Hari',
             'Tanggal Mulai', 'Tanggal Berakhir', 'Sisa Waktu (Hari)', 'Status',
         ];
 
-        foreach (range('A', 'R') as $col) {
+        foreach (range('A', 'W') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -47,13 +48,13 @@ class ExportImportController extends Controller
         ];
 
         $sheet->fromArray([$headers], null, 'A1');
-        $sheet->getStyle('A1:R1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:W1')->applyFromArray($headerStyle);
 
         $data = $this->getExportData();
         $sheet->fromArray($data, null, 'A2');
 
         $lastRow = count($data) + 1;
-        $sheet->getStyle("A1:R{$lastRow}")->getBorders()->getAllBorders()
+        $sheet->getStyle("A1:W{$lastRow}")->getBorders()->getAllBorders()
             ->setBorderStyle(Border::BORDER_THIN);
 
         $writer = new Xlsx($spreadsheet);
@@ -70,6 +71,7 @@ class ExportImportController extends Controller
     {
         $headers = [
             'Nama Asuransi', 'Alias/Versi Tera', 'High Profile', 'TPA/PAYOR',
+            'PIC Nama', 'Kontak PIC', 'Email PIC', 'Link Portal', 'Alamat Penagihan',
             'Badan Usaha', 'Nama Layanan', 'Kode Layanan', 'Benefit', 'Cakupan', 'Obat',
             'Deskripsi',
             'Diskon (%)', 'Jangka Waktu (Hari)', 'Tipe Hari',
@@ -131,13 +133,14 @@ class ExportImportController extends Controller
 
         $headers = [
             'Nama Asuransi', 'Alias/Versi Tera', 'High Profile', 'TPA/PAYOR',
+            'PIC Nama', 'Kontak PIC', 'Email PIC', 'Link Portal', 'Alamat Penagihan',
             'Badan Usaha', 'Nama Layanan', 'Kode Layanan', 'Benefit', 'Cakupan', 'Obat',
             'Deskripsi',
             'Diskon (%)', 'Jangka Waktu (Hari)', 'Tipe Hari',
             'Tanggal Mulai', 'Tanggal Berakhir', 'Status',
         ];
 
-        foreach (range('A', 'Q') as $col) {
+        foreach (range('A', 'V') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -149,11 +152,12 @@ class ExportImportController extends Controller
         ];
 
         $sheet->fromArray([$headers], null, 'A1');
-        $sheet->getStyle('A1:Q1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:V1')->applyFromArray($headerStyle);
 
         $examples = [
             [
                 'Asuransi ABC', 'v1.0', 'Ya', 'TPA',
+                'Budi Santoso', '081234567890', 'budi@asuransi-abc.co.id', 'https://portal.asuransi-abc.co.id', 'Jl. Penagihan No. 1, Jakarta',
                 '(Badan Usaha 1)(Badan Usaha 2)',
                 '(Rawat Inap)(Rawat Jalan, IGD)',
                 '(RI)(RJ, IGD)',
@@ -171,25 +175,25 @@ class ExportImportController extends Controller
         $exampleStyle = [
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F0FDFA']],
         ];
-        $sheet->getStyle('A2:Q2')->applyFromArray($exampleStyle);
+        $sheet->getStyle('A2:V2')->applyFromArray($exampleStyle);
 
-        $sheet->getStyle('A2:Q2')->getBorders()->getAllBorders()
+        $sheet->getStyle('A2:V2')->getBorders()->getAllBorders()
             ->setBorderStyle(Border::BORDER_THIN);
 
-        $sheet->getStyle('A1:Q2')->getFont()->setName('Calibri');
+        $sheet->getStyle('A1:V2')->getFont()->setName('Calibri');
 
         // Note row
         $noteStyle = [
             'font' => ['italic' => true, 'color' => ['rgb' => '64748B'], 'size' => 9],
         ];
         $sheet->setCellValue('A3', 'Note: 1 baris = 1 kontrak. Multi BU: (BU 1)(BU 2). Detail per BU urut sesuai (). Pisahkan item dengan koma.');
-        $sheet->mergeCells('A3:Q3');
-        $sheet->getStyle('A3:Q3')->applyFromArray($noteStyle);
+        $sheet->mergeCells('A3:V3');
+        $sheet->getStyle('A3:V3')->applyFromArray($noteStyle);
         $sheet->getRowDimension(3)->setRowHeight(24);
 
         $sheet->setCellValue('A4', 'Status: isi "aktif" atau "tidak_aktif". Kosongkan = default aktif. Tidak case-sensitive.');
-        $sheet->mergeCells('A4:Q4');
-        $sheet->getStyle('A4:Q4')->applyFromArray($noteStyle);
+        $sheet->mergeCells('A4:V4');
+        $sheet->getStyle('A4:V4')->applyFromArray($noteStyle);
         $sheet->getRowDimension(4)->setRowHeight(20);
 
         // Sheet 2: Petunjuk
@@ -217,6 +221,11 @@ class ExportImportController extends Controller
             ['Alias/Versi Tera', 'Nama lain/alias kontrak (opsional)'],
             ['High Profile', 'Ya / Tidak'],
             ['TPA/PAYOR', 'TPA / Payor / TPA & PAYOR'],
+            ['PIC Nama', 'Nama PIC asuransi (opsional, default nama penginput)'],
+            ['Kontak PIC', 'Kontak PIC (opsional, default no. telpon penginput)'],
+            ['Email PIC', 'Email PIC (opsional, default email penginput)'],
+            ['Link Portal', 'URL portal asuransi (opsional)'],
+            ['Alamat Penagihan', 'Alamat lengkap penagihan (opsional)'],
             ['Badan Usaha', '(Nama BU 1)(Nama BU 2) — gunakan () untuk multi BU'],
             ['Nama Layanan', '(layanan BU1)(layanan BU2)'],
             ['Kode Layanan', '(kode BU1)(kode BU2)'],
@@ -456,6 +465,16 @@ class ExportImportController extends Controller
             'High Profile' => 'is_high_profile',
             'TPA' => 'penjamin_category',
             'Payor' => 'penjamin_category',
+            'PIC Nama' => 'pic_nama',
+            'Nama PIC' => 'pic_nama',
+            'WA PIC' => 'pic_kontak',
+            'No. WA' => 'pic_kontak',
+            'Telepon PIC' => 'pic_kontak',
+            'Email PIC' => 'pic_email',
+            'Portal' => 'pic_portal',
+            'Link Portal' => 'pic_portal',
+            'Alamat Penagihan' => 'alamat_penagihan',
+            'Alamat Tagih' => 'alamat_penagihan',
             'Badan Usaha' => 'badan_usaha_raw',
             'Nama Layanan' => 'jenis_layanan_raw',
             'Jenis Layanan' => 'jenis_layanan_raw',
@@ -740,6 +759,11 @@ class ExportImportController extends Controller
                         'alias_versi_tera' => $this->cellValue($row, $indexMap, 'alias_versi_tera'),
                         'is_high_profile' => $isHighProfile,
                         'penjamin_category' => $penjaminCategory,
+                        'pic_nama' => $this->cellValue($row, $indexMap, 'pic_nama') ?: $existing->pic_nama,
+                        'pic_kontak' => $this->cellValue($row, $indexMap, 'pic_kontak') ?: $existing->pic_kontak,
+                        'pic_email' => $this->cellValue($row, $indexMap, 'pic_email') ?: $existing->pic_email,
+                        'pic_portal' => $this->cellValue($row, $indexMap, 'pic_portal') ?: $existing->pic_portal,
+                        'alamat_penagihan' => $this->cellValue($row, $indexMap, 'alamat_penagihan') ?: $existing->alamat_penagihan,
                         'tanggal_mulai' => $parsedMulai,
                         'tanggal_berakhir' => $parsedBerakhir,
                         'status' => $newStatus,
@@ -852,6 +876,11 @@ class ExportImportController extends Controller
                     'alias_versi_tera' => $this->cellValue($row, $indexMap, 'alias_versi_tera'),
                     'is_high_profile' => $isHighProfile,
                     'penjamin_category' => $penjaminCategory,
+                    'pic_nama' => $this->cellValue($row, $indexMap, 'pic_nama') ?: (auth()->user()->name ?? null),
+                    'pic_kontak' => $this->cellValue($row, $indexMap, 'pic_kontak') ?: (auth()->user()->no_telpon ?? null),
+                    'pic_email' => $this->cellValue($row, $indexMap, 'pic_email') ?: (auth()->user()->email ?? null),
+                    'pic_portal' => $this->cellValue($row, $indexMap, 'pic_portal') ?: null,
+                    'alamat_penagihan' => $this->cellValue($row, $indexMap, 'alamat_penagihan') ?: null,
                     'badan_usaha_id' => null,
                     'jenis_layanan' => [],
                     'benefit' => [],
@@ -1082,6 +1111,11 @@ class ExportImportController extends Controller
                 $c->alias_versi_tera ?? '',
                 $c->is_high_profile ? 'Ya' : 'Tidak',
                 $c->penjamin_category ?? '',
+                $c->pic_nama ?? '',
+                $c->pic_kontak ?? '',
+                $c->pic_email ?? '',
+                $c->pic_portal ?? '',
+                $c->alamat_penagihan ?? '',
                 collect($buNames)->map(fn ($v) => "({$v})")->implode(''),
                 $c->badanUsahaPivot->map(fn ($p) => '('.collect($p->jenis_layanan_ids)->map(fn ($id) => $c->jenisLayananRelasi->firstWhere('id', $id)?->nama)->filter()->implode(', ').')')->implode(''),
                 $c->badanUsahaPivot->map(fn ($p) => '('.collect($p->jenis_layanan_ids)->map(fn ($id) => $c->jenisLayananRelasi->firstWhere('id', $id)?->kode)->filter()->implode(', ').')')->implode(''),
