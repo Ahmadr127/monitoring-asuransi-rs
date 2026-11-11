@@ -32,7 +32,9 @@ class ContractRolloverController extends Controller
             $oldStartDate = $contract->tanggal_mulai;
             $oldStatus = $contract->status;
             $newEndDate = $request->new_end_date;
-            $newStartDate = $request->new_start_date ?? $contract->tanggal_mulai->format('Y-m-d');
+            $newStartDate = $request->new_start_date
+                ?? $contract->tanggal_mulai?->format('Y-m-d')
+                ?? now()->toDateString();
 
             // Update kontrak
             $contract->update([

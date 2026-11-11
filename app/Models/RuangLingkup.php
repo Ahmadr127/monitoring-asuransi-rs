@@ -120,6 +120,11 @@ class RuangLingkup extends Model
     // Date Calculations
     public function getDaysRemainingAttribute()
     {
+        // Kontrak tanpa periode belum punya sisa waktu.
+        if (! $this->tanggal_berakhir) {
+            return null;
+        }
+
         // Hitung dari awal hari ini sampai tanggal berakhir
         $daysRemaining = now()->startOfDay()->diffInDays($this->tanggal_berakhir->startOfDay(), false);
 
@@ -130,17 +135,31 @@ class RuangLingkup extends Model
 
     public function getIsExpiredAttribute()
     {
+        if (! $this->tanggal_berakhir) {
+            return false;
+        }
+
         return $this->tanggal_berakhir->startOfDay()->isPast();
     }
 
     public function getStatusBadgeAttribute()
     {
-        if ($this->status === 'aktif' && !$this->is_expired) {
-            return [
-                'class' => 'active',
-                'text' => 'Aktif',
-                'color' => 'success',
-            ];
+        if ($this->status === 'aktif') {
+            if (! $this->tanggal_berakhir) {
+                return [
+                    'class' => 'inactive',
+                    'text' => 'Belum Ada Periode',
+                    'color' => 'secondary',
+                ];
+            }
+
+            if (! $this->is_expired) {
+                return [
+                    'class' => 'active',
+                    'text' => 'Aktif',
+                    'color' => 'success',
+                ];
+            }
         }
 
         return [
@@ -185,7 +204,7 @@ class RuangLingkup extends Model
             return false;
         }
 
-        if ($this->is_expired && $this->status === 'aktif') {
+        if ($this->tanggal_berakhir && $this->is_expired && $this->status === 'aktif') {
             $oldStatus = $this->status;
             $this->update(['status' => 'tidak_aktif']);
 

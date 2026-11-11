@@ -97,15 +97,15 @@
                         </div>
 
                         <div class="rl-field s1">
-                            <label class="rl-label req">Tanggal Mulai</label>
-                            <input type="date" name="tanggal_mulai" id="form_tanggal_mulai" required class="rl-input"
-                                   value="{{ old('tanggal_mulai', $isEdit ? $ruangLingkup->tanggal_mulai->format('Y-m-d') : '') }}">
+                            <label class="rl-label">Tanggal Mulai</label>
+                            <input type="date" name="tanggal_mulai" id="form_tanggal_mulai" class="rl-input"
+                                   value="{{ old('tanggal_mulai', $isEdit ? $ruangLingkup->tanggal_mulai?->format('Y-m-d') : '') }}">
                         </div>
 
                         <div class="rl-field s1">
-                            <label class="rl-label req">Tanggal Berakhir</label>
-                            <input type="date" name="tanggal_berakhir" id="form_tanggal_berakhir" required class="rl-input"
-                                   value="{{ old('tanggal_berakhir', $isEdit ? $ruangLingkup->tanggal_berakhir->format('Y-m-d') : '') }}">
+                            <label class="rl-label">Tanggal Berakhir</label>
+                            <input type="date" name="tanggal_berakhir" id="form_tanggal_berakhir" class="rl-input"
+                                   value="{{ old('tanggal_berakhir', $isEdit ? $ruangLingkup->tanggal_berakhir?->format('Y-m-d') : '') }}">
                         </div>
 
                         <div class="rl-field s1">
@@ -1124,16 +1124,6 @@
                 const penjaminTrigger = penjaminSelect.closest('.ssd')?.querySelector('.ssd-trigger');
                 if (penjaminTrigger) penjaminTrigger.classList.add('error');
                 messages.push('TPA / PAYOR wajib dipilih.');
-            }
-
-            if (!tglMulai.value) {
-                tglMulai.classList.add('error');
-                messages.push('Tanggal Mulai wajib diisi.');
-            }
-
-            if (!tglAkhir.value) {
-                tglAkhir.classList.add('error');
-                messages.push('Tanggal Berakhir wajib diisi.');
             }
 
             if (tglMulai.value && tglAkhir.value) {

@@ -62,6 +62,7 @@ class ExportImportTest extends TestCase
         $contract = RuangLingkup::factory()->create([
             'nama_asuransi' => 'ASURANSI TEST',
             'penjamin_category' => 'TPA',
+            'alias_versi_tera' => null,
             'tanggal_mulai' => '2026-01-01',
             'tanggal_berakhir' => '2026-12-31',
         ]);
@@ -90,6 +91,7 @@ class ExportImportTest extends TestCase
         $contract = RuangLingkup::factory()->create([
             'nama_asuransi' => 'ASURANSI TEST',
             'penjamin_category' => 'TPA',
+            'alias_versi_tera' => null,
             'tanggal_mulai' => '2026-01-01',
             'tanggal_berakhir' => '2026-12-31',
         ]);
@@ -128,6 +130,7 @@ class ExportImportTest extends TestCase
         $contract = RuangLingkup::factory()->create([
             'nama_asuransi' => 'ASURANSI TEST',
             'penjamin_category' => 'TPA',
+            'alias_versi_tera' => null,
             'tanggal_mulai' => '2026-01-01',
             'tanggal_berakhir' => '2026-12-31',
         ]);

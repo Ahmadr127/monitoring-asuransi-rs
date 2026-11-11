@@ -110,8 +110,8 @@ class ReminderRecipientController extends Controller
                 'nama_asuransi' => $c->nama_asuransi,
                 'penjamin_category' => $c->penjamin_category,
                 'badan_usaha' => $c->badanUsahaPivot?->first()?->badanUsaha?->nama_bu ?? '-',
-                'tanggal_mulai' => $c->tanggal_mulai->translatedFormat('d M Y'),
-                'tanggal_berakhir' => $c->tanggal_berakhir->translatedFormat('d M Y'),
+                'tanggal_mulai' => $c->tanggal_mulai?->translatedFormat('d M Y') ?? '-',
+                'tanggal_berakhir' => $c->tanggal_berakhir?->translatedFormat('d M Y') ?? '-',
                 'days_remaining' => (int) $c->days_remaining,
                 'url' => route('admin.ruang-lingkup.show', $c),
             ];

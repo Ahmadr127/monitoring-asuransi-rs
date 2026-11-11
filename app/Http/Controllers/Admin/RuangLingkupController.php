@@ -74,11 +74,13 @@ class RuangLingkupController extends Controller
         ]);
 
         $now = now();
-        $endDate = \Carbon\Carbon::parse($ruangLingkup->tanggal_berakhir);
-        $daysRemaining = $now->diffInDays($endDate, false);
-        $isExpired = $daysRemaining < 0;
+        $endDate = $ruangLingkup->tanggal_berakhir
+            ? \Carbon\Carbon::parse($ruangLingkup->tanggal_berakhir)
+            : null;
+        $daysRemaining = $endDate ? $now->diffInDays($endDate, false) : null;
+        $isExpired = $daysRemaining !== null && $daysRemaining < 0;
 
-        $ruangLingkup->days_remaining = max(0, $daysRemaining);
+        $ruangLingkup->days_remaining = $daysRemaining === null ? null : max(0, $daysRemaining);
         $ruangLingkup->is_expired = $isExpired;
 
         $visibleColumns = $this->getVisibleColumns(true);
@@ -370,8 +372,8 @@ class RuangLingkupController extends Controller
             'bu_groups.*.obat_ids.*' => 'exists:master_obat,id',
             'bu_groups.*.deskripsi' => 'nullable|string',
             'deskripsi' => 'nullable|string',
-            'tanggal_mulai' => 'required|date',
-            'tanggal_berakhir' => 'required|date|after_or_equal:tanggal_mulai',
+            'tanggal_mulai' => 'nullable|date',
+            'tanggal_berakhir' => 'nullable|date|after_or_equal:tanggal_mulai',
             'status' => 'required|in:aktif,tidak_aktif',
         ];
 

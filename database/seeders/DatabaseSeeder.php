@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
         // 2. Seed Ruang Lingkup (Depends on master data)
         $this->command->info('Seeding Ruang Lingkup...');
         $this->call([
-            RuangLingkupSeeder::class,
+            // RuangLingkupSeeder::class,
             ContractHistorySeeder::class,
             WorkflowSeeder::class,
         ]);

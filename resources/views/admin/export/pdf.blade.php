@@ -53,7 +53,7 @@
                 <td>{{ $c->diskon?->first()?->persentase_diskon ? $c->diskon->first()->persentase_diskon . '%' : '-' }}</td>
                 <td>{{ $c->tanggal_mulai?->format('d/m/Y') ?? '-' }}</td>
                 <td>{{ $c->tanggal_berakhir?->format('d/m/Y') ?? '-' }}</td>
-                <td>{{ max(0, $c->days_remaining) }}</td>
+                <td>{{ max(0, $c->days_remaining ?? 0) }}</td>
                 <td>{{ $c->status === 'aktif' ? 'Aktif' : 'Tidak Aktif' }}</td>
             </tr>
             @endforeach

@@ -10,8 +10,12 @@ trait PreparesDashboardData
     private function mapRuangLingkup($item, $withDays = true, $clampDays = false)
     {
         if ($withDays) {
-            $days = now()->startOfDay()->diffInDays($item->tanggal_berakhir->startOfDay(), false);
-            $item->days_remaining = $clampDays ? max(0, $days) : $days;
+            if ($item->tanggal_berakhir) {
+                $days = now()->startOfDay()->diffInDays($item->tanggal_berakhir->startOfDay(), false);
+                $item->days_remaining = $clampDays ? max(0, $days) : $days;
+            } else {
+                $item->days_remaining = null;
+            }
         }
 
         $item->jenis_layanan = $item->jenisLayananRelasi->pluck('nama')->toArray();
@@ -68,6 +72,10 @@ trait PreparesDashboardData
             ->values();
 
         $expiringContracts30 = $activeItems->filter(function ($item) {
+            if (! $item->tanggal_berakhir) {
+                return false;
+            }
+
             $end = $item->tanggal_berakhir->startOfDay();
 
             return $end->greaterThanOrEqualTo(now()->startOfDay()) && $end->lessThanOrEqualTo(now()->addDays(RuangLingkup::EXPIRING_SOON));
@@ -76,6 +84,10 @@ trait PreparesDashboardData
         })->values();
 
         $expiringContracts90 = $activeItems->filter(function ($item) {
+            if (! $item->tanggal_berakhir) {
+                return false;
+            }
+
             $end = $item->tanggal_berakhir->startOfDay();
 
             return $end->greaterThanOrEqualTo(now()->startOfDay()) && $end->lessThanOrEqualTo(now()->addDays(RuangLingkup::EXPIRING_WARNING));

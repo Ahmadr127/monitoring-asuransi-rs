@@ -29,7 +29,7 @@
                 'Kontrak' => e($contract->nama_asuransi),
                 'Badan Usaha' => e($contract->badanUsaha?->name ?? '-'),
                 'Jenis Layanan' => e($jenisLayanan),
-                'Periode' => e($contract->tanggal_mulai->format('d M Y')) . ' &mdash; ' . e($contract->tanggal_berakhir->format('d M Y')),
+                'Periode' => ($contract->tanggal_mulai?->format('d M Y') ?? '-') . ' &mdash; ' . ($contract->tanggal_berakhir?->format('d M Y') ?? '-'),
                 'Kategori' => e($contract->penjamin_category ?? '-'),
                 'Alias / Versi' => e($contract->alias_versi_tera ?? '-'),
                 'High Profile' => $contract->is_high_profile ? 'Ya' : 'Tidak',

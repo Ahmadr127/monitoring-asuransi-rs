@@ -65,7 +65,13 @@
                                 </div>
                                 <div class="info-content">
                                     <span class="info-label">Periode Kerjasama</span>
-                                    <span class="info-value">{{ $item->tanggal_mulai->format('d M Y') }} - {{ $item->tanggal_berakhir->format('d M Y') }}</span>
+                                    <span class="info-value">
+                                        @if($item->tanggal_mulai && $item->tanggal_berakhir)
+                                            {{ $item->tanggal_mulai->format('d M Y') }} - {{ $item->tanggal_berakhir->format('d M Y') }}
+                                        @else
+                                            Belum ada periode
+                                        @endif
+                                    </span>
                                 </div>
                             </div>
                             @endif
@@ -286,8 +292,8 @@
             if (item.is_high_profile) {
                 namaContainer.innerHTML += ' <span class="status-badge status-expired badge-high">High</span>';
             }
-            const startDate = new Date(item.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-            const endDate = new Date(item.tanggal_berakhir).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            const startDate = item.tanggal_mulai ? new Date(item.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+            const endDate = item.tanggal_berakhir ? new Date(item.tanggal_berakhir).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
             
             document.getElementById('detail_periode_top').textContent = `Kontrak Periode ${startDate} - ${endDate}`;
             document.getElementById('detail_periode').textContent = `${startDate} - ${endDate}`;
@@ -297,16 +303,19 @@
             badge.className = `status-badge ${item.status === 'aktif' ? 'status-active' : 'status-expired'}`;
 
             // Sisa Waktu
-            const diffTime = new Date(item.tanggal_berakhir) - (new Date()).setHours(0,0,0,0);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             const sisaWaktuEl = document.getElementById('detail_sisa_waktu');
-            
-            if (item.status === 'aktif') {
+
+            if (item.status === 'aktif' && item.tanggal_berakhir) {
+                const diffTime = new Date(item.tanggal_berakhir) - (new Date()).setHours(0,0,0,0);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 const days = Math.max(0, diffDays);
                 sisaWaktuEl.textContent = `${days} Hari`;
                 sisaWaktuEl.style.color = days <= 15 ? 'var(--danger)' : (days <= 30 ? 'var(--warning)' : 'var(--success)');
                 sisaWaktuEl.setAttribute('data-expiration', item.tanggal_berakhir);
                 sisaWaktuEl.classList.add('status-badge');
+            } else if (item.status === 'aktif') {
+                sisaWaktuEl.textContent = '-';
+                sisaWaktuEl.removeAttribute('data-expiration');
             } else {
                 sisaWaktuEl.textContent = 'Sudah Berakhir';
                 sisaWaktuEl.style.color = 'var(--danger)';

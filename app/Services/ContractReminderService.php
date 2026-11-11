@@ -174,8 +174,8 @@ class ContractReminderService
             'nama_asuransi' => $contract->nama_asuransi,
             'penjamin_category' => $contract->penjamin_category,
             'badan_usaha' => $contract->badanUsahaPivot?->first()?->badanUsaha?->nama_bu ?? '-',
-            'tanggal_mulai' => $contract->tanggal_mulai->translatedFormat('d M Y'),
-            'tanggal_berakhir' => $contract->tanggal_berakhir->translatedFormat('d M Y'),
+            'tanggal_mulai' => $contract->tanggal_mulai?->translatedFormat('d M Y') ?? '-',
+            'tanggal_berakhir' => $contract->tanggal_berakhir?->translatedFormat('d M Y') ?? '-',
             'days_remaining' => (int) $contract->days_remaining,
             'url' => route('admin.ruang-lingkup.show', $contract),
         ];

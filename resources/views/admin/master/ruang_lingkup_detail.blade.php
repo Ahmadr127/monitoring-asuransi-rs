@@ -32,7 +32,7 @@
                 </div>
                 <div class="status-content">
                     <div class="status-label">Tanggal Mulai</div>
-                    <div class="status-value">{{ $ruangLingkup->tanggal_mulai->format('d M Y') }}</div>
+                    <div class="status-value">{{ $ruangLingkup->tanggal_mulai?->format('d M Y') ?? '-' }}</div>
                 </div>
             </div>
 
@@ -42,7 +42,7 @@
                 </div>
                 <div class="status-content">
                     <div class="status-label">Tanggal Berakhir</div>
-                    <div class="status-value">{{ $ruangLingkup->tanggal_berakhir->format('d M Y') }}</div>
+                    <div class="status-value">{{ $ruangLingkup->tanggal_berakhir?->format('d M Y') ?? '-' }}</div>
                 </div>
             </div>
 
@@ -53,7 +53,12 @@
                 <div class="status-content">
                     <div class="status-label">Total Durasi</div>
                     <div class="status-value">
-                        {{ $ruangLingkup->tanggal_mulai->diffInDays($ruangLingkup->tanggal_berakhir) }} Hari</div>
+                        @if($ruangLingkup->tanggal_mulai && $ruangLingkup->tanggal_berakhir)
+                            {{ $ruangLingkup->tanggal_mulai->diffInDays($ruangLingkup->tanggal_berakhir) }} Hari
+                        @else
+                            -
+                        @endif
+                    </div>
                 </div>
             </div>
             @endif
@@ -93,7 +98,7 @@
                 </div>
             </div>
 
-            @if($effectiveStatus === 'aktif')
+            @if($effectiveStatus === 'aktif' && $ruangLingkup->tanggal_berakhir)
                 <div class="status-card">
                     @php
                         $remaining = floor(now()->diffInDays($ruangLingkup->tanggal_berakhir, false));
@@ -397,11 +402,18 @@
                                 <div class="history-title">Kontrak Awal</div>
                                 <div>
                                     <div class="history-details">
-                                        <span>{{ $ruangLingkup->tanggal_mulai->format('d M Y') }}</span>
+                                        <span>{{ $ruangLingkup->tanggal_mulai?->format('d M Y') ?? '-' }}</span>
                                         <span class="arrow">→</span>
-                                        <span>{{ $ruangLingkup->tanggal_berakhir->format('d M Y') }}</span>
+                                        <span>{{ $ruangLingkup->tanggal_berakhir?->format('d M Y') ?? '-' }}</span>
                                     </div>
-                                    <div class="text-xs-muted mt-1">Durasi: {{ $ruangLingkup->tanggal_mulai->diffInDays($ruangLingkup->tanggal_berakhir) }} Hari</div>
+                                    <div class="text-xs-muted mt-1">
+                                        Durasi:
+                                        @if($ruangLingkup->tanggal_mulai && $ruangLingkup->tanggal_berakhir)
+                                            {{ $ruangLingkup->tanggal_mulai->diffInDays($ruangLingkup->tanggal_berakhir) }} Hari
+                                        @else
+                                            -
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
 

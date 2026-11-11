@@ -62,7 +62,7 @@ class RuangLingkupTest extends TestCase
 
         $response = $this->post(route('admin.ruang-lingkup.store'), []);
 
-        $response->assertSessionHasErrors(['nama_asuransi', 'bu_groups', 'tanggal_mulai', 'tanggal_berakhir', 'status']);
+        $response->assertSessionHasErrors(['nama_asuransi', 'bu_groups', 'status']);
     }
 
     public function test_show_returns_200()

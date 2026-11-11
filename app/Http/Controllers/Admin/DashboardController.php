@@ -28,7 +28,7 @@ class DashboardController extends Controller
                 'type' => 'warning',
                 'title' => 'Kontrak Akan Berakhir',
                 'message' => $contract->nama_asuransi.' akan berakhir dalam '.floor($contract->days_remaining).' hari',
-                'time' => $contract->tanggal_berakhir->diffForHumans(),
+                'time' => $contract->tanggal_berakhir?->diffForHumans() ?? '-',
                 'icon' => 'clock',
             ]);
         }

@@ -22,6 +22,41 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ExportImportController extends Controller
 {
+    private const IMPORT_HEADER_MAP = [
+        'Nama Asuransi' => 'nama_asuransi',
+        'Alias' => 'alias_versi_tera',
+        'Versi Tera' => 'alias_versi_tera',
+        'High Profile' => 'is_high_profile',
+        'TPA' => 'penjamin_category',
+        'Payor' => 'penjamin_category',
+        'PIC Nama' => 'pic_nama',
+        'Nama PIC' => 'pic_nama',
+        'Kontak PIC' => 'pic_kontak',
+        'No. Telp PIC' => 'pic_kontak',
+        'WA PIC' => 'pic_kontak',
+        'No. WA' => 'pic_kontak',
+        'Telepon PIC' => 'pic_kontak',
+        'Email PIC' => 'pic_email',
+        'Portal' => 'pic_portal',
+        'Link Portal' => 'pic_portal',
+        'Alamat Penagihan' => 'alamat_penagihan',
+        'Alamat Tagih' => 'alamat_penagihan',
+        'Badan Usaha' => 'badan_usaha_raw',
+        'Nama Layanan' => 'jenis_layanan_raw',
+        'Jenis Layanan' => 'jenis_layanan_raw',
+        'Kode Layanan' => 'kode_layanan_raw',
+        'Benefit' => 'benefit_raw',
+        'Cakupan' => 'cakupan_raw',
+        'Obat' => 'obat_raw',
+        'Deskripsi' => 'deskripsi_raw',
+        'Diskon' => 'diskon_persen',
+        'Jangka Waktu' => 'jangka_waktu',
+        'Tipe Hari' => 'tipe_hari',
+        'Tanggal Mulai' => 'tanggal_mulai',
+        'Tanggal Berakhir' => 'tanggal_berakhir',
+        'Status' => 'status',
+    ];
+
     public function exportXlsx()
     {
         $spreadsheet = new Spreadsheet;
@@ -186,12 +221,12 @@ class ExportImportController extends Controller
         $noteStyle = [
             'font' => ['italic' => true, 'color' => ['rgb' => '64748B'], 'size' => 9],
         ];
-        $sheet->setCellValue('A3', 'Note: 1 baris = 1 kontrak. Multi BU: (BU 1)(BU 2). Detail per BU urut sesuai (). Pisahkan item dengan koma.');
+        $sheet->setCellValue('A3', 'Note: 1 baris = 1 kontrak. Multi BU: (BU 1)(BU 2). Detail per BU urut sesuai (). Tanpa BU: semua grup detail digabung. Pisahkan item dengan koma.');
         $sheet->mergeCells('A3:V3');
         $sheet->getStyle('A3:V3')->applyFromArray($noteStyle);
         $sheet->getRowDimension(3)->setRowHeight(24);
 
-        $sheet->setCellValue('A4', 'Status: isi "aktif" atau "tidak_aktif". Kosongkan = default aktif. Tidak case-sensitive.');
+        $sheet->setCellValue('A4', 'Status: isi "aktif" atau "tidak_aktif". Kosongkan = aktif jika tanggal lengkap; otomatis tidak_aktif jika tanggal kosong. Tidak case-sensitive.');
         $sheet->mergeCells('A4:V4');
         $sheet->getStyle('A4:V4')->applyFromArray($noteStyle);
         $sheet->getRowDimension(4)->setRowHeight(20);
@@ -226,7 +261,7 @@ class ExportImportController extends Controller
             ['Email PIC', 'Email PIC (opsional, default email penginput)'],
             ['Link Portal', 'URL portal asuransi (opsional)'],
             ['Alamat Penagihan', 'Alamat lengkap penagihan (opsional)'],
-            ['Badan Usaha', '(Nama BU 1)(Nama BU 2) — gunakan () untuk multi BU'],
+            ['Badan Usaha', 'Opsional. (Nama BU 1)(Nama BU 2) — gunakan () untuk multi BU'],
             ['Nama Layanan', '(layanan BU1)(layanan BU2)'],
             ['Kode Layanan', '(kode BU1)(kode BU2)'],
             ['Benefit', '(benefit BU1)(benefit BU2)'],
@@ -236,9 +271,9 @@ class ExportImportController extends Controller
             ['Diskon (%)', 'Angka, contoh: 10'],
             ['Jangka Waktu (Hari)', 'Angka, contoh: 30'],
             ['Tipe Hari', 'kalender / kerja'],
-            ['Tanggal Mulai *', 'Format: YYYY-MM-DD (contoh: 2026-01-01)'],
-            ['Tanggal Berakhir *', 'Format: YYYY-MM-DD (contoh: 2026-12-31)'],
-            ['Status', 'aktif / tidak_aktif. Kosongkan = default aktif.'],
+            ['Tanggal Mulai', 'Opsional. Format: YYYY-MM-DD (contoh: 2026-01-01). Isi keduanya atau kosongkan keduanya.'],
+            ['Tanggal Berakhir', 'Opsional. Format: YYYY-MM-DD (contoh: 2026-12-31).'],
+            ['Status', 'aktif / tidak_aktif. Kosongkan = aktif jika tanggal lengkap; otomatis tidak_aktif jika tanggal kosong.'],
         ];
 
         $guideSheet->fromArray($guideData, null, 'A3');
@@ -273,7 +308,11 @@ class ExportImportController extends Controller
             'file' => 'required|file|mimes:xlsx,xls|max:5120',
         ]);
 
-        [$rows, $indexMap] = $this->parseImportFile($request->file('file'));
+        try {
+            [$rows, $indexMap, $headerRowNumber] = $this->parseImportFile($request->file('file'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal membaca file: '.$e->getMessage());
+        }
 
         if ($rows === null) {
             return back()->with('error', 'Tidak dapat mendeteksi kolom. Pastikan header Excel sesuai template.');
@@ -287,7 +326,7 @@ class ExportImportController extends Controller
         $summary = ['new' => 0, 'merge' => 0, 'error' => 0];
 
         foreach ($rows as $line => $row) {
-            $excelRow = $line + 2;
+            $excelRow = $line + $headerRowNumber + 1;
             $validation = $this->validateImportRow($row, $indexMap);
 
             if ($validation['skip']) {
@@ -310,20 +349,18 @@ class ExportImportController extends Controller
 
             $nama = Str::upper($validation['nama']);
             $penjaminCategory = $validation['penjamin_category'];
+            $alias = $validation['alias'];
             $parsedMulai = $validation['parsed_mulai'];
             $parsedBerakhir = $validation['parsed_berakhir'];
             $badanUsaha = $validation['badan_usaha'];
 
-            $existing = RuangLingkup::whereRaw('LOWER(nama_asuransi) = ?', [Str::lower($nama)])
-                ->where(function ($q) use ($penjaminCategory) {
-                    empty($penjaminCategory)
-                        ? $q->whereNull('penjamin_category')->orWhere('penjamin_category', '')
-                        : $q->where('penjamin_category', $penjaminCategory);
-                })
-                ->where('tanggal_mulai', $parsedMulai)
-                ->where('tanggal_berakhir', $parsedBerakhir)
-                ->orderBy('id')
-                ->first(['id', 'status', 'updated_at']);
+            $existing = $this->findExistingImportMatch(
+                $nama,
+                $penjaminCategory,
+                $alias,
+                $parsedMulai,
+                $parsedBerakhir,
+            );
 
             if ($existing) {
                 $summary['merge']++;
@@ -397,7 +434,7 @@ class ExportImportController extends Controller
         }
 
         try {
-            [$rows, $indexMap] = $this->parseImportFile($tempPath);
+            [$rows, $indexMap, $headerRowNumber] = $this->parseImportFile($tempPath);
         } catch (\Exception $e) {
             @unlink($tempPath);
 
@@ -417,18 +454,7 @@ class ExportImportController extends Controller
         DB::beginTransaction();
 
         try {
-            $result = $this->processImportRows($rows, $indexMap, $overwrite);
-
-            if (! empty($result['errors'])) {
-                DB::rollBack();
-                @unlink($tempPath);
-
-                $result['imported'] = 0;
-                $result['updated'] = 0;
-                $result['merged'] = 0;
-
-                return $this->handleImportResult($result);
-            }
+            $result = $this->processImportRows($rows, $indexMap, $overwrite, $headerRowNumber);
 
             DB::commit();
         } catch (\Exception $e) {
@@ -452,49 +478,52 @@ class ExportImportController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $rows = $sheet->toArray();
 
-        if (count($rows) < 2) {
-            return [[], []];
+        if (empty($rows)) {
+            return [[], [], 1];
         }
 
-        $excelHeaders = array_shift($rows);
-
-        $autoMap = [
-            'Nama Asuransi' => 'nama_asuransi',
-            'Alias' => 'alias_versi_tera',
-            'Versi Tera' => 'alias_versi_tera',
-            'High Profile' => 'is_high_profile',
-            'TPA' => 'penjamin_category',
-            'Payor' => 'penjamin_category',
-            'PIC Nama' => 'pic_nama',
-            'Nama PIC' => 'pic_nama',
-            'WA PIC' => 'pic_kontak',
-            'No. WA' => 'pic_kontak',
-            'Telepon PIC' => 'pic_kontak',
-            'Email PIC' => 'pic_email',
-            'Portal' => 'pic_portal',
-            'Link Portal' => 'pic_portal',
-            'Alamat Penagihan' => 'alamat_penagihan',
-            'Alamat Tagih' => 'alamat_penagihan',
-            'Badan Usaha' => 'badan_usaha_raw',
-            'Nama Layanan' => 'jenis_layanan_raw',
-            'Jenis Layanan' => 'jenis_layanan_raw',
-            'Kode Layanan' => 'kode_layanan_raw',
-            'Benefit' => 'benefit_raw',
-            'Cakupan' => 'cakupan_raw',
-            'Obat' => 'obat_raw',
-            'Deskripsi' => 'deskripsi_raw',
-            'Diskon' => 'diskon_persen',
-            'Jangka Waktu' => 'jangka_waktu',
-            'Tipe Hari' => 'tipe_hari',
-            'Tanggal Mulai' => 'tanggal_mulai',
-            'Tanggal Berakhir' => 'tanggal_berakhir',
-            'Status' => 'status',
-        ];
-
+        // Cari baris header di 10 baris pertama. File dari pengguna sering
+        // memiliki baris kosong atau judul di atas header.
+        $headerIndex = null;
         $indexMap = [];
-        foreach ($excelHeaders as $colIndex => $colName) {
-            $colNameTrimmed = trim($colName);
-            foreach ($autoMap as $key => $field) {
+
+        foreach (array_slice($rows, 0, 10) as $i => $candidate) {
+            $candidateMap = $this->buildImportIndexMap($candidate);
+
+            if (count($candidateMap) > count($indexMap)) {
+                $indexMap = $candidateMap;
+                $headerIndex = $i;
+            }
+
+            // Header template minimal memiliki 5 kolom yang dikenali.
+            if (count($indexMap) >= 5) {
+                break;
+            }
+        }
+
+        if (empty($indexMap) || $headerIndex === null) {
+            return [null, null, null];
+        }
+
+        return [
+            array_slice($rows, $headerIndex + 1),
+            $indexMap,
+            $headerIndex + 1,
+        ];
+    }
+
+    private function buildImportIndexMap(array $headerRow): array
+    {
+        $indexMap = [];
+
+        foreach ($headerRow as $colIndex => $colName) {
+            $colNameTrimmed = trim((string) $colName);
+
+            if ($colNameTrimmed === '') {
+                continue;
+            }
+
+            foreach (self::IMPORT_HEADER_MAP as $key => $field) {
                 if (stripos($colNameTrimmed, $key) !== false) {
                     $indexMap[$field] = $colIndex;
                     break;
@@ -502,15 +531,13 @@ class ExportImportController extends Controller
             }
         }
 
-        if (empty($indexMap)) {
-            return [null, null];
-        }
-
-        return [$rows, $indexMap];
+        return $indexMap;
     }
+
     private function validateImportRow(array $row, array $indexMap): array
     {
         $nama = $this->cellValue($row, $indexMap, 'nama_asuransi');
+        $alias = $this->cellValue($row, $indexMap, 'alias_versi_tera') ?: null;
         $tglMulai = $this->cellValue($row, $indexMap, 'tanggal_mulai');
         $tglBerakhir = $this->cellValue($row, $indexMap, 'tanggal_berakhir');
         $statusRaw = $this->cellValue($row, $indexMap, 'status');
@@ -537,17 +564,34 @@ class ExportImportController extends Controller
             $errors[] = 'Nama Asuransi wajib diisi.';
         }
 
+        // "perpanjang otomatis" berarti tidak ada tanggal berakhir tetap.
+        if (preg_match('/^perpanjang\s*otomatis$/i', trim($tglBerakhir))) {
+            $tglBerakhir = '';
+        }
+
         $parsedMulai = null;
         $parsedBerakhir = null;
-        if (empty($tglMulai) || empty($tglBerakhir)) {
-            $errors[] = 'Tanggal Mulai dan Tanggal Berakhir wajib diisi.';
-        } else {
-            try {
-                $parsedMulai = Carbon::parse($tglMulai);
-                $parsedBerakhir = Carbon::parse($tglBerakhir);
-            } catch (\Exception $e) {
-                $errors[] = 'Format tanggal tidak valid (gunakan YYYY-MM-DD).';
+        $hasMulai = $tglMulai !== '';
+        $hasBerakhir = $tglBerakhir !== '';
+
+        if ($hasMulai) {
+            $parsedMulai = $this->parseImportDate($tglMulai);
+
+            if (! $parsedMulai) {
+                $errors[] = 'Format Tanggal Mulai tidak valid (gunakan YYYY-MM-DD).';
             }
+        }
+
+        if ($hasBerakhir) {
+            $parsedBerakhir = $this->parseImportDate($tglBerakhir);
+
+            if (! $parsedBerakhir) {
+                $errors[] = 'Format Tanggal Berakhir tidak valid (gunakan YYYY-MM-DD).';
+            }
+        }
+
+        if ($parsedMulai && $parsedBerakhir && $parsedBerakhir->lt($parsedMulai)) {
+            $errors[] = 'Tanggal Berakhir tidak boleh sebelum Tanggal Mulai.';
         }
 
         $status = '';
@@ -560,6 +604,13 @@ class ExportImportController extends Controller
             } else {
                 $errors[] = "Status harus 'aktif' atau 'tidak_aktif'.";
             }
+        }
+
+        // Kontrak tanpa periode lengkap tidak boleh berstatus aktif.
+        if ($parsedMulai === null || $parsedBerakhir === null) {
+            $status = 'tidak_aktif';
+        } else {
+            $status = $status ?: 'aktif';
         }
 
         if (! empty($highRaw)) {
@@ -584,16 +635,16 @@ class ExportImportController extends Controller
             }
         }
 
+        // Badan Usaha boleh kosong. Detail layanan/obat tetap disimpan pada
+        // pivot dengan badan_usaha_id = null.
         $buNames = $this->parseParentheses($buRaw);
-        if (empty($buNames)) {
-            $errors[] = 'Badan Usaha wajib diisi. Gunakan (Nama BU) sebagai pemisah.';
-        }
 
         return [
             'valid' => empty($errors),
             'skip' => false,
             'errors' => $errors,
             'nama' => $nama,
+            'alias' => $alias,
             'penjamin_category' => $penjaminCategory,
             'tgl_mulai' => $tglMulai,
             'tgl_berakhir' => $tglBerakhir,
@@ -607,7 +658,7 @@ class ExportImportController extends Controller
         ];
     }
 
-    private function processImportRows(array $rows, array $indexMap, bool $overwrite = false): array
+    private function processImportRows(array $rows, array $indexMap, bool $overwrite = false, int $headerRowNumber = 1): array
     {
         $imported = 0;
         $updated = 0;
@@ -616,10 +667,7 @@ class ExportImportController extends Controller
         $errors = [];
 
         foreach ($rows as $line => $row) {
-            if (! empty($errors)) {
-                break;
-            }
-
+            $excelRow = $line + $headerRowNumber + 1;
             $validation = $this->validateImportRow($row, $indexMap);
 
             if ($validation['skip']) {
@@ -628,97 +676,77 @@ class ExportImportController extends Controller
 
             if (! $validation['valid']) {
                 foreach ($validation['errors'] as $error) {
-                    $errors[] = 'Baris '.($line + 2).': '.$error;
+                    $errors[] = 'Baris '.$excelRow.': '.$error;
                 }
                 continue;
             }
 
             $nama = Str::upper($validation['nama']);
+            $alias = $validation['alias'];
             $status = $validation['status'];
             $isHighProfile = $validation['is_high_profile'];
-            $buNames = array_map(fn($n) => Str::upper($n), $validation['bu_names']);
             $penjaminCategory = $validation['penjamin_category'];
             $parsedMulai = $validation['parsed_mulai'];
             $parsedBerakhir = $validation['parsed_berakhir'];
 
-            $layananGroups = $this->parseGroupedItems($this->cellValue($row, $indexMap, 'jenis_layanan_raw'));
-            $kodeGroups = $this->parseGroupedItems($this->cellValue($row, $indexMap, 'kode_layanan_raw'));
-            $benefitGroups = $this->parseGroupedItems($this->cellValue($row, $indexMap, 'benefit_raw'));
-            $cakupanGroups = $this->parseGroupedItems($this->cellValue($row, $indexMap, 'cakupan_raw'));
-            $obatGroups = $this->parseGroupedItems($this->cellValue($row, $indexMap, 'obat_raw'));
-            $deskripsiGroups = $this->parseParentheses($this->cellValue($row, $indexMap, 'deskripsi_raw'));
+            $buNames = array_values(array_filter(
+                array_map(fn ($n) => Str::upper(trim($n)), $validation['bu_names']),
+                fn ($n) => $n !== ''
+            ));
+            $buTargets = empty($buNames) ? [null] : $buNames;
 
-            $existing = RuangLingkup::whereRaw('LOWER(nama_asuransi) = ?', [Str::lower($nama)])
-                ->where(function ($q) use ($penjaminCategory) {
-                    empty($penjaminCategory)
-                        ? $q->whereNull('penjamin_category')->orWhere('penjamin_category', '')
-                        : $q->where('penjamin_category', $penjaminCategory);
-                })
-                ->where('tanggal_mulai', $parsedMulai)
-                ->where('tanggal_berakhir', $parsedBerakhir)
-                ->orderBy('id')
-                ->first();
+            $detailGroups = $this->buildDetailGroups(
+                $buTargets,
+                $this->parseGroupedItems($this->cellValue($row, $indexMap, 'jenis_layanan_raw')),
+                $this->parseGroupedItems($this->cellValue($row, $indexMap, 'kode_layanan_raw')),
+                $this->parseGroupedItems($this->cellValue($row, $indexMap, 'benefit_raw')),
+                $this->parseGroupedItems($this->cellValue($row, $indexMap, 'cakupan_raw')),
+                $this->parseGroupedItems($this->cellValue($row, $indexMap, 'obat_raw')),
+                $this->parseParentheses($this->cellValue($row, $indexMap, 'deskripsi_raw')),
+            );
+
+            $existing = $this->findExistingImportMatch(
+                $nama,
+                $penjaminCategory,
+                $alias,
+                $parsedMulai,
+                $parsedBerakhir,
+            );
 
             if ($existing) {
                 if (! $overwrite) {
                     try {
-                        $existingBuIds = $existing->badanUsahaPivot()->pluck('badan_usaha_id')->toArray();
+                        $existingBuIds = $existing->badanUsahaPivot()
+                            ->whereNotNull('badan_usaha_id')
+                            ->pluck('badan_usaha_id')
+                            ->map(fn ($id) => (int) $id)
+                            ->all();
+                        $hasNullBuPivot = $existing->badanUsahaPivot()->whereNull('badan_usaha_id')->exists();
                         $allLayananIds = $existing->jenisLayananRelasi()->pluck('master_jenis_layanan.id')->toArray();
                         $allObatIds = $existing->obatRelasi()->pluck('master_obat.id')->toArray();
                         $hasNewBu = false;
 
-                        foreach ($buNames as $i => $buName) {
-                            $bu = BadanUsaha::whereRaw('LOWER(nama_bu) = ?', [Str::lower($buName)])->first();
-                            if (! $bu) {
-                                $bu = BadanUsaha::create(['nama_bu' => $buName]);
-                            }
+                        foreach ($buTargets as $i => $buName) {
+                            $bu = $this->resolveBadanUsaha($buName);
 
-                            if (in_array($bu->id, $existingBuIds)) {
+                            if ($buName === null) {
+                                if ($hasNullBuPivot) {
+                                    continue;
+                                }
+                            } elseif (in_array((int) $bu->id, $existingBuIds, true)) {
                                 continue;
                             }
 
-                            $buLayananIds = [];
-                            foreach ($layananGroups[$i] ?? [] as $j => $name) {
-                                if (! empty($name)) {
-                                    $kode = $kodeGroups[$i][$j] ?? null;
-                                    $koded = $kode ? Str::upper($kode) : null;
-                                    $ly = null;
-                                    if ($koded) {
-                                        $ly = JenisLayanan::whereRaw('LOWER(kode) = ?', [Str::lower($koded)])->first();
-                                    }
-                                    if (! $ly) {
-                                        $ly = JenisLayanan::whereRaw('LOWER(nama) = ?', [Str::lower($name)])->first();
-                                    }
-                                    if (! $ly) {
-                                        $ly = JenisLayanan::create([
-                                            'nama' => Str::upper($name),
-                                            'kode' => $koded ?: $this->generateKodeLayanan($name),
-                                        ]);
-                                    } elseif ($koded && ! $ly->kode) {
-                                        $ly->update(['kode' => $koded]);
-                                    }
-                                    $buLayananIds[] = $ly->id;
-                                }
-                            }
-
-                            $buObatIds = [];
-                            foreach ($obatGroups[$i] ?? [] as $name) {
-                                if (! empty($name)) {
-                                    $ob = Obat::whereRaw('LOWER(nama) = ?', [Str::lower($name)])->first();
-                                    if (! $ob) {
-                                        $ob = Obat::create(['nama' => Str::upper($name)]);
-                                    }
-                                    $buObatIds[] = $ob->id;
-                                }
-                            }
+                            [$buLayananIds, $buObatIds] = $this->resolveDetailRelations($detailGroups[$i]);
+                            $detail = $detailGroups[$i];
 
                             $existing->badanUsahaPivot()->create([
-                                'badan_usaha_id' => $bu->id,
-                                'benefit' => $benefitGroups[$i] ?? [],
-                                'cakupan' => $cakupanGroups[$i] ?? [],
+                                'badan_usaha_id' => $bu?->id,
+                                'benefit' => $detail['benefit'],
+                                'cakupan' => $detail['cakupan'],
                                 'jenis_layanan_ids' => $buLayananIds,
                                 'obat_ids' => $buObatIds,
-                                'deskripsi' => $deskripsiGroups[$i] ?? '',
+                                'deskripsi' => $detail['deskripsi'],
                             ]);
 
                             $allLayananIds = array_merge($allLayananIds, $buLayananIds);
@@ -744,7 +772,7 @@ class ExportImportController extends Controller
                             $merged++;
                         }
                     } catch (\Exception $e) {
-                        $errors[] = 'Baris '.($line + 2)." (merge): {$e->getMessage()}";
+                        $errors[] = 'Baris '.$excelRow.' (merge): '.$e->getMessage();
                     }
 
                     continue;
@@ -752,11 +780,11 @@ class ExportImportController extends Controller
 
                 try {
                     $oldStatus = $existing->status;
-                    $newStatus = $status ?: 'aktif';
+                    $newStatus = $status;
 
                     $existing->update([
                         'nama_asuransi' => $nama,
-                        'alias_versi_tera' => $this->cellValue($row, $indexMap, 'alias_versi_tera'),
+                        'alias_versi_tera' => $alias,
                         'is_high_profile' => $isHighProfile,
                         'penjamin_category' => $penjaminCategory,
                         'pic_nama' => $this->cellValue($row, $indexMap, 'pic_nama') ?: $existing->pic_nama,
@@ -776,54 +804,18 @@ class ExportImportController extends Controller
                     $allLayananIds = [];
                     $allObatIds = [];
 
-                    foreach ($buNames as $i => $buName) {
-                        $bu = BadanUsaha::whereRaw('LOWER(nama_bu) = ?', [Str::lower($buName)])->first();
-                        if (! $bu) {
-                            $bu = BadanUsaha::create(['nama_bu' => $buName]);
-                        }
-
-                        $buLayananIds = [];
-                        foreach ($layananGroups[$i] ?? [] as $j => $name) {
-                            if (! empty($name)) {
-                                $kode = $kodeGroups[$i][$j] ?? null;
-                                $koded = $kode ? Str::upper($kode) : null;
-                                $ly = null;
-                                if ($koded) {
-                                    $ly = JenisLayanan::whereRaw('LOWER(kode) = ?', [Str::lower($koded)])->first();
-                                }
-                                if (! $ly) {
-                                    $ly = JenisLayanan::whereRaw('LOWER(nama) = ?', [Str::lower($name)])->first();
-                                }
-                                if (! $ly) {
-                                    $ly = JenisLayanan::create([
-                                        'nama' => Str::upper($name),
-                                        'kode' => $koded ?: $this->generateKodeLayanan($name),
-                                    ]);
-                                } elseif ($koded && ! $ly->kode) {
-                                    $ly->update(['kode' => $koded]);
-                                }
-                                $buLayananIds[] = $ly->id;
-                            }
-                        }
-
-                        $buObatIds = [];
-                        foreach ($obatGroups[$i] ?? [] as $name) {
-                            if (! empty($name)) {
-                                $ob = Obat::whereRaw('LOWER(nama) = ?', [Str::lower($name)])->first();
-                                if (! $ob) {
-                                    $ob = Obat::create(['nama' => Str::upper($name)]);
-                                }
-                                $buObatIds[] = $ob->id;
-                            }
-                        }
+                    foreach ($buTargets as $i => $buName) {
+                        $bu = $this->resolveBadanUsaha($buName);
+                        [$buLayananIds, $buObatIds] = $this->resolveDetailRelations($detailGroups[$i]);
+                        $detail = $detailGroups[$i];
 
                         $existing->badanUsahaPivot()->create([
-                            'badan_usaha_id' => $bu->id,
-                            'benefit' => $benefitGroups[$i] ?? [],
-                            'cakupan' => $cakupanGroups[$i] ?? [],
+                            'badan_usaha_id' => $bu?->id,
+                            'benefit' => $detail['benefit'],
+                            'cakupan' => $detail['cakupan'],
                             'jenis_layanan_ids' => $buLayananIds,
                             'obat_ids' => $buObatIds,
-                            'deskripsi' => $deskripsiGroups[$i] ?? '',
+                            'deskripsi' => $detail['deskripsi'],
                         ]);
 
                         $allLayananIds = array_merge($allLayananIds, $buLayananIds);
@@ -864,7 +856,7 @@ class ExportImportController extends Controller
 
                     $updated++;
                 } catch (\Exception $e) {
-                    $errors[] = 'Baris '.($line + 2)." (timpa): {$e->getMessage()}";
+                    $errors[] = 'Baris '.$excelRow.' (timpa): '.$e->getMessage();
                 }
 
                 continue;
@@ -873,7 +865,7 @@ class ExportImportController extends Controller
             try {
                 $rl = RuangLingkup::create([
                     'nama_asuransi' => $nama,
-                    'alias_versi_tera' => $this->cellValue($row, $indexMap, 'alias_versi_tera'),
+                    'alias_versi_tera' => $alias,
                     'is_high_profile' => $isHighProfile,
                     'penjamin_category' => $penjaminCategory,
                     'pic_nama' => $this->cellValue($row, $indexMap, 'pic_nama') ?: (auth()->user()->name ?? null),
@@ -888,60 +880,24 @@ class ExportImportController extends Controller
                     'obat' => [],
                     'tanggal_mulai' => $parsedMulai,
                     'tanggal_berakhir' => $parsedBerakhir,
-                    'status' => $status ?: 'aktif',
+                    'status' => $status,
                 ]);
 
                 $allLayananIds = [];
                 $allObatIds = [];
 
-                foreach ($buNames as $i => $buName) {
-                    $bu = BadanUsaha::whereRaw('LOWER(nama_bu) = ?', [Str::lower($buName)])->first();
-                    if (! $bu) {
-                        $bu = BadanUsaha::create(['nama_bu' => $buName]);
-                    }
-
-                    $buLayananIds = [];
-                    foreach ($layananGroups[$i] ?? [] as $j => $name) {
-                        if (! empty($name)) {
-                            $kode = $kodeGroups[$i][$j] ?? null;
-                            $koded = $kode ? Str::upper($kode) : null;
-                            $ly = null;
-                            if ($koded) {
-                                $ly = JenisLayanan::whereRaw('LOWER(kode) = ?', [Str::lower($koded)])->first();
-                            }
-                            if (! $ly) {
-                                $ly = JenisLayanan::whereRaw('LOWER(nama) = ?', [Str::lower($name)])->first();
-                            }
-                            if (! $ly) {
-                                $ly = JenisLayanan::create([
-                                    'nama' => Str::upper($name),
-                                    'kode' => $koded ?: $this->generateKodeLayanan($name),
-                                ]);
-                            } elseif ($koded && ! $ly->kode) {
-                                $ly->update(['kode' => $koded]);
-                            }
-                            $buLayananIds[] = $ly->id;
-                        }
-                    }
-
-                    $buObatIds = [];
-                    foreach ($obatGroups[$i] ?? [] as $name) {
-                        if (! empty($name)) {
-                            $ob = Obat::whereRaw('LOWER(nama) = ?', [Str::lower($name)])->first();
-                            if (! $ob) {
-                                $ob = Obat::create(['nama' => Str::upper($name)]);
-                            }
-                            $buObatIds[] = $ob->id;
-                        }
-                    }
+                foreach ($buTargets as $i => $buName) {
+                    $bu = $this->resolveBadanUsaha($buName);
+                    [$buLayananIds, $buObatIds] = $this->resolveDetailRelations($detailGroups[$i]);
+                    $detail = $detailGroups[$i];
 
                     $rl->badanUsahaPivot()->create([
-                        'badan_usaha_id' => $bu->id,
-                        'benefit' => $benefitGroups[$i] ?? [],
-                        'cakupan' => $cakupanGroups[$i] ?? [],
+                        'badan_usaha_id' => $bu?->id,
+                        'benefit' => $detail['benefit'],
+                        'cakupan' => $detail['cakupan'],
                         'jenis_layanan_ids' => $buLayananIds,
                         'obat_ids' => $buObatIds,
-                        'deskripsi' => $deskripsiGroups[$i] ?? '',
+                        'deskripsi' => $detail['deskripsi'],
                     ]);
 
                     $allLayananIds = array_merge($allLayananIds, $buLayananIds);
@@ -980,11 +936,153 @@ class ExportImportController extends Controller
 
                 $imported++;
             } catch (\Exception $e) {
-                $errors[] = 'Baris '.($line + 2).": {$e->getMessage()}";
+                $errors[] = 'Baris '.$excelRow.': '.$e->getMessage();
             }
         }
 
         return compact('imported', 'updated', 'merged', 'skipped', 'errors');
+    }
+
+    private function findExistingImportMatch(string $nama, string $penjaminCategory, ?string $alias, $parsedMulai, $parsedBerakhir): ?RuangLingkup
+    {
+        return RuangLingkup::query()
+            ->whereRaw('LOWER(nama_asuransi) = ?', [Str::lower($nama)])
+            ->where(function ($q) use ($penjaminCategory) {
+                empty($penjaminCategory)
+                    ? $q->whereNull('penjamin_category')->orWhere('penjamin_category', '')
+                    : $q->where('penjamin_category', $penjaminCategory);
+            })
+            ->where(function ($q) use ($alias) {
+                empty($alias)
+                    ? $q->whereNull('alias_versi_tera')->orWhere('alias_versi_tera', '')
+                    : $q->whereRaw('LOWER(alias_versi_tera) = ?', [Str::lower($alias)]);
+            })
+            ->when($parsedMulai === null,
+                fn ($q) => $q->whereNull('tanggal_mulai'),
+                fn ($q) => $q->whereDate('tanggal_mulai', $parsedMulai->toDateString()))
+            ->when($parsedBerakhir === null,
+                fn ($q) => $q->whereNull('tanggal_berakhir'),
+                fn ($q) => $q->whereDate('tanggal_berakhir', $parsedBerakhir->toDateString()))
+            ->orderBy('id')
+            ->first();
+    }
+
+    private function resolveBadanUsaha(?string $buName): ?BadanUsaha
+    {
+        if ($buName === null || $buName === '') {
+            return null;
+        }
+
+        $bu = BadanUsaha::whereRaw('LOWER(nama_bu) = ?', [Str::lower($buName)])->first();
+
+        if (! $bu) {
+            $bu = BadanUsaha::create(['nama_bu' => $buName]);
+        }
+
+        return $bu;
+    }
+
+    private function buildDetailGroups(
+        array $buTargets,
+        array $layananGroups,
+        array $kodeGroups,
+        array $benefitGroups,
+        array $cakupanGroups,
+        array $obatGroups,
+        array $deskripsiGroups,
+    ): array {
+        $groups = [];
+
+        foreach ($buTargets as $i => $buName) {
+            if ($buName === null) {
+                $groups[] = [
+                    'layanan' => $this->flattenGroups($layananGroups),
+                    'kode' => $this->flattenGroups($kodeGroups),
+                    'benefit' => $this->flattenGroups($benefitGroups),
+                    'cakupan' => $this->flattenGroups($cakupanGroups),
+                    'obat' => $this->flattenGroups($obatGroups),
+                    'deskripsi' => implode('; ', array_filter($deskripsiGroups)),
+                ];
+            } else {
+                $groups[] = [
+                    'layanan' => $layananGroups[$i] ?? [],
+                    'kode' => $kodeGroups[$i] ?? [],
+                    'benefit' => $benefitGroups[$i] ?? [],
+                    'cakupan' => $cakupanGroups[$i] ?? [],
+                    'obat' => $obatGroups[$i] ?? [],
+                    'deskripsi' => $deskripsiGroups[$i] ?? '',
+                ];
+            }
+        }
+
+        return $groups;
+    }
+
+    private function flattenGroups(array $groups): array
+    {
+        $flat = [];
+
+        foreach ($groups as $items) {
+            foreach ($items as $item) {
+                if ($item !== '') {
+                    $flat[] = $item;
+                }
+            }
+        }
+
+        return $flat;
+    }
+
+    private function resolveDetailRelations(array $detail): array
+    {
+        $layananIds = [];
+
+        foreach ($detail['layanan'] as $j => $name) {
+            if ($name === '') {
+                continue;
+            }
+
+            $kode = $detail['kode'][$j] ?? null;
+            $koded = $kode ? Str::upper($kode) : null;
+            $ly = null;
+
+            if ($koded) {
+                $ly = JenisLayanan::whereRaw('LOWER(kode) = ?', [Str::lower($koded)])->first();
+            }
+
+            if (! $ly) {
+                $ly = JenisLayanan::whereRaw('LOWER(nama) = ?', [Str::lower($name)])->first();
+            }
+
+            if (! $ly) {
+                $ly = JenisLayanan::create([
+                    'nama' => Str::upper($name),
+                    'kode' => $koded ?: $this->generateKodeLayanan($name),
+                ]);
+            } elseif ($koded && ! $ly->kode) {
+                $ly->update(['kode' => $koded]);
+            }
+
+            $layananIds[] = $ly->id;
+        }
+
+        $obatIds = [];
+
+        foreach ($detail['obat'] as $name) {
+            if ($name === '') {
+                continue;
+            }
+
+            $ob = Obat::whereRaw('LOWER(nama) = ?', [Str::lower($name)])->first();
+
+            if (! $ob) {
+                $ob = Obat::create(['nama' => Str::upper($name)]);
+            }
+
+            $obatIds[] = $ob->id;
+        }
+
+        return [$layananIds, $obatIds];
     }
 
     private function handleImportResult(array $result)
@@ -1065,11 +1163,62 @@ class ExportImportController extends Controller
 
         $isDateKey = in_array($key, ['tanggal_mulai', 'tanggal_berakhir']);
 
-        if ($isDateKey && is_numeric($value) && $value > 40000 && $value < 100000) {
+        if ($isDateKey && is_numeric($value) && $value >= 30000 && $value <= 200000) {
             return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((int) $value)->format('Y-m-d');
         }
 
         return trim((string) $value);
+    }
+
+    private function parseImportDate(string $value): ?\Carbon\Carbon
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        // ISO
+        if (preg_match('/^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}$/', $value)) {
+            try {
+                return \Carbon\Carbon::createFromFormat('Y-m-d', str_replace('/', '-', $value));
+            } catch (\Exception $e) {
+                // fall through
+            }
+        }
+
+        // D/M/Y or M/D/Y (slash or dash)
+        if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/', $value, $m)) {
+            $a = (int) $m[1];
+            $b = (int) $m[2];
+            $y = $m[3];
+
+            $year = strlen($y) === 2 ? (2000 + (int) $y) : (int) $y;
+
+            if ($a > 12 && $b <= 12) {
+                $day = $a;
+                $month = $b;
+            } elseif ($b > 12 && $a <= 12) {
+                $day = $b;
+                $month = $a;
+            } else {
+                // Ambiguous: default to month-first (M/D/Y) to match Excel.
+                $month = $a;
+                $day = $b;
+            }
+
+            try {
+                return \Carbon\Carbon::create($year, $month, $day);
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+
+        try {
+            return \Carbon\Carbon::parse($value);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     private function generateKodeLayanan(string $name): string

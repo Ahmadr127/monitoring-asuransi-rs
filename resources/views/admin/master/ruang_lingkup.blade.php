@@ -55,22 +55,7 @@
 
             <div class="filter-row-wrapper">
                 <div class="filter-left-side">
-                    <div class="filter-group">
-                        <label>Bulan Kontrak</label>
-                        <div class="filter-input-container">
-                            <select id="monthFilter" onchange="filterTable()" class="filter-select">
-                                <option value="">Semua Bulan</option>
-                                @foreach(['01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April', '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus', '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'] as $v => $n)
-                                    <option value="{{ $v }}">{{ $n }}</option>
-                                @endforeach
-                            </select>
-                            <button id="clearMonth" onclick="clearMonthFilter()" class="clear-filter-btn hidden">
-                                <x-icon name="close" class="" />
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="filter-group">
+<div class="filter-group">
                         <label>Tahun Kontrak</label>
                         <div class="filter-input-container">
                             <select id="yearFilter" onchange="filterTable()" class="filter-select">
@@ -86,6 +71,21 @@
                                 @endforeach
                             </select>
                             <button id="clearYear" onclick="clearYearFilter()" class="clear-filter-btn hidden">
+                                <x-icon name="close" class="" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Bulan Kontrak</label>
+                        <div class="filter-input-container">
+                            <select id="monthFilter" onchange="filterTable()" class="filter-select">
+                                <option value="">Semua Bulan</option>
+                                @foreach(['01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April', '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus', '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'] as $v => $n)
+                                    <option value="{{ $v }}">{{ $n }}</option>
+                                @endforeach
+                            </select>
+                            <button id="clearMonth" onclick="clearMonthFilter()" class="clear-filter-btn hidden">
                                 <x-icon name="close" class="" />
                             </button>
                         </div>
@@ -374,8 +374,8 @@
                                 data-status="{{ $rl->status_effective }}"
                                 data-penjamin-category="{{ $rl->penjamin_category }}"
                                 data-high-profile="{{ $rl->is_high_profile ? '1' : '0' }}"
-                                data-tanggal-mulai="{{ $rl->tanggal_mulai->format('Y-m-d') }}"
-                                data-tanggal-berakhir="{{ $rl->tanggal_berakhir->format('Y-m-d') }}"
+                                data-tanggal-mulai="{{ $rl->tanggal_mulai?->format('Y-m-d') ?? '' }}"
+                                data-tanggal-berakhir="{{ $rl->tanggal_berakhir?->format('Y-m-d') ?? '' }}"
                                 data-badan-usaha="{{ strtolower($buName) }}"
                                 data-jangka-waktu="{{ $rl->penagihanPembayaran ? implode(',', $rl->penagihanPembayaran->map(fn($p) => $p->jangka_waktu_hari . '|' . $p->tipe_hari)->toArray()) : '' }}"
                                 data-all-bu-names="{{ strtolower($allBuNames->implode(' ')) }}">
@@ -420,23 +420,27 @@
                                 <td class="period-cell text-left">
                                     <div class="period-info">
                                         <div class="period-dates">
-                                            <div class="start-date">{{ $rl->tanggal_mulai->format('d M Y') }}</div>
+                                            <div class="start-date">{{ $rl->tanggal_mulai?->format('d M Y') ?? '-' }}</div>
                                             <div class="date-separator">—</div>
-                                            <div class="end-date">{{ $rl->tanggal_berakhir->format('d M Y') }}</div>
+                                            <div class="end-date">{{ $rl->tanggal_berakhir?->format('d M Y') ?? '-' }}</div>
                                         </div>
                                         <div class="period-duration">
-                                            @php
-                                                $duration = $rl->tanggal_mulai->diffInDays($rl->tanggal_berakhir);
-                                                $remaining = floor(now()->diffInDays($rl->tanggal_berakhir, false));
-                                            @endphp
-                                            <div class="flex-col-start">
-                                                <span class="duration text-xs-muted">Total: {{ $duration }} Hari</span>
-                                                @if($rl->status_effective === 'aktif')
-                                                    <span class="remaining status-badge {{ $remaining <= 30 ? 'status-critical' : ($remaining <= 90 ? 'status-warning-badge' : 'status-active') }} font-bold-700 text-xs-medium"
-                                                          data-expiration="{{ $rl->tanggal_berakhir }}">Tersisa: {{ max(0, $remaining) }} Hari
-                                                    </span>
-                                                @endif
-                                            </div>
+                                            @if($rl->tanggal_mulai && $rl->tanggal_berakhir)
+                                                @php
+                                                    $duration = $rl->tanggal_mulai->diffInDays($rl->tanggal_berakhir);
+                                                    $remaining = floor(now()->diffInDays($rl->tanggal_berakhir, false));
+                                                @endphp
+                                                <div class="flex-col-start">
+                                                    <span class="duration text-xs-muted">Total: {{ $duration }} Hari</span>
+                                                    @if($rl->status_effective === 'aktif')
+                                                        <span class="remaining status-badge {{ $remaining <= 30 ? 'status-critical' : ($remaining <= 90 ? 'status-warning-badge' : 'status-active') }} font-bold-700 text-xs-medium"
+                                                              data-expiration="{{ $rl->tanggal_berakhir }}">Tersisa: {{ max(0, $remaining) }} Hari
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                <span class="duration text-xs-muted">Periode belum diisi</span>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>

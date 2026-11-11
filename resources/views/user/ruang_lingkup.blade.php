@@ -394,8 +394,8 @@
                                 data-badge-status="{{ $rl->is_expired ? 'tidak_aktif' : $rl->status }}"
                                 data-penjamin-category="{{ $rl->penjamin_category }}"
                                 data-high-profile="{{ $rl->is_high_profile ? '1' : '0' }}"
-                                data-tanggal-mulai="{{ $rl->tanggal_mulai->format('Y-m-d') }}"
-                                data-tanggal-berakhir="{{ $rl->tanggal_berakhir->format('Y-m-d') }}"
+                                data-tanggal-mulai="{{ $rl->tanggal_mulai?->format('Y-m-d') ?? '' }}"
+                                data-tanggal-berakhir="{{ $rl->tanggal_berakhir?->format('Y-m-d') ?? '' }}"
                                 data-badan-usaha="{{ strtolower($buName) }}"
                                 data-jangka-waktu="{{ $rl->penagihanPembayaran ? implode(',', $rl->penagihanPembayaran->map(fn($p) => $p->jangka_waktu_hari . '|' . $p->tipe_hari)->toArray()) : '' }}"
                                 data-all-bu-names="{{ strtolower($allBuNames->implode(' ')) }}">
@@ -453,23 +453,27 @@
                                 <td class="period-cell text-left" style="{{ !in_array('periode', $visibleColumns) ? 'display:none' : '' }}">
                                     <div class="period-info">
                                         <div class="period-dates">
-                                            <div class="start-date">{{ $rl->tanggal_mulai->format('d M Y') }}</div>
+                                            <div class="start-date">{{ $rl->tanggal_mulai?->format('d M Y') ?? '-' }}</div>
                                             <div class="date-separator">—</div>
-                                            <div class="end-date">{{ $rl->tanggal_berakhir->format('d M Y') }}</div>
+                                            <div class="end-date">{{ $rl->tanggal_berakhir?->format('d M Y') ?? '-' }}</div>
                                         </div>
                                         <div class="period-duration">
-                                            @php
-                                                $duration = $rl->tanggal_mulai->diffInDays($rl->tanggal_berakhir);
-                                                $remaining = floor(now()->diffInDays($rl->tanggal_berakhir, false));
-                                            @endphp
-                                            <div class="flex-col-start">
-                                                <span class="duration text-xs-muted">Total: {{ $duration }} Hari</span>
-                                                @if($rl->status === 'aktif')
-                                                    <span class="remaining status-badge {{ $remaining <= 30 ? 'status-critical' : ($remaining <= 90 ? 'status-warning-badge' : 'status-active') }} font-bold-700 text-xs-medium"
-                                                          data-expiration="{{ $rl->tanggal_berakhir }}">Tersisa: {{ max(0, $remaining) }} Hari
-                                                    </span>
-                                                @endif
-                                            </div>
+                                            @if($rl->tanggal_mulai && $rl->tanggal_berakhir)
+                                                @php
+                                                    $duration = $rl->tanggal_mulai->diffInDays($rl->tanggal_berakhir);
+                                                    $remaining = floor(now()->diffInDays($rl->tanggal_berakhir, false));
+                                                @endphp
+                                                <div class="flex-col-start">
+                                                    <span class="duration text-xs-muted">Total: {{ $duration }} Hari</span>
+                                                    @if($rl->status === 'aktif')
+                                                        <span class="remaining status-badge {{ $remaining <= 30 ? 'status-critical' : ($remaining <= 90 ? 'status-warning-badge' : 'status-active') }} font-bold-700 text-xs-medium"
+                                                              data-expiration="{{ $rl->tanggal_berakhir }}">Tersisa: {{ max(0, $remaining) }} Hari
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                <span class="duration text-xs-muted">Periode belum diisi</span>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>

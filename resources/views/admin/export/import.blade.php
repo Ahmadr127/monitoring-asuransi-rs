@@ -63,7 +63,7 @@
                     <li>1 baris = 1 kontrak. Multi BU: <code>(BU 1)(BU 2)</code> di kolom Badan Usaha.</li>
                     <li>Detail per BU: <code>(item BU1)(item BU2)</code>. Di dalam <code>()</code> gunakan koma sebagai pemisah item.</li>
                     <li>Contoh: Layanan <code>(Rawat Inap, Lab)(Rawat Jalan)</code> = BU1: Rawat Inap+Lab, BU2: Rawat Jalan.</li>
-                    <li>Kolom bertanda <strong class="import-required-mark">wajib diisi</strong>: Nama Asuransi, Badan Usaha, Tanggal Mulai, Tanggal Berakhir.</li>
+                    <li>Kolom bertanda <strong class="import-required-mark">wajib diisi</strong>: Nama Asuransi. Badan Usaha dan tanggal bersifat opsional; kontrak tanpa tanggal akan berstatus <strong>tidak_aktif</strong>.</li>
                     <li>Upload file yang sudah diisi.</li>
                 </ol>
                 <div class="import-mt">
