@@ -58,6 +58,7 @@ class User extends Authenticatable
     {
         return [
             'password' => 'hashed',
+            'simutu_synced_at' => 'datetime',
         ];
     }
 

@@ -61,9 +61,8 @@
                             <select id="yearFilter" onchange="filterTable()" class="filter-select">
                                 <option value="">Semua Tahun</option>
                                 @php
-                                    $rlModels = collect($ruangLingkup)->pluck('rl');
-                                    $years = $rlModels->pluck('tanggal_mulai')->filter()->map(fn($d) => \Carbon\Carbon::parse($d)->year)
-                                        ->merge($rlModels->pluck('tanggal_berakhir')->filter()->map(fn($d) => \Carbon\Carbon::parse($d)->year))
+                                    $years = collect($rows)->pluck('tanggal_mulai')->filter()->map(fn($d) => \Carbon\Carbon::parse($d)->year)
+                                        ->merge(collect($rows)->pluck('tanggal_berakhir')->filter()->map(fn($d) => \Carbon\Carbon::parse($d)->year))
                                         ->unique()->sort();
                                 @endphp
                                 @foreach($years as $year)
@@ -130,7 +129,7 @@
                             <th></th>
                             <th>
                                 <div class="filter-input-container" id="wrap-namaAsuransiFilter">
-                                    @php $namaList = collect($ruangLingkup)->pluck('rl')->pluck('nama_asuransi')->filter()->unique()->sort(); @endphp
+                                    @php $namaList = collect($rows)->pluck('nama')->filter()->unique()->sort(); @endphp
                                     <x-searchable-select
                                         name="nama_asuransi"
                                         id="nf"
@@ -154,7 +153,7 @@
                                         onclick="clearFilterWrap('aliasTeraFilter')" title="Clear"><x-icon name="close" class="" /></button>
                                 </div>
                                 <datalist id="aliasTeraList">
-                                    @php $aliasList = collect($ruangLingkup)->pluck('rl')->pluck('alias_versi_tera')->filter()->unique()->sort(); @endphp
+                                    @php $aliasList = collect($rows)->pluck('alias')->filter()->unique()->sort(); @endphp
                                     @foreach($aliasList as $alias)<option value="{{ $alias }}">@endforeach
                                 </datalist>
                             </th>
@@ -167,7 +166,7 @@
                                         onclick="clearFilterWrap('nomorSpkFilter')" title="Clear"><x-icon name="close" class="" /></button>
                                 </div>
                                 <datalist id="nomorSpkList">
-                                    @php $spkList = collect($ruangLingkup)->pluck('rl')->pluck('nomor_spk')->filter()->unique()->sort(); @endphp
+                                    @php $spkList = collect($rows)->pluck('nomor_spk')->filter()->unique()->sort(); @endphp
                                     @foreach($spkList as $spk)<option value="{{ $spk }}">@endforeach
                                 </datalist>
                             </th>
@@ -205,7 +204,7 @@
                                     <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('badanUsahaFilter')" title="Clear"><x-icon name="close" class="" /></button>
                                 </div>
                                 <datalist id="badanUsahaList">
-                                    @php $bus = collect($ruangLingkup)->pluck('bu_nama')->filter()->unique()->sort(); @endphp
+                                    @php $bus = collect($rows)->pluck('bu_nama')->filter()->unique()->sort(); @endphp
                                     @foreach($bus as $bu)<option value="{{ htmlspecialchars($bu) }}">@endforeach
                                 </datalist>
                             </th>
@@ -226,12 +225,10 @@
                             <th>
                                 <div class="filter-input-container" id="wrap-jangkaWaktuFilter">
                                     @php
-                                        $jangkaWaktuList = collect($ruangLingkup)->pluck('rl')->flatMap(function ($item) {
-                                            return $item->penagihanPembayaran ? $item->penagihanPembayaran->map(fn($p) => [
-                                                'key' => $p->jangka_waktu_hari . '|' . $p->tipe_hari,
-                                                'label' => $p->jangka_waktu_hari . ' Hari ' . $p->tipe_hari,
-                                            ]) : collect();
-                                        })->filter()->unique('key')->sortBy('label');
+                                        $jangkaWaktuList = collect($rows)->flatMap(fn ($r) => collect($r['penagihan'])->map(fn ($p) => [
+                                            'key' => $p['j'] . '|' . $p['t'],
+                                            'label' => $p['j'] . ' Hari ' . $p['t'],
+                                        ]))->unique('key')->sortBy('label');
                                     @endphp
                                     <x-searchable-select
                                         input-id="jangkaWaktuFilter"
@@ -258,13 +255,7 @@
                                 </div>
                                 <datalist id="serviceList">
                                     @php
-                                        $semuaLayanan = collect($ruangLingkup)->pluck('rl')->flatMap(function ($item) {
-                                            $services = collect();
-                                            if ($item->jenisLayananRelasi && $item->jenisLayananRelasi->count() > 0) {
-                                                $services = $services->merge($item->jenisLayananRelasi->pluck('nama'));
-                                            }
-                                            return $services;
-                                        })->filter()->unique()->sort();
+                                        $semuaLayanan = collect($rows)->flatMap(fn ($r) => $r['jenis_layanan'])->filter()->unique()->sort();
                                     @endphp
                                     @foreach($semuaLayanan as $layanan)
                                         <option value="{{ $layanan }}">
@@ -280,9 +271,7 @@
                                 </div>
                                 <datalist id="obatList">
                                     @php
-                                        $semuaObat = collect($ruangLingkup)->pluck('rl')->flatMap(function ($item) {
-                                            return $item->obatRelasi->pluck('nama');
-                                        })->filter()->unique()->sort();
+                                        $semuaObat = collect($rows)->flatMap(fn ($r) => $r['obat'])->filter()->unique()->sort();
                                     @endphp
                                     @foreach($semuaObat as $namaObat)
                                         <option value="{{ $namaObat }}">
@@ -337,262 +326,21 @@
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        @php
-                            // Group by RL id for client-side grouping
-                            $grouped = collect($ruangLingkup)->groupBy(fn($item) => $item['rl']->id);
-                        @endphp
-                        @forelse($ruangLingkup as $index => $item)
-                            @php
-                                $rl = $item['rl'];
-                                $pivot = $item['pivot'];
-                                $benefitArray = $item['benefit'];
-                                $cakupanArray = $item['cakupan'];
-                                $buName = $item['bu_nama'];
-
-                                // String untuk search
-                                $pivotLayananIds = $pivot->jenis_layanan_ids ?? [];
-                                $jenisLayananArray = [];
-                                if (! empty($pivotLayananIds) && $rl->jenisLayananRelasi && $rl->jenisLayananRelasi->count() > 0) {
-                                    $jenisLayananArray = $rl->jenisLayananRelasi->whereIn('id', $pivotLayananIds)->pluck('nama')->toArray();
-                                }
-                                $searchLayanan = strtolower(implode(' ', $jenisLayananArray));
-                                $searchBenefit = strtolower(implode(' ', $benefitArray));
-                                $searchCakupan = strtolower(implode(' ', $cakupanArray));
-                                $pivotObatIds = $pivot->obat_ids ?? [];
-                                $searchObat = '';
-                                if (! empty($pivotObatIds)) {
-                                    $searchObat = strtolower($rl->obatRelasi->whereIn('id', $pivotObatIds)->pluck('nama')->implode(' '));
-                                }
-                                $searchDeskripsi = strtolower($rl->deskripsi ?? '');
-
-                                $searchDiskon = '';
-                                if ($rl->diskon && $rl->diskon->count() > 0) {
-                                    $searchDiskon = $rl->diskon->pluck('persentase_diskon')->implode(' ') . ' ' .
-                                        strtolower($rl->diskon->pluck('keterangan')->implode(' '));
-                                }
-
-                                // Semua BU names untuk grup ini (digunakan saat mode grouping)
-                                $allBuNames = $grouped->get($rl->id, collect())->pluck('bu_nama')->filter()->unique();
-                            @endphp
-                            <tr class="table-row"
-                                data-rl-id="{{ $rl->id }}"
-                                data-index="{{ $index + 1 }}"
-                                data-nama="{{ strtolower($rl->nama_asuransi) }}"
-                                data-alias-tera="{{ strtolower($rl->alias_versi_tera ?? '') }}"
-                                data-nomor-spk="{{ strtolower($rl->nomor_spk ?? '') }}"
-                                data-layanan="{{ $searchLayanan }}"
-                                data-benefit="{{ $searchBenefit }}"
-                                data-cakupan="{{ $searchCakupan }}"
-                                data-obat="{{ $searchObat }}"
-                                data-deskripsi="{{ $searchDeskripsi }}"
-                                data-diskon="{{ $searchDiskon }}"
-                                data-status="{{ $rl->status_effective }}"
-                                data-penjamin-category="{{ $rl->penjamin_category }}"
-                                data-high-profile="{{ $rl->is_high_profile ? '1' : '0' }}"
-                                data-tanggal-mulai="{{ $rl->tanggal_mulai?->format('Y-m-d') ?? '' }}"
-                                data-tanggal-berakhir="{{ $rl->tanggal_berakhir?->format('Y-m-d') ?? '' }}"
-                                data-badan-usaha="{{ strtolower($buName) }}"
-                                data-jangka-waktu="{{ $rl->penagihanPembayaran ? implode(',', $rl->penagihanPembayaran->map(fn($p) => $p->jangka_waktu_hari . '|' . $p->tipe_hari)->toArray()) : '' }}"
-                                data-all-bu-names="{{ strtolower($allBuNames->implode(' ')) }}">
-
-                                <td class="number-cell text-center font-bold-700 text-muted-premium">
-                                    <span class="row-number">{{ $index + 1 }}</span>
-                                </td>
-                                <td class="company-cell text-left">
-                                    <div class="company-info">
-                                        <div class="company-details">
-                                            <div class="company-name font-bold-700 color-slate-900">
-                                                {{ Str::upper($rl->nama_asuransi) }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="text-left text-sm-semibold color-indigo">
-                                    @if($rl->alias_versi_tera)
-                                        <span class="badge badge-indigo text-xs-bold inline-flex-center letter-spacing-tight">
-                                            {{ $rl->alias_versi_tera }}
-                                        </span>
-                                    @else
-                                        <span class="color-muted">-</span>
-                                    @endif
-                                </td>
-                                <td class="text-left text-sm-semibold color-slate-700">
-                                    {{ $rl->nomor_spk ?? '-' }}
-                                </td>
-                                <td class="text-center">
-                                    <span class="status-badge status-info text-xs-bold min-w-60">
-                                        {{ $rl->penjamin_category ?? '-' }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    @if($rl->is_high_profile)
-                                        <span class="badge-high-profile">High</span>
-                                    @else
-                                        <span class="color-muted text-xs-medium">-</span>
-                                    @endif
-                                </td>
-                                <td class="bu-cell text-left color-slate-700">
-                                    <span class="badge badge-bu bu-single">{{ $buName !== '' ? Str::upper($buName) : '-' }}</span>
-                                    <span class="badge badge-bu bu-group-badge d-none"></span>
-                                </td>
-                                <td class="period-cell text-left">
-                                    <div class="period-info">
-                                        <div class="period-dates">
-                                            <div class="start-date">{{ $rl->tanggal_mulai?->format('d M Y') ?? '-' }}</div>
-                                            <div class="date-separator">—</div>
-                                            <div class="end-date">{{ $rl->tanggal_berakhir?->format('d M Y') ?? '-' }}</div>
-                                        </div>
-                                        <div class="period-duration">
-                                            @if($rl->tanggal_mulai && $rl->tanggal_berakhir)
-                                                @php
-                                                    $duration = $rl->tanggal_mulai->diffInDays($rl->tanggal_berakhir);
-                                                    $remaining = floor(now()->diffInDays($rl->tanggal_berakhir, false));
-                                                @endphp
-                                                <div class="flex-col-start">
-                                                    <span class="duration text-xs-muted">Total: {{ $duration }} Hari</span>
-                                                    @if($rl->status_effective === 'aktif')
-                                                        <span class="remaining status-badge {{ $remaining <= 30 ? 'status-critical' : ($remaining <= 90 ? 'status-warning-badge' : 'status-active') }} font-bold-700 text-xs-medium"
-                                                              data-expiration="{{ $rl->tanggal_berakhir }}">Tersisa: {{ max(0, $remaining) }} Hari
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                            @else
-                                                <span class="duration text-xs-muted">Periode belum diisi</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="text-center text-xs-medium">
-                                    @if($rl->penagihanPembayaran && $rl->penagihanPembayaran->count() > 0)
-                                        @foreach($rl->penagihanPembayaran as $penagihan)
-                                            <div class="font-bold-700 color-slate-900">
-                                                {{ $penagihan->jangka_waktu_hari }} {{ $penagihan->tipe_hari }}
-                                            </div>
-                                        @endforeach
-                                    @else
-                                        <a href="{{ route('admin.penagihan-pembayaran.index', ['ruang_lingkup_id' => $rl->id]) }}" class="btn-tambah-inline" title="Tambah jangka waktu bayar">
-                                            <x-icon name="plus-circle-solid" class="" />
-                                            Tambah
-                                        </a>
-                                    @endif
-                                </td>
-                                <td class="discount-cell text-center">
-                                    @if($rl->diskon && $rl->diskon->count() > 0)
-                                        @foreach($rl->diskon as $d)
-                                            <span class="status-badge status-active text-xs-bold inline-flex-center">
-                                                {{ $d->persentase_diskon }}%
-                                            </span>
-                                        @endforeach
-                                    @else
-                                        <a href="{{ route('admin.diskon.index', ['ruang_lingkup_id' => $rl->id]) }}" class="btn-tambah-inline" title="Tambah diskon">
-                                            <x-icon name="plus-circle-solid" class="" />
-                                            Tambah
-                                        </a>
-                                    @endif
-                                </td>
-                                <td class="services-cell text-left">
-                                    @if(count($jenisLayananArray) > 0)
-                                        <div class="service-badges">
-                                            @foreach($jenisLayananArray as $layanan)
-                                                <span class="badge-layanan-khusus" data-item="{{ strtolower($layanan) }}">{{ $layanan }}</span>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <span class="no-data">-</span>
-                                    @endif
-                                </td>
-                                <td class="benefits-cell text-left">
-                                    @if(count($benefitArray) > 0)
-                                        <div class="benefit-list">
-                                            @foreach(array_slice($benefitArray, 0, 3) as $ben)
-                                                <div class="benefit-item">
-                                                    <span class="benefit-icon">✓</span> {{ Str::limit($ben, 35) }}
-                                                </div>
-                                            @endforeach
-                                            @if(count($benefitArray) > 3)
-                                                <div class="more-items">+{{ count($benefitArray) - 3 }} benefit lainnya</div>
-                                            @endif
-                                        </div>
-                                    @else
-                                        <span class="no-data">-</span>
-                                    @endif
-                                </td>
-                                <td class="coverage-cell text-left">
-                                    @if(count($cakupanArray) > 0)
-                                        <div class="coverage-list">
-                                            @foreach(array_slice($cakupanArray, 0, 2) as $cak)
-                                                <div class="coverage-item">{{ Str::limit($cak, 30) }}</div>
-                                            @endforeach
-                                            @if(count($cakupanArray) > 2)
-                                                <div class="more-items">+{{ count($cakupanArray) - 2 }} lainnya</div>
-                                            @endif
-                                        </div>
-                                    @else
-                                        <span class="no-data">-</span>
-                                    @endif
-                                </td>
-                                <td class="obat-cell text-left">
-                                    @php
-                                        $pivotObatIds = $pivot->obat_ids ?? [];
-                                        $obats = ! empty($pivotObatIds) && $rl->obatRelasi ? $rl->obatRelasi->whereIn('id', $pivotObatIds) : collect();
-                                    @endphp
-                                    @if($obats->count() > 0)
-                                        <div class="obat-list">
-                                            @foreach($obats as $obat)
-                                                <span class="badge-obat-mini" data-item="{{ strtolower($obat->nama) }}">{{ Str::limit($obat->nama, 25) }}</span>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <span class="no-data">-</span>
-                                    @endif
-                                </td>
-                                <td class="status-cell text-center">
-                                    @if($rl->status_effective === 'aktif')
-                                        <span class="status-badge status-active">Aktif</span>
-                                    @elseif($rl->approval_status !== null && $rl->approval_status->value !== 'approved')
-                                        <span class="status-badge {{ $rl->approval_badge['class'] }}">{{ $rl->approval_badge['label'] }}</span>
-                                    @else
-                                        <span class="status-badge status-expired">Tidak Aktif</span>
-                                    @endif
-                                </td>
-                                <td class="actions-cell text-center">
-                                    <div class="action-buttons flex-col-center">
-                                        <a href="{{ route('admin.ruang-lingkup.show', $rl) }}"
-                                            title="Lihat Detail" class="action-btn view-btn no-underline inline-flex-center">
-                                            <x-icon name="eye" class="" />
-                                        </a>
-                                        <a href="{{ route('admin.ruang-lingkup.edit', $rl) }}"
-                                            title="Edit" class="action-btn edit-btn no-underline inline-flex-center">
-                                            <x-icon name="edit" class="" />
-                                        </a>
-                                        <x-delete-modal
-                                            action="{{ route('admin.ruang-lingkup.destroy', $rl) }}"
-                                            label="{{ $rl->nama_asuransi }}"
-                                            class="action-btn delete-btn"
-                                            title="Hapus"
-                                        >
-                                            <x-icon name="trash" class="icon-14" />
-                                        </x-delete-modal>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr id="emptyRow">
-                                <td colspan="16" class="empty-state">
-                                    <div class="empty-icon">
-                                        <x-icon name="document" class="" />
-                                    </div>
-                                    <div class="empty-text">
-                                        <h3>Belum ada data kerjasama</h3>
-                                        <p>Mulai dengan menambahkan kerjasama asuransi pertama Anda</p>
-                                    </div>
-                                    <a href="{{ route('admin.ruang-lingkup.create') }}" class="btn-primary no-underline inline-flex-center gap-2">
-                                        <x-icon name="plus-circle-solid" class="" />
-                                        Tambah Kerjasama
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforelse
+                        <tr id="emptyRow" class="d-none">
+                            <td colspan="16" class="empty-state">
+                                <div class="empty-icon">
+                                    <x-icon name="document" class="" />
+                                </div>
+                                <div class="empty-text">
+                                    <h3>Belum ada data kerjasama</h3>
+                                    <p>Mulai dengan menambahkan kerjasama asuransi pertama Anda</p>
+                                </div>
+                                <a href="{{ route('admin.ruang-lingkup.create') }}" class="btn-primary no-underline inline-flex-center gap-2">
+                                    <x-icon name="plus-circle-solid" class="" />
+                                    Tambah Kerjasama
+                                </a>
+                            </td>
+                        </tr>
                         <tr id="searchEmptyRow" class="d-none">
                             <td colspan="16" class="empty-state empty-state-compact">
                                 <div class="empty-icon empty-icon-mb-1 text-muted-premium">
@@ -634,9 +382,8 @@
 
         // Store all items data by RL ID for easy access
         const itemsDataById = {};
-        @foreach(collect($ruangLingkup)->groupBy(fn($i) => $i['rl']->id) as $rlId => $group)
-            @php $first = $group->first(); @endphp
-            itemsDataById[{{ $rlId }}] = @json($first['rl']);
+        @foreach(collect($rows)->keyBy('rl_id') as $rlId => $row)
+            itemsDataById[{{ $rlId }}] = @json($row);
         @endforeach
 
         /**
@@ -644,7 +391,7 @@
          * AUTOCOMPLETE DATA PREPARATION
          * ==========================================
          */
-        const asuransiList = @json(collect($ruangLingkup)->pluck('rl')->pluck('nama_asuransi')->unique()->values());
+        const asuransiList = @json(collect($rows)->pluck('nama')->unique()->values());
         let suggestions = new Set();
         let suggestionList = [];
         let benefitSuggestions = new Set();
@@ -661,19 +408,11 @@
 
         defaultBenefits.forEach(benefit => benefitSuggestions.add(benefit));
 
-        @foreach($ruangLingkup as $item)
-            @php
-                $itemBenefitArray = $item['benefit'];
-                $itemCakupanArray = $item['cakupan'];
-            @endphp
-            @foreach($itemBenefitArray as $benefit)
-                @if(strpos(strtolower($benefit), 'biaya') === false)
-                    benefitSuggestions.add(@json($benefit));
-                @endif
-            @endforeach
-            @foreach($itemCakupanArray as $cakupan)
-                cakupanSuggestions.add(@json($cakupan));
-            @endforeach
+        @foreach(collect($rows)->flatMap(fn ($r) => $r['benefit'])->filter(fn ($b) => stripos((string) $b, 'biaya') === false)->unique()->values() as $benefit)
+            benefitSuggestions.add(@json($benefit));
+        @endforeach
+        @foreach(collect($rows)->flatMap(fn ($r) => $r['cakupan'])->unique()->values() as $cakupan)
+            cakupanSuggestions.add(@json($cakupan));
         @endforeach
 
         let benefitSuggestionList = Array.from(benefitSuggestions).sort();
@@ -749,12 +488,189 @@
             });
         }
 
+        // ============================================================
+        // Row rendering: data JSON -> <tr>. Menggantikan render baris di server
+        // (HTML turun drastis; markup baris dibuat sekali oleh JS).
+        // ============================================================
+        const tableRowsData = @json($rows);
+
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        const SVG_PLUS_CIRCLE_SOLID = '<svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" /></svg>';
+        const SVG_EYE = '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>';
+        const SVG_EDIT = '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>';
+        const SVG_TRASH = '<svg viewBox="0 0 20 20" fill="currentColor" class="icon-14"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>';
+
+        function limitStr(str, max) {
+            str = String(str == null ? '' : str);
+            return str.length > max ? str.slice(0, max) + '...' : str;
+        }
+
+        function buildTableRow(row, index) {
+            const s = row.search;
+            const esc = escapeHtml;
+
+            const aliasHtml = row.alias
+                ? '<span class="badge badge-indigo text-xs-bold inline-flex-center letter-spacing-tight">' + esc(row.alias) + '</span>'
+                : '<span class="color-muted">-</span>';
+
+            const highProfileHtml = row.high_profile === '1'
+                ? '<span class="badge-high-profile">High</span>'
+                : '<span class="color-muted text-xs-medium">-</span>';
+
+            const buHtml = row.bu_nama !== ''
+                ? '<span class="badge badge-bu bu-single">' + esc(row.bu_nama) + '</span><span class="badge badge-bu bu-group-badge d-none"></span>'
+                : '<span class="badge badge-bu bu-single">-</span><span class="badge badge-bu bu-group-badge d-none"></span>';
+
+            let periodHtml;
+            if (row.tanggal_mulai && row.tanggal_berakhir) {
+                let remainingHtml = '';
+                if (row.status_effective === 'aktif' && row.remaining_days !== null) {
+                    remainingHtml = '<span class="remaining status-badge ' + row.remaining_class + ' font-bold-700 text-xs-medium" data-expiration="' + esc(row.expiration) + '">Tersisa: ' + row.remaining_days + ' Hari</span>';
+                }
+                periodHtml = '<div class="flex-col-start">' +
+                    '<span class="duration text-xs-muted">Total: ' + row.duration_days + ' Hari</span>' +
+                    remainingHtml +
+                '</div>';
+            } else {
+                periodHtml = '<span class="duration text-xs-muted">Periode belum diisi</span>';
+            }
+
+            let penagihanHtml;
+            if (row.penagihan && row.penagihan.length > 0) {
+                penagihanHtml = row.penagihan.map(function (p) {
+                    return '<div class="font-bold-700 color-slate-900">' + esc(p.j) + ' ' + esc(p.t) + '</div>';
+                }).join('');
+            } else {
+                penagihanHtml = '<a href="' + row.penagihan_url + '" class="btn-tambah-inline" title="Tambah jangka waktu bayar">' + SVG_PLUS_CIRCLE_SOLID + ' Tambah</a>';
+            }
+
+            let diskonHtml;
+            if (row.diskons && row.diskons.length > 0) {
+                diskonHtml = row.diskons.map(function (d) {
+                    return '<span class="status-badge status-active text-xs-bold inline-flex-center">' + esc(d) + '%</span>';
+                }).join('');
+            } else {
+                diskonHtml = '<a href="' + row.diskon_url + '" class="btn-tambah-inline" title="Tambah diskon">' + SVG_PLUS_CIRCLE_SOLID + ' Tambah</a>';
+            }
+
+            const layananHtml = row.jenis_layanan.length > 0
+                ? '<div class="service-badges">' + row.jenis_layanan.map(function (n) {
+                    return '<span class="badge-layanan-khusus" data-item="' + esc(n.toLowerCase()) + '">' + esc(n) + '</span>';
+                }).join('') + '</div>'
+                : '<span class="no-data">-</span>';
+
+            let benefitHtml;
+            if (row.benefit.length > 0) {
+                benefitHtml = '<div class="benefit-list">' + row.benefit.slice(0, 3).map(function (b) {
+                    return '<div class="benefit-item"><span class="benefit-icon">✓</span> ' + esc(limitStr(b, 35)) + '</div>';
+                }).join('');
+                if (row.benefit.length > 3) {
+                    benefitHtml += '<div class="more-items">+' + (row.benefit.length - 3) + ' benefit lainnya</div>';
+                }
+                benefitHtml += '</div>';
+            } else {
+                benefitHtml = '<span class="no-data">-</span>';
+            }
+
+            let cakupanHtml;
+            if (row.cakupan.length > 0) {
+                cakupanHtml = '<div class="coverage-list">' + row.cakupan.slice(0, 2).map(function (c) {
+                    return '<div class="coverage-item">' + esc(limitStr(c, 30)) + '</div>';
+                }).join('');
+                if (row.cakupan.length > 2) {
+                    cakupanHtml += '<div class="more-items">+' + (row.cakupan.length - 2) + ' lainnya</div>';
+                }
+                cakupanHtml += '</div>';
+            } else {
+                cakupanHtml = '<span class="no-data">-</span>';
+            }
+
+            const obatHtml = row.obat.length > 0
+                ? '<div class="obat-list">' + row.obat.map(function (n) {
+                    return '<span class="badge-obat-mini" data-item="' + esc(n.toLowerCase()) + '">' + esc(n) + '</span>';
+                }).join('') + '</div>'
+                : '<span class="no-data">-</span>';
+
+            let statusHtml;
+            if (row.status_effective === 'aktif') {
+                statusHtml = '<span class="status-badge status-active">Aktif</span>';
+            } else if (row.approval_label) {
+                statusHtml = '<span class="status-badge ' + row.approval_class + '">' + esc(row.approval_label) + '</span>';
+            } else {
+                statusHtml = '<span class="status-badge status-expired">Tidak Aktif</span>';
+            }
+
+            return '<tr class="table-row"' +
+                    ' data-rl-id="' + row.rl_id + '"' +
+                    ' data-index="' + (index + 1) + '"' +
+                    ' data-nama="' + esc(s.nama) + '"' +
+                    ' data-alias-tera="' + esc(s.alias) + '"' +
+                    ' data-nomor-spk="' + esc(s.nomor_spk) + '"' +
+                    ' data-layanan="' + esc(s.layanan) + '"' +
+                    ' data-benefit="' + esc(s.benefit) + '"' +
+                    ' data-cakupan="' + esc(s.cakupan) + '"' +
+                    ' data-obat="' + esc(s.obat) + '"' +
+                    ' data-deskripsi="' + esc(s.deskripsi) + '"' +
+                    ' data-diskon="' + esc(s.diskon) + '"' +
+                    ' data-status="' + esc(s.status) + '"' +
+                    ' data-penjamin-category="' + esc(row.penjamin) + '"' +
+                    ' data-high-profile="' + row.high_profile + '"' +
+                    ' data-tanggal-mulai="' + esc(row.tanggal_mulai || '') + '"' +
+                    ' data-tanggal-berakhir="' + esc(row.tanggal_berakhir || '') + '"' +
+                    ' data-badan-usaha="' + esc(s.bu) + '"' +
+                    ' data-jangka-waktu="' + esc(row.jangka_waktu) + '"' +
+                    ' data-all-bu-names="' + esc(row.all_bu_names) + '">' +
+                '<td class="number-cell text-center font-bold-700 text-muted-premium"><span class="row-number">' + (index + 1) + '</span></td>' +
+                '<td class="company-cell text-left"><div class="company-info"><div class="company-details"><div class="company-name font-bold-700 color-slate-900">' + esc(row.nama) + '</div></div></div></td>' +
+                '<td class="text-left text-sm-semibold color-indigo">' + aliasHtml + '</td>' +
+                '<td class="text-left text-sm-semibold color-slate-700">' + (row.nomor_spk ? esc(row.nomor_spk) : '-') + '</td>' +
+                '<td class="text-center"><span class="status-badge status-info text-xs-bold min-w-60">' + (row.penjamin ? esc(row.penjamin) : '-') + '</span></td>' +
+                '<td class="text-center">' + highProfileHtml + '</td>' +
+                '<td class="bu-cell text-left color-slate-700">' + buHtml + '</td>' +
+                '<td class="period-cell text-left"><div class="period-info"><div class="period-dates"><div class="start-date">' + (row.mulai_fmt ? esc(row.mulai_fmt) : '-') + '</div><div class="date-separator">&mdash;</div><div class="end-date">' + (row.berakhir_fmt ? esc(row.berakhir_fmt) : '-') + '</div></div><div class="period-duration">' + periodHtml + '</div></div></td>' +
+                '<td class="text-center text-xs-medium">' + penagihanHtml + '</td>' +
+                '<td class="discount-cell text-center">' + diskonHtml + '</td>' +
+                '<td class="services-cell text-left">' + layananHtml + '</td>' +
+                '<td class="benefits-cell text-left">' + benefitHtml + '</td>' +
+                '<td class="coverage-cell text-left">' + cakupanHtml + '</td>' +
+                '<td class="obat-cell text-left">' + obatHtml + '</td>' +
+                '<td class="status-cell text-center">' + statusHtml + '</td>' +
+                '<td class="actions-cell text-center"><div class="action-buttons flex-col-center">' +
+                    '<a href="' + row.show_url + '" title="Lihat Detail" class="action-btn view-btn no-underline inline-flex-center">' + SVG_EYE + '</a>' +
+                    '<a href="' + row.edit_url + '" title="Edit" class="action-btn edit-btn no-underline inline-flex-center">' + SVG_EDIT + '</a>' +
+                    '<button type="button" data-dm-trigger data-dm-action="' + row.destroy_url + '" data-dm-label="' + esc(row.nama) + '" class="action-btn delete-btn" title="Hapus">' + SVG_TRASH + '</button>' +
+                '</div></td>' +
+            '</tr>';
+        }
+
+        function renderTableRowsData() {
+            const tbody = document.getElementById('tableBody');
+            const emptyRow = document.getElementById('emptyRow');
+            if (!tbody) return;
+
+            if (!tableRowsData.length) {
+                if (emptyRow) emptyRow.classList.remove('d-none');
+                return;
+            }
+
+            tbody.insertAdjacentHTML('afterbegin', tableRowsData.map(buildTableRow).join(''));
+        }
+
         /**
          * ==========================================
          * INITIALIZATION
          * ==========================================
          */
         document.addEventListener('DOMContentLoaded', function () {
+            renderTableRowsData();
             initializeData();
             setupEventListeners();
             setupActionButtonDelegation();

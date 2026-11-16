@@ -13,6 +13,7 @@ use App\Services\ContractReminderService;
 use App\Services\WorkflowService;
 use App\Traits\PreparesDashboardData;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class RuangLingkupController extends Controller
 {
@@ -39,8 +40,9 @@ class RuangLingkupController extends Controller
 
         $badanUsaha = BadanUsaha::orderBy('nama_bu', 'asc')->get();
         $visibleColumns = $this->getVisibleColumns(false);
+        $rows = $this->buildRows($ruangLingkup);
 
-        return view('admin.master.ruang_lingkup', compact('ruangLingkup', 'badanUsaha', 'visibleColumns'));
+        return view('admin.master.ruang_lingkup', compact('badanUsaha', 'visibleColumns', 'rows'));
     }
 
     public function create()
@@ -330,6 +332,114 @@ class RuangLingkupController extends Controller
                 'nama' => $o->nama,
             ]),
         ]);
+    }
+
+    /**
+     * Bangun array polos per baris tabel (jauh lebih kecil dari HTML baris:
+     * data dikirim via @json dan dirender jadi <tr> oleh JavaScript).
+     */
+    private function buildRows(\Illuminate\Support\Collection $items): array
+    {
+        $grouped = $items->groupBy(fn ($item) => $item['rl']->id);
+
+        return $items->values()->map(function ($item) use ($grouped) {
+            $rl = $item['rl'];
+            $pivot = $item['pivot'];
+            $buName = $item['bu_nama'];
+            $benefitArray = $item['benefit'];
+            $cakupanArray = $item['cakupan'];
+
+            $pivotLayananIds = $pivot->jenis_layanan_ids ?? [];
+            $jenisLayananArray = [];
+            if (! empty($pivotLayananIds) && $rl->jenisLayananRelasi && $rl->jenisLayananRelasi->count() > 0) {
+                $jenisLayananArray = $rl->jenisLayananRelasi->whereIn('id', $pivotLayananIds)->pluck('nama')->toArray();
+            }
+
+            $pivotObatIds = $pivot->obat_ids ?? [];
+            $obats = ! empty($pivotObatIds) && $rl->obatRelasi
+                ? $rl->obatRelasi->whereIn('id', $pivotObatIds)->values()
+                : collect();
+            $obatNames = $obats->pluck('nama')->map(fn ($n) => Str::limit($n, 25))->values()->all();
+
+            $searchLayanan = strtolower(implode(' ', $jenisLayananArray));
+            $searchBenefit = strtolower(implode(' ', $benefitArray));
+            $searchCakupan = strtolower(implode(' ', $cakupanArray));
+            $searchObat = strtolower($obats->pluck('nama')->implode(' '));
+
+            $searchDiskon = '';
+            if ($rl->diskon && $rl->diskon->count() > 0) {
+                $searchDiskon = $rl->diskon->pluck('persentase_diskon')->implode(' ').' '.
+                    strtolower($rl->diskon->pluck('keterangan')->implode(' '));
+            }
+
+            $allBuNames = $grouped->get($rl->id, collect())->pluck('bu_nama')->filter()->unique();
+
+            $statusEffective = $rl->status_effective;
+            $approvalBadge = ($rl->approval_status !== null && $rl->approval_status->value !== 'approved')
+                ? $rl->approval_badge
+                : null;
+
+            $duration = ($rl->tanggal_mulai && $rl->tanggal_berakhir)
+                ? $rl->tanggal_mulai->diffInDays($rl->tanggal_berakhir)
+                : null;
+            $remaining = $rl->tanggal_berakhir
+                ? floor(now()->diffInDays($rl->tanggal_berakhir, false))
+                : null;
+            $remainingClass = $remaining !== null
+                ? ($remaining <= 30 ? 'status-critical' : ($remaining <= 90 ? 'status-warning-badge' : 'status-active'))
+                : '';
+
+            return [
+                'rl_id' => $rl->id,
+                'nama' => Str::upper($rl->nama_asuransi),
+                'alias' => $rl->alias_versi_tera,
+                'nomor_spk' => $rl->nomor_spk,
+                'penjamin' => $rl->penjamin_category,
+                'high_profile' => $rl->is_high_profile ? '1' : '0',
+                'bu_nama' => $buName !== '' ? Str::upper($buName) : '',
+                'all_bu_names' => strtolower($allBuNames->implode(' ')),
+                'tanggal_mulai' => $rl->tanggal_mulai?->format('Y-m-d'),
+                'tanggal_berakhir' => $rl->tanggal_berakhir?->format('Y-m-d'),
+                'mulai_fmt' => $rl->tanggal_mulai?->format('d M Y'),
+                'berakhir_fmt' => $rl->tanggal_berakhir?->format('d M Y'),
+                'expiration' => $rl->tanggal_berakhir ? (string) $rl->tanggal_berakhir : null,
+                'duration_days' => $duration,
+                'remaining_days' => $remaining !== null ? max(0, $remaining) : null,
+                'remaining_class' => $remainingClass,
+                'status_effective' => $statusEffective,
+                'approval_label' => $approvalBadge['label'] ?? null,
+                'approval_class' => $approvalBadge['class'] ?? null,
+                'jenis_layanan' => $jenisLayananArray,
+                'benefit' => $benefitArray,
+                'cakupan' => $cakupanArray,
+                'obat' => $obatNames,
+                'diskons' => $rl->diskon ? $rl->diskon->pluck('persentase_diskon')->values()->all() : [],
+                'penagihan' => $rl->penagihanPembayaran
+                    ? $rl->penagihanPembayaran->map(fn ($p) => ['j' => $p->jangka_waktu_hari, 't' => $p->tipe_hari])->values()->all()
+                    : [],
+                'jangka_waktu' => $rl->penagihanPembayaran
+                    ? implode(',', $rl->penagihanPembayaran->map(fn ($p) => $p->jangka_waktu_hari.'|'.$p->tipe_hari)->toArray())
+                    : '',
+                'search' => [
+                    'nama' => strtolower($rl->nama_asuransi),
+                    'alias' => strtolower($rl->alias_versi_tera ?? ''),
+                    'nomor_spk' => strtolower($rl->nomor_spk ?? ''),
+                    'layanan' => $searchLayanan,
+                    'benefit' => $searchBenefit,
+                    'cakupan' => $searchCakupan,
+                    'obat' => $searchObat,
+                    'deskripsi' => strtolower($rl->deskripsi ?? ''),
+                    'diskon' => strtolower($searchDiskon),
+                    'status' => $statusEffective,
+                    'bu' => strtolower($buName),
+                ],
+                'show_url' => route('admin.ruang-lingkup.show', $rl),
+                'edit_url' => route('admin.ruang-lingkup.edit', $rl),
+                'destroy_url' => route('admin.ruang-lingkup.destroy', $rl),
+                'penagihan_url' => route('admin.penagihan-pembayaran.index', ['ruang_lingkup_id' => $rl->id]),
+                'diskon_url' => route('admin.diskon.index', ['ruang_lingkup_id' => $rl->id]),
+            ];
+        })->values()->all();
     }
 
     private function getMasterData(): array

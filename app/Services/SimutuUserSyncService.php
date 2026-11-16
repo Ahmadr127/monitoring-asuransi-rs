@@ -211,10 +211,31 @@ class SimutuUserSyncService
 
     /**
      * Sync untuk satu username. Jika akun belum ada lokal, buat otomatis.
+     *
+     * Lazy-sync hanya saat data basi (stale_after_seconds, default 1 jam);
+     * user yang baru disinkronkan TIDAK perlu koneksi ke simutu saat login.
+     * Jika simutu tidak terjangkau, login tidak ikut menggantung:
+     * kegagalan ditandai (circuit breaker) dan sync dilewati sementara.
      */
     public function syncForUsername(?string $username): ?User
     {
         if (! $this->enabled() || ! $username) {
+            return null;
+        }
+
+        $stale = (int) config('simutu_sync.stale_after_seconds', 3600);
+        $local = User::where('username', $username)->first();
+
+        if ($local && $stale > 0 && $local->simutu_synced_at) {
+            if ($local->simutu_synced_at->greaterThanOrEqualTo(now()->subSeconds($stale))) {
+                // Data masih segar — lewati koneksi ke simutu sepenuhnya.
+                return $local;
+            }
+        }
+
+        // Circuit breaker: jika simutu baru saja gagal, jangan gantungkan login.
+        $breakerKey = 'simutu.sync.unreachable';
+        if (\Illuminate\Support\Facades\Cache::has($breakerKey)) {
             return null;
         }
 
@@ -241,6 +262,8 @@ class SimutuUserSyncService
                 ->first();
         } catch (\Throwable $e) {
             Log::warning('Simutu syncForUsername gagal: '.$e->getMessage());
+            \Illuminate\Support\Facades\Cache::put($breakerKey, true, now()->addMinutes(10));
+
             return null;
         }
 
@@ -248,8 +271,11 @@ class SimutuUserSyncService
             return null;
         }
 
-        $local = $this->findLocalUser((array) $simutu);
-        return $this->applyToLocal((array) $simutu, $local, createIfMissing: true);
+        $localSynced = $this->findLocalUser((array) $simutu);
+        $synced = $this->applyToLocal((array) $simutu, $localSynced, createIfMissing: true);
+        \Illuminate\Support\Facades\Cache::forget($breakerKey);
+
+        return $synced;
     }
 
     protected function findLocalUser(array $simutu): ?User
