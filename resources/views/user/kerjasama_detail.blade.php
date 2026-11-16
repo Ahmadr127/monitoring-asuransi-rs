@@ -96,6 +96,12 @@
                         <div class="detail-value">{{ $ruangLingkup->alias_versi_tera ?? '-' }}</div>
                     </div>
                     @endif
+                    @if(in_array('nomor_spk', $visibleColumns))
+                    <div class="detail-item span-2">
+                        <div class="detail-label">Nomor SPK</div>
+                        <div class="detail-value">{{ $ruangLingkup->nomor_spk ?? '-' }}</div>
+                    </div>
+                    @endif
                     @if(in_array('penjamin_category', $visibleColumns))
                     <div class="detail-item">
                         <div class="detail-label">TPA / PAYOR</div>

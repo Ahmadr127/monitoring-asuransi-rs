@@ -75,6 +75,11 @@
 .rl-btn-rem { border-color: #fee2e2; color: #ef4444; }
 .rl-btn-rem:hover { background: #ef4444; border-color: #ef4444; color: #fff; }
 
+/* Baris input BU + tombol tambah */
+.bu-input-row { display: flex; gap: 0.3125rem; align-items: stretch; }
+.bu-input-row .input-container { flex: 1; min-width: 0; }
+.bu-input-row .rl-btn-add { align-self: center; }
+
 .rl-empty { padding: 0.4375rem; text-align: center; }
 .rl-empty p { font-size: 0.6875rem; color: #94a3b8; margin: 0 0 0.3125rem 0; }
 .rl-empty .btn-primary { font-size: 0.6875rem; padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.1875rem; }

@@ -125,7 +125,7 @@ class RuangLingkupController extends Controller
 
             foreach ($buGroups as $group) {
                 $ruangLingkup->badanUsahaPivot()->create([
-                    'badan_usaha_id' => $group['badan_usaha_id'],
+                    'badan_usaha_id' => $group['badan_usaha_id'] ?? null,
                     'benefit' => $this->filterNonEmptyArray($group['benefit'] ?? []),
                     'cakupan' => $this->filterNonEmptyArray($group['cakupan'] ?? []),
                     'jenis_layanan_ids' => $this->filterNonEmptyArray($group['jenis_layanan_ids'] ?? []),
@@ -229,7 +229,7 @@ class RuangLingkupController extends Controller
 
             foreach ($buGroups as $group) {
                 $data = [
-                    'badan_usaha_id' => $group['badan_usaha_id'],
+                    'badan_usaha_id' => $group['badan_usaha_id'] ?? null,
                     'benefit' => $this->filterNonEmptyArray($group['benefit'] ?? []),
                     'cakupan' => $this->filterNonEmptyArray($group['cakupan'] ?? []),
                     'jenis_layanan_ids' => $this->filterNonEmptyArray($group['jenis_layanan_ids'] ?? []),
@@ -355,13 +355,14 @@ class RuangLingkupController extends Controller
             'is_high_profile' => 'nullable|boolean',
             'penjamin_category' => 'nullable|string|in:TPA,PAYOR,TPA & PAYOR',
             'alias_versi_tera' => 'nullable|string|max:255',
+            'nomor_spk' => 'nullable|string|max:255',
             'pic_nama' => 'nullable|string|max:255',
             'pic_kontak' => 'nullable|string|max:30',
             'pic_email' => 'nullable|email|max:255',
             'pic_portal' => 'nullable|string|max:500',
             'alamat_penagihan' => 'nullable|string',
             'bu_groups' => 'required|array|min:1',
-            'bu_groups.*.badan_usaha_id' => 'required|exists:master_badan_usaha,id',
+            'bu_groups.*.badan_usaha_id' => 'nullable|exists:master_badan_usaha,id',
             'bu_groups.*.benefit' => 'nullable|array',
             'bu_groups.*.benefit.*' => 'nullable|string',
             'bu_groups.*.cakupan' => 'nullable|array',
@@ -383,7 +384,6 @@ class RuangLingkupController extends Controller
             'bu_groups.*.jenis_layanan_ids.min' => 'Pilih minimal 1 jenis layanan untuk setiap Badan Usaha',
             'bu_groups.required' => 'Minimal 1 Badan Usaha harus dipilih',
             'bu_groups.min' => 'Minimal 1 Badan Usaha harus dipilih',
-            'bu_groups.*.badan_usaha_id.required' => 'Pilih Badan Usaha',
         ];
 
         if ($isUpdate) {

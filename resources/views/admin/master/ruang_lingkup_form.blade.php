@@ -72,6 +72,13 @@
                                    placeholder="Contoh: AIA V2.0">
                         </div>
 
+                        <div class="rl-field s2">
+                            <label class="rl-label">Nomor SPK</label>
+                            <input type="text" name="nomor_spk" id="nomor_spk" class="rl-input"
+                                   value="{{ old('nomor_spk', $isEdit ? $ruangLingkup->nomor_spk : '') }}"
+                                   placeholder="Contoh: SPK/2026/001" maxlength="255">
+                        </div>
+
                         <div class="rl-field s1">
                             <label class="rl-label req">TPA / PAYOR</label>
                             <x-searchable-select
@@ -202,17 +209,23 @@
                                 <input type="hidden" name="bu_groups[{{ $gi }}][pivot_id]" value="{{ $group['pivot_id'] }}">
                                 <div class="rl-grid">
                                     <div class="rl-field s2">
-                                        <label class="rl-label req">Badan Usaha</label>
-                                        <div class="input-container">
-                                            <input type="text" class="rl-input bu-autocomplete-input"
-                                                   value="{{ $group['badan_usaha_name'] }}"
-                                                   placeholder="Cari Badan Usaha..."
-                                                   data-target-id="bu_groups[{{ $gi }}][badan_usaha_id]"
-                                                   autocomplete="off">
-                                            <input type="hidden" name="bu_groups[{{ $gi }}][badan_usaha_id]"
-                                                   class="bu-autocomplete-hidden"
-                                                   value="{{ $group['badan_usaha_id'] }}">
-                                            <div class="rl-autocomplete bu-autocomplete-dropdown"></div>
+                                        <label class="rl-label">Badan Usaha (opsional)</label>
+                                        <div class="bu-input-row">
+                                            <div class="input-container">
+                                                <input type="text" class="rl-input bu-autocomplete-input"
+                                                       value="{{ $group['badan_usaha_name'] }}"
+                                                       placeholder="Cari Badan Usaha..."
+                                                       data-target-id="bu_groups[{{ $gi }}][badan_usaha_id]"
+                                                       autocomplete="off">
+                                                <input type="hidden" name="bu_groups[{{ $gi }}][badan_usaha_id]"
+                                                       class="bu-autocomplete-hidden"
+                                                       value="{{ $group['badan_usaha_id'] }}">
+                                                <div class="rl-autocomplete bu-autocomplete-dropdown"></div>
+                                            </div>
+                                            <button type="button" class="rl-btn-add" title="Tambah Badan Usaha baru"
+                                                    onclick="openTambahBuModal(this.closest('.bu-input-row').querySelector('.bu-autocomplete-input'))">
+                                                <x-icon name="plus-circle-solid" class="" />
+                                            </button>
                                         </div>
                                     </div>
 
@@ -369,6 +382,10 @@
                                     <span class="rl-review-value" id="rev_alias_versi_tera">-</span>
                                 </div>
                                 <div class="rl-review-item">
+                                    <span class="rl-review-label">Nomor SPK</span>
+                                    <span class="rl-review-value" id="rev_nomor_spk">-</span>
+                                </div>
+                                <div class="rl-review-item">
                                     <span class="rl-review-label">TPA / Payor</span>
                                     <span class="rl-review-value" id="rev_penjamin_category">-</span>
                                 </div>
@@ -422,6 +439,19 @@
             </div>
         </form>
     </div>
+
+    <!-- Modal: Tambah Badan Usaha (general modal-form component) -->
+    <x-modal-form id="tambahBuModal" title="Tambah Badan Usaha"
+                  action="{{ route('admin.master-badan-usaha.store') }}"
+                  method="POST" size="sm" submit-text="Simpan"
+                  :ajax="true">
+        <div class="rl-field">
+            <label class="rl-label req" for="tambah_bu_nama">Nama Badan Usaha</label>
+            <input type="text" id="tambah_bu_nama" name="nama_bu" class="rl-input"
+                   placeholder="Contoh: PT Asuransi Sehat" required autocomplete="off"
+                   style="text-transform: uppercase">
+        </div>
+    </x-modal-form>
 
     <!-- Leave confirmation modal -->
     <div class="dm-overlay" id="leaveModal">
@@ -520,6 +550,7 @@
             step: currentStep,
             nama_asuransi: document.getElementById('form_nama_asuransi')?.value || '',
             alias_versi_tera: document.getElementById('alias_versi_tera')?.value || '',
+            nomor_spk: document.getElementById('nomor_spk')?.value || '',
             penjamin_category: document.getElementById('penjamin_category')?.value || '',
             is_high_profile: document.getElementById('is_high_profile')?.checked || false,
             tanggal_mulai: document.getElementById('form_tanggal_mulai')?.value || '',
@@ -646,12 +677,15 @@
             '<input type="hidden" name="bu_groups[' + index + '][pivot_id]" value="' + pivotId + '">' +
             '<div class="rl-grid">' +
                 '<div class="rl-field s2">' +
-                    '<label class="rl-label req">Badan Usaha</label>' +
+                    '<label class="rl-label">Badan Usaha (opsional)</label>' +
+                    '<div class="bu-input-row">' +
                     '<div class="input-container">' +
                         '<input type="text" class="rl-input bu-autocomplete-input" value="' + escapeHtml(buName) + '" placeholder="Cari Badan Usaha..." data-target-id="bu_groups[' + index + '][badan_usaha_id]" autocomplete="off">' +
                         '<input type="hidden" name="bu_groups[' + index + '][badan_usaha_id]" class="bu-autocomplete-hidden" value="' + buId + '">' +
                         '<div class="rl-autocomplete bu-autocomplete-dropdown"></div>' +
                     '</div>' +
+                    '<button type="button" class="rl-btn-add" title="Tambah Badan Usaha baru" onclick="openTambahBuModal(this.closest(\'.bu-input-row\').querySelector(\'.bu-autocomplete-input\'))">' + ICON_PLUS + '</button>' +
+                '</div>' +
                 '</div>' +
                 '<div class="rl-field full">' +
                     '<div class="rl-grid rl-sub-grid">' +
@@ -770,6 +804,46 @@
         saveFormDraft();
     }
 
+    // --- Modal Tambah BU (general modal-form component) ---
+    let tambahBuTargetInput = null;
+
+    function openTambahBuModal(inputEl) {
+        tambahBuTargetInput = inputEl
+            || (document.activeElement && document.activeElement.classList
+                && document.activeElement.classList.contains('bu-autocomplete-input')
+                ? document.activeElement : null);
+        const form = document.getElementById('tambahBuModal-form');
+        const errBox = form ? form.querySelector('[data-modal-form-errors]') : null;
+        if (form) form.reset();
+        if (errBox) { errBox.hidden = true; errBox.innerHTML = ''; }
+        XModal.open('tambahBuModal');
+        setTimeout(function () {
+            const namaInput = document.getElementById('tambah_bu_nama');
+            if (namaInput) namaInput.focus();
+        }, 60);
+    }
+
+    document.addEventListener('modal-form:success', function (e) {
+        if (!e.detail || e.detail.id !== 'tambahBuModal') return;
+        const bu = e.detail.data && e.detail.data.data ? e.detail.data.data : null;
+        if (!bu || !bu.id) return;
+
+        const entry = { id: bu.id, nama: bu.nama_bu };
+        if (!badanUsahaData.some(function (b) { return String(b.id) === String(entry.id); })) {
+            badanUsahaData.push(entry);
+            badanUsahaData.sort(function (a, b) { return a.nama.localeCompare(b.nama); });
+        }
+
+        if (tambahBuTargetInput) {
+            const container = tambahBuTargetInput.closest('.input-container');
+            const hidden = container ? container.querySelector('.bu-autocomplete-hidden') : null;
+            tambahBuTargetInput.value = entry.nama;
+            if (hidden) hidden.value = entry.id;
+            tambahBuTargetInput.classList.remove('error');
+            tambahBuTargetInput = null;
+        }
+    });
+
     // --- BU Autocomplete (shared by all groups) ---
     function initBuAutocomplete(inputEl) {
         if (!inputEl || inputEl.dataset.rlInit) return;
@@ -846,8 +920,8 @@
 
         function selectItem(item) {
             if (item.dataset.action === 'tambah') {
-                saveReturnInfo();
-                window.open('{{ route('admin.master-badan-usaha.index') }}', '_blank');
+                dropdown.style.display = 'none';
+                openTambahBuModal(inputEl);
                 return;
             }
             selecting = true;
@@ -1158,12 +1232,6 @@
             let gi = 1;
             document.querySelectorAll('#bu_groups_container .bu-group-card').forEach(function(card) {
                 const groupLabel = 'Badan Usaha #' + gi;
-                const hidden = card.querySelector('.bu-autocomplete-hidden');
-                if (!hidden || !hidden.value) {
-                    const input = card.querySelector('.bu-autocomplete-input');
-                    if (input) input.classList.add('error');
-                    messages.push(groupLabel + ': pilih Badan Usaha terlebih dahulu.');
-                }
 
                 const checkedLayanan = card.querySelectorAll('input[name$="[jenis_layanan_ids][]"]:checked');
                 if (checkedLayanan.length === 0) {
@@ -1182,6 +1250,7 @@
         // Informasi Dasar
         document.getElementById('rev_nama_asuransi').textContent = document.getElementById('form_nama_asuransi').value || '-';
         document.getElementById('rev_alias_versi_tera').textContent = document.getElementById('alias_versi_tera').value || '-';
+        document.getElementById('rev_nomor_spk').textContent = document.getElementById('nomor_spk').value || '-';
 
         const categoryVal = document.getElementById('penjamin_category').value;
         document.getElementById('rev_penjamin_category').textContent = categoryVal || '-';
@@ -1329,6 +1398,7 @@
             };
             setVal('form_nama_asuransi', draft.nama_asuransi);
             setVal('alias_versi_tera', draft.alias_versi_tera);
+            setVal('nomor_spk', draft.nomor_spk);
             setVal('penjamin_category', draft.penjamin_category);
             if (window.__searchableSelects && window.__searchableSelects['penjamin_category']) {
                 window.__searchableSelects['penjamin_category'].select(draft.penjamin_category || null);

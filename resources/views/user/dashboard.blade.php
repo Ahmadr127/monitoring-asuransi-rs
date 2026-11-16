@@ -285,6 +285,10 @@
                                 <label>Alias Versi Tera</label>
                                 <span id="detail_versi_tera">-</span>
                             </div>
+                            <div class="alias-box">
+                                <label>Nomor SPK</label>
+                                <span id="detail_nomor_spk">-</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -582,6 +586,7 @@
             document.getElementById('detail_jangka_waktu').textContent = jwLabel;
             document.getElementById('detail_badan_usaha').textContent = item.badan_usaha ? item.badan_usaha.nama_bu : '-';
             document.getElementById('detail_versi_tera').textContent = item.alias_versi_tera || '-';
+            document.getElementById('detail_nomor_spk').textContent = item.nomor_spk || '-';
             const lys = Array.isArray(item.jenis_layanan) ? item.jenis_layanan : [];
             document.getElementById('detail_jenis_layanan').innerHTML = lys.map(l => `<span class="tag-pill">${l}</span>`).join('') || '-';
             const dsc = Array.isArray(item.deskripsi_list) ? item.deskripsi_list : (item.deskripsi ? [item.deskripsi] : []);

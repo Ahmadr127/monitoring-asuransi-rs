@@ -24,6 +24,7 @@ class RuangLingkup extends Model
         'is_high_profile',
         'penjamin_category',
         'alias_versi_tera',
+        'nomor_spk',
         'pic_nama',
         'pic_kontak',
         'pic_email',

@@ -101,7 +101,7 @@ trait PreparesDashboardData
 
         $visibleColumns = $tableSetting
             ? $tableSetting->visible_columns
-            : ['nama_asuransi', 'alias_versi_tera', 'penjamin_category', 'periode', 'status', 'jenis_layanan'];
+            : ['nama_asuransi', 'alias_versi_tera', 'nomor_spk', 'penjamin_category', 'periode', 'status', 'jenis_layanan'];
 
         return compact(
             'all', 'allKerjasama', 'activeItems', 'inactiveItems',
@@ -119,7 +119,7 @@ trait PreparesDashboardData
 
         if ($defaults === null) {
             $defaults = [
-                'nama_asuransi', 'alias_versi_tera', 'is_high_profile', 'penjamin_category',
+                'nama_asuransi', 'alias_versi_tera', 'nomor_spk', 'is_high_profile', 'penjamin_category',
                 'jangka_waktu', 'badan_usaha', 'diskon', 'jenis_layanan',
                 'benefit', 'obat', 'cakupan', 'periode', 'status',
             ];

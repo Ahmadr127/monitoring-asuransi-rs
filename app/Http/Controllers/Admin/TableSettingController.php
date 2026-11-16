@@ -13,6 +13,7 @@ class TableSettingController extends Controller
     private $availableColumns = [
         'ruang_lingkup' => [
             'alias_versi_tera' => 'Alias / Versi Tera',
+            'nomor_spk' => 'No. SPK',
             'penjamin_category' => 'TPA / PAYOR',
             'is_high_profile' => 'High Profile',
             'badan_usaha' => 'Badan Usaha',

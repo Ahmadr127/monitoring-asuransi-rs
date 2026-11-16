@@ -140,6 +140,18 @@
                                 </datalist>
                             </th>
                             @endif
+                            @if(in_array('nomor_spk', $visibleColumns))
+                            <th>
+                                <div class="filter-input-container" id="wrap-nomorSpkFilter">
+                                    <input type="text" id="nomorSpkFilter" list="nomorSpkList" oninput="handleFilterInput(this)" autocomplete="off" class="filter-select" placeholder="Cari...">
+                                    <button type="button" class="clear-filter-btn" onclick="clearFilterWrap('nomorSpkFilter')" title="Clear"><x-icon name="close" class="icon-sm" /></button>
+                                </div>
+                                <datalist id="nomorSpkList">
+                                    @php $spkList = collect($ruangLingkup)->pluck('rl')->pluck('nomor_spk')->filter()->unique()->sort(); @endphp
+                                    @foreach($spkList as $spk)<option value="{{ $spk }}">@endforeach
+                                </datalist>
+                            </th>
+                            @endif
                             @if(in_array('penjamin_category', $visibleColumns))
                             <th>
                                 <div class="filter-input-container" id="wrap-payorTpaFilter">
@@ -305,6 +317,9 @@
                             @if(in_array('alias_versi_tera', $visibleColumns))
                             <th class="text-left w-120 th-min-140">Alias Versi Tera</th>
                             @endif
+                            @if(in_array('nomor_spk', $visibleColumns))
+                            <th class="text-left w-120 th-min-140">No. SPK</th>
+                            @endif
                             @if(in_array('penjamin_category', $visibleColumns))
                             <th class="text-center w-100 th-min-110">TPA / PAYOR</th>
                             @endif
@@ -384,6 +399,7 @@
                                 data-index="{{ $index + 1 }}"
                                 data-nama="{{ strtolower($rl->nama_asuransi) }}"
                                 data-alias-tera="{{ strtolower($rl->alias_versi_tera ?? '') }}"
+                                data-nomor-spk="{{ strtolower($rl->nomor_spk ?? '') }}"
                                 data-layanan="{{ $searchLayanan }}"
                                 data-benefit="{{ $searchBenefit }}"
                                 data-cakupan="{{ $searchCakupan }}"
@@ -422,6 +438,11 @@
                                     @else
                                         <span class="color-muted">-</span>
                                     @endif
+                                </td>
+                                @endif
+                                @if(in_array('nomor_spk', $visibleColumns))
+                                <td class="text-left text-sm-semibold color-slate-700">
+                                    {{ $rl->nomor_spk ?? '-' }}
                                 </td>
                                 @endif
 
@@ -656,6 +677,7 @@
                 document.getElementById('highProfileFilter')?.value ||
                 document.getElementById('payorTpaFilter')?.value ||
                 document.getElementById('aliasTeraFilter')?.value ||
+                document.getElementById('nomorSpkFilter')?.value ||
                 document.getElementById('diskonFilter')?.value;
 
             isGroupedMode = !hasActiveFilter;
@@ -764,6 +786,7 @@
             const headerFilters = {
                 nama: document.getElementById('namaAsuransiFilter')?.value.toLowerCase() ?? '',
                 alias: document.getElementById('aliasTeraFilter')?.value.toLowerCase() ?? '',
+                spk: document.getElementById('nomorSpkFilter')?.value.toLowerCase() ?? '',
                 high: document.getElementById('highProfileFilter')?.value ?? '',
                 payor: document.getElementById('payorTpaFilter')?.value ?? '',
                 bu: document.getElementById('badanUsahaFilter')?.value.toLowerCase() ?? '',
@@ -779,6 +802,7 @@
                 const data = {
                     nama: row.getAttribute('data-nama') || '',
                     alias: row.getAttribute('data-alias-tera') || '',
+                    spk: row.getAttribute('data-nomor-spk') || '',
                     layanan: row.getAttribute('data-layanan') || '',
                     benefit: row.getAttribute('data-benefit') || '',
                     cakupan: row.getAttribute('data-cakupan') || '',
@@ -797,6 +821,7 @@
                 const matchesGlobal = !searchTerm ||
                     data.nama.includes(searchTerm) ||
                     data.alias.includes(searchTerm) ||
+                    data.spk.includes(searchTerm) ||
                     data.layanan.includes(searchTerm) ||
                     data.benefit.includes(searchTerm) ||
                     data.cakupan.includes(searchTerm) ||
@@ -806,6 +831,7 @@
                 const matchesHeader =
                     (!headerFilters.nama || data.nama.includes(headerFilters.nama)) &&
                     (!headerFilters.alias || data.alias.includes(headerFilters.alias)) &&
+                    (!headerFilters.spk || data.spk.includes(headerFilters.spk)) &&
                     (!headerFilters.high || data.high === headerFilters.high) &&
                     (!headerFilters.payor || data.payor === headerFilters.payor) &&
                     (!headerFilters.bu || data.bu.includes(headerFilters.bu)) &&
@@ -906,7 +932,7 @@
             document.getElementById('searchInput').value = '';
             document.getElementById('monthFilter').value = '';
             document.getElementById('yearFilter').value = '';
-            ['namaAsuransiFilter','aliasTeraFilter','highProfileFilter','payorTpaFilter','badanUsahaFilter',
+            ['namaAsuransiFilter','aliasTeraFilter','nomorSpkFilter','highProfileFilter','payorTpaFilter','badanUsahaFilter',
              'jangkaWaktuFilter','diskonFilter','serviceFilter','obatFilter','periodFilter','statusFilter'
             ].forEach(function(id) {
                 const el = document.getElementById(id);

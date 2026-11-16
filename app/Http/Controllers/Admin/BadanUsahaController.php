@@ -36,16 +36,31 @@ class BadanUsahaController extends Controller
                 'nama_bu.max' => 'Nama badan usaha maksimal 255 karakter',
             ]);
 
-            BadanUsaha::create($validated);
+            $badanUsaha = BadanUsaha::create($validated);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Data badan usaha berhasil ditambahkan',
+                    'data' => $badanUsaha,
+                ], 201);
+            }
 
             return redirect()->route('admin.master-badan-usaha.index')
                 ->with('success', 'Data badan usaha berhasil ditambahkan');
         } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson()) {
+                throw $e; // Laravel otomatis render 422 JSON untuk request JSON
+            }
+
             return redirect()->back()
                 ->withErrors($e->errors())
                 ->withInput()
                 ->with('error', 'Gagal menambahkan data: '.implode(', ', $e->validator->errors()->all()));
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Gagal menambahkan data: '.$e->getMessage()], 500);
+            }
+
             return redirect()->back()
                 ->with('error', 'Gagal menambahkan data: '.$e->getMessage())
                 ->withInput();

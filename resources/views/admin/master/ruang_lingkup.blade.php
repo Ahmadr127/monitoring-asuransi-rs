@@ -159,6 +159,19 @@
                                 </datalist>
                             </th>
                             <th>
+                                <div class="filter-input-container" id="wrap-nomorSpkFilter">
+                                    <input type="text" id="nomorSpkFilter" list="nomorSpkList"
+                                        oninput="handleFilterInput(this)" autocomplete="off" class="filter-select"
+                                        placeholder="Cari...">
+                                    <button type="button" class="clear-filter-btn"
+                                        onclick="clearFilterWrap('nomorSpkFilter')" title="Clear"><x-icon name="close" class="" /></button>
+                                </div>
+                                <datalist id="nomorSpkList">
+                                    @php $spkList = collect($ruangLingkup)->pluck('rl')->pluck('nomor_spk')->filter()->unique()->sort(); @endphp
+                                    @foreach($spkList as $spk)<option value="{{ $spk }}">@endforeach
+                                </datalist>
+                            </th>
+                            <th>
                                 <div class="filter-input-container" id="wrap-payorTpaFilter">
                                     <x-searchable-select
                                         input-id="payorTpaFilter"
@@ -293,7 +306,7 @@
                             <th></th>
                         </tr>
                         <tr class="filter-spacer-row">
-                            <th colspan="15"></th>
+                            <th colspan="16"></th>
                         </tr>
                         <tr>
                             <th class="text-center w-40 th-min-50">No</th>
@@ -302,6 +315,7 @@
                                 <x-icon name="sort" class="sort-icon" />
                             </th>
                             <th class="text-left w-120 th-min-140">Alias Versi Tera</th>
+                            <th class="text-left w-120 th-min-140">No. SPK</th>
                             <th class="text-center w-100 th-min-110">TPA/PAYOR</th>
                             <th class="text-center w-80 th-min-90">High Profile</th>
                             <th class="bu-cell text-left th-min-200">Badan Usaha</th>
@@ -365,6 +379,7 @@
                                 data-index="{{ $index + 1 }}"
                                 data-nama="{{ strtolower($rl->nama_asuransi) }}"
                                 data-alias-tera="{{ strtolower($rl->alias_versi_tera ?? '') }}"
+                                data-nomor-spk="{{ strtolower($rl->nomor_spk ?? '') }}"
                                 data-layanan="{{ $searchLayanan }}"
                                 data-benefit="{{ $searchBenefit }}"
                                 data-cakupan="{{ $searchCakupan }}"
@@ -401,6 +416,9 @@
                                         <span class="color-muted">-</span>
                                     @endif
                                 </td>
+                                <td class="text-left text-sm-semibold color-slate-700">
+                                    {{ $rl->nomor_spk ?? '-' }}
+                                </td>
                                 <td class="text-center">
                                     <span class="status-badge status-info text-xs-bold min-w-60">
                                         {{ $rl->penjamin_category ?? '-' }}
@@ -414,7 +432,7 @@
                                     @endif
                                 </td>
                                 <td class="bu-cell text-left color-slate-700">
-                                    <span class="badge badge-bu bu-single">{{ Str::upper($buName) }}</span>
+                                    <span class="badge badge-bu bu-single">{{ $buName !== '' ? Str::upper($buName) : '-' }}</span>
                                     <span class="badge badge-bu bu-group-badge d-none"></span>
                                 </td>
                                 <td class="period-cell text-left">
@@ -560,7 +578,7 @@
                             </tr>
                         @empty
                             <tr id="emptyRow">
-                                <td colspan="15" class="empty-state">
+                                <td colspan="16" class="empty-state">
                                     <div class="empty-icon">
                                         <x-icon name="document" class="" />
                                     </div>
@@ -576,7 +594,7 @@
                             </tr>
                         @endforelse
                         <tr id="searchEmptyRow" class="d-none">
-                            <td colspan="15" class="empty-state empty-state-compact">
+                            <td colspan="16" class="empty-state empty-state-compact">
                                 <div class="empty-icon empty-icon-mb-1 text-muted-premium">
                                     <x-icon name="search-empty" class="empty-icon-large-svg" />
                                 </div>
@@ -675,7 +693,8 @@
             const hasPerBuFilter = searchValue ||
                 document.getElementById('namaAsuransiFilter')?.value ||
                 document.getElementById('badanUsahaFilter')?.value ||
-                document.getElementById('aliasTeraFilter')?.value;
+                document.getElementById('aliasTeraFilter')?.value ||
+                document.getElementById('nomorSpkFilter')?.value;
 
             isGroupedMode = !hasPerBuFilter;
 
@@ -709,7 +728,7 @@
                             }).filter(function(n) { return n; }).map(function(n) {
                                 return n.charAt(0).toUpperCase() + n.slice(1);
                             });
-                            groupBadge.textContent = allBuNames.join(', ');
+                            groupBadge.textContent = allBuNames.length ? allBuNames.join(', ') : '-';
                             groupBadge.style.display = 'inline-block';
                         }
                     }
@@ -1100,6 +1119,7 @@
             const jangkaWaktuValue = document.getElementById('jangkaWaktuFilter') ? document.getElementById('jangkaWaktuFilter').value : '';
             const namaAsuransiValue = document.getElementById('namaAsuransiFilter') ? document.getElementById('namaAsuransiFilter').value.toLowerCase() : '';
             const aliasTeraValue = document.getElementById('aliasTeraFilter') ? document.getElementById('aliasTeraFilter').value.toLowerCase() : '';
+            const nomorSpkValue = document.getElementById('nomorSpkFilter') ? document.getElementById('nomorSpkFilter').value.toLowerCase() : '';
             const diskonValue = document.getElementById('diskonFilter') ? document.getElementById('diskonFilter').value.toLowerCase() : '';
 
             toggleClearButton('clearStatus', statusValue);
@@ -1116,6 +1136,7 @@
             filteredRows = allRows.filter(row => {
                 const nama = row.getAttribute('data-nama') || '';
                 const aliasTera = row.getAttribute('data-alias-tera') || '';
+                const nomorSpk = row.getAttribute('data-nomor-spk') || '';
                 const layanan = row.getAttribute('data-layanan') || '';
                 const obatData = row.getAttribute('data-obat') || '';
                 const benefit = row.getAttribute('data-benefit') || '';
@@ -1144,6 +1165,7 @@
 
                 if (namaAsuransiValue && !nama.includes(namaAsuransiValue)) showRow = false;
                 if (aliasTeraValue && !aliasTera.includes(aliasTeraValue)) showRow = false;
+                if (nomorSpkValue && !nomorSpk.includes(nomorSpkValue)) showRow = false;
                 if (diskonValue && !diskon.includes(diskonValue)) showRow = false;
 
                 if (searchValue) {
@@ -1665,6 +1687,7 @@
             if(document.getElementById('jangkaWaktuFilter')) document.getElementById('jangkaWaktuFilter').value = '';
             if(document.getElementById('namaAsuransiFilter')) document.getElementById('namaAsuransiFilter').value = '';
             if(document.getElementById('aliasTeraFilter')) document.getElementById('aliasTeraFilter').value = '';
+            if(document.getElementById('nomorSpkFilter')) document.getElementById('nomorSpkFilter').value = '';
             if(document.getElementById('diskonFilter')) document.getElementById('diskonFilter').value = '';
             if(document.getElementById('obatFilter')) document.getElementById('obatFilter').value = '';
 
