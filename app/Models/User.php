@@ -12,6 +12,15 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * Cache per-request daftar nama permission milik user.
+     * Mencegah query permission berulang (belasan kali per halaman).
+     *
+     * @var array<int, string>|null
+     */
+    private ?array $permissionNamesCache = null;
+
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -74,11 +83,23 @@ class User extends Authenticatable
     }
 
     /**
-     * Cek permission dari database melalui relasi role → permissions.
+     * Semua nama permission milik role user ini (diambil sekali per request).
+     */
+    public function permissionNames(): array
+    {
+        if ($this->permissionNamesCache === null) {
+            $this->permissionNamesCache = $this->role?->permissions()->pluck('name')->all() ?? [];
+        }
+
+        return $this->permissionNamesCache;
+    }
+
+    /**
+     * Cek permission dari database melalui relasi role → permissions (di-cache per request).
      */
     public function hasPermission(string $permission): bool
     {
-        return $this->role?->hasPermission($permission) ?? false;
+        return in_array($permission, $this->permissionNames(), true);
     }
 
     /**

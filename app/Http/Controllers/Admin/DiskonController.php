@@ -16,7 +16,7 @@ class DiskonController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $ruangLingkups = RuangLingkup::where('status', 'aktif')->get();
+        $ruangLingkups = RuangLingkup::where('status', 'aktif')->select('id', 'nama_asuransi')->orderBy('nama_asuransi')->get();
         $existingRlIds = $diskons->pluck('ruang_lingkup_id')->toArray();
 
         return view('admin.master.diskon', compact('diskons', 'ruangLingkups', 'existingRlIds'));

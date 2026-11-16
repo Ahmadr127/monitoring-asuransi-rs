@@ -20,8 +20,6 @@ class RuangLingkupController extends Controller
 
     public function index()
     {
-        RuangLingkup::expiredButActive()->get()->each(fn ($c) => $c->updateExpiredStatus());
-
         $ruangLingkup = RuangLingkup::with([
             'badanUsahaPivot.badanUsaha',
             'penagihanPembayaran',

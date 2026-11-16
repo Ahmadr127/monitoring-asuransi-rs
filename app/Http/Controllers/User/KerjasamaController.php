@@ -14,8 +14,7 @@ class KerjasamaController extends Controller
 
     public function index()
     {
-        RuangLingkup::expiredButActive()->get()->each(fn ($c) => $c->updateExpiredStatus());
-
+        // Expired contracts di-update oleh schedule harian, tidak saat GET.
         $ruangLingkup = RuangLingkup::with([
             'diskon',
             'penagihanPembayaran',

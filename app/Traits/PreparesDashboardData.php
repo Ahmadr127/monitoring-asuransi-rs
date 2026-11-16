@@ -37,12 +37,14 @@ trait PreparesDashboardData
 
     private function prepareDashboardData()
     {
-        RuangLingkup::expiredButActive()->get()->each(fn ($c) => $c->updateExpiredStatus());
-
+        // Expired contracts di-update oleh schedule harian `contracts:update-expired`
+        // (lihat routes/console.php), tidak perlu ditulis saat GET halaman.
+        // Map dilakukan SATU KALI per item; list lain diturunkan dari sini
+        // (tidak ada relasi yang dipanggil ulang atau @json duplikat besar).
         $all = RuangLingkup::with([
             'diskon', 'penagihanPembayaran', 'badanUsaha', 'jenisLayananRelasi', 'obatRelasi', 'badanUsahaPivot',
         ])->approved()->get()->map(function ($item) {
-            $item = $this->mapRuangLingkup($item, true, false);
+            $this->mapRuangLingkup($item, true, false);
 
             if ($item->status === 'aktif') {
                 $item->sort_priority = 1;
@@ -59,41 +61,28 @@ trait PreparesDashboardData
             ['days_remaining', 'asc'],
         ])->values();
 
-        $activeItems = $all->where('status', 'aktif');
-        $inactiveItems = $all->where('status', 'tidak_aktif');
+        $activeItems = $all->where('status', 'aktif')->sortBy('days_remaining')->values();
+        $inactiveItems = $all->where('status', 'tidak_aktif')->sortByDesc('created_at')->values();
 
-        $kerjasamaAktif = $activeItems->map(function ($item) {
-            return $this->mapRuangLingkup($item, true, true);
-        })->sortBy('days_remaining')->values();
+        $kerjasamaAktif = $activeItems;
+        $kerjasamaTidakAktif = $inactiveItems;
 
-        $kerjasamaTidakAktif = $inactiveItems
-            ->sortByDesc('created_at')
-            ->map(fn ($item) => $this->mapRuangLingkup($item, false, false))
-            ->values();
+        $filterExpiring = function (int $days) use ($activeItems) {
+            $end = now()->addDays($days)->startOfDay();
+            $today = now()->startOfDay();
 
-        $expiringContracts30 = $activeItems->filter(function ($item) {
-            if (! $item->tanggal_berakhir) {
-                return false;
-            }
+            return $activeItems->filter(function ($item) use ($today, $end) {
+                if (! $item->tanggal_berakhir) {
+                    return false;
+                }
+                $itemEnd = $item->tanggal_berakhir->startOfDay();
 
-            $end = $item->tanggal_berakhir->startOfDay();
+                return $itemEnd->greaterThanOrEqualTo($today) && $itemEnd->lessThanOrEqualTo($end);
+            })->sortBy('tanggal_berakhir')->values();
+        };
 
-            return $end->greaterThanOrEqualTo(now()->startOfDay()) && $end->lessThanOrEqualTo(now()->addDays(RuangLingkup::EXPIRING_SOON));
-        })->sortBy('tanggal_berakhir')->map(function ($item) {
-            return $this->mapRuangLingkup($item, true, true);
-        })->values();
-
-        $expiringContracts90 = $activeItems->filter(function ($item) {
-            if (! $item->tanggal_berakhir) {
-                return false;
-            }
-
-            $end = $item->tanggal_berakhir->startOfDay();
-
-            return $end->greaterThanOrEqualTo(now()->startOfDay()) && $end->lessThanOrEqualTo(now()->addDays(RuangLingkup::EXPIRING_WARNING));
-        })->sortBy('tanggal_berakhir')->map(function ($item) {
-            return $this->mapRuangLingkup($item, true, true);
-        })->values();
+        $expiringContracts30 = $filterExpiring(RuangLingkup::EXPIRING_SOON);
+        $expiringContracts90 = $filterExpiring(RuangLingkup::EXPIRING_WARNING);
 
         $tableSetting = RoleTableSetting::where('role_id', auth()->user()->role_id)
             ->where('table_name', 'ruang_lingkup')
@@ -111,7 +100,7 @@ trait PreparesDashboardData
         );
     }
 
-    private function getVisibleColumns(bool $includeHistory = false, array $defaults = null): array
+    private function getVisibleColumns(bool $includeHistory = false, ?array $defaults = null): array
     {
         $tableSetting = RoleTableSetting::where('role_id', auth()->user()->role_id)
             ->where('table_name', 'ruang_lingkup')

@@ -306,13 +306,30 @@
     <script>
         const visibleColumns = @json($visibleColumns ?? []);
 
-        const dashboardData = {
-            all: @json($allKerjasama ?? []),
-            aktif: @json($kerjasamaAktif ?? []),
-            expiring30: @json($expiringContracts30 ?? []),
-            expiring90: @json($expiringContracts90 ?? []),
-            tidak_aktif: @json($kerjasamaTidakAktif ?? [])
-        };
+        // Server hanya mengirim satu koleksi (all); list lain diturunkan di client.
+        const allKerjasama = @json($allKerjasama ?? []);
+        const dashboardData = (() => {
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const addDays = function (n) { const d = new Date(today); d.setDate(d.getDate() + n); return d; };
+            const parseDay = function (s) { const d = new Date(s); return isNaN(d) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
+            const aktif = allKerjasama
+                .filter(i => i.status === 'aktif')
+                .map(i => ({ ...i, days_remaining: Math.max(0, i.days_remaining ?? 0) }))
+                .sort((a, b) => (a.days_remaining ?? 999999) - (b.days_remaining ?? 999999));
+            const tidak_aktif = allKerjasama
+                .filter(i => i.status !== 'aktif')
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const expiring = function (n) {
+                const limit = addDays(n);
+                return aktif
+                    .filter(i => {
+                        const end = parseDay(i.tanggal_berakhir);
+                        return end && end >= today && end <= limit;
+                    })
+                    .sort((a, b) => new Date(a.tanggal_berakhir) - new Date(b.tanggal_berakhir));
+            };
+            return { all: allKerjasama, aktif: aktif, expiring30: expiring(30), expiring90: expiring(90), tidak_aktif: tidak_aktif };
+        })();
 
         const config = {
             all: { title: 'Semua Monitoring Kontrak', variant: 'all' },

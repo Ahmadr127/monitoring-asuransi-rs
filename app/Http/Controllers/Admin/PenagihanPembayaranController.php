@@ -13,7 +13,7 @@ class PenagihanPembayaranController extends Controller
     public function index()
     {
         $penagihans = PenagihanPembayaran::with('ruangLingkup')->orderBy('created_at', 'desc')->get();
-        $ruangLingkups = RuangLingkup::where('status', 'aktif')->get();
+        $ruangLingkups = RuangLingkup::where('status', 'aktif')->select('id', 'nama_asuransi')->orderBy('nama_asuransi')->get();
         $existingRlIds = $penagihans->pluck('ruang_lingkup_id')->toArray();
 
         return view('admin.master.penagihan_pembayaran', compact('penagihans', 'ruangLingkups', 'existingRlIds'));

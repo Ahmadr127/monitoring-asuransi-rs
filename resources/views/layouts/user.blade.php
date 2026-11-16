@@ -21,45 +21,25 @@
         rel="stylesheet">
 
     <!-- App Styles -->
+    <link rel="stylesheet" href="{{ asset_v('css/hospital-clean.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('css/admin-pages.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('css/contract-countdown.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('css/layout.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('css/master-data.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('css/ruang-lingkup.css') }}">
     @if($isLegal)
-    <link rel="stylesheet" href="{{ asset('css/hospital-clean.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/admin-pages.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/contract-countdown.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/layout.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/master-data.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/ruang-lingkup.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/settings.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/kerjasama-list.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/notifications.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard-admin.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard-user.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/auth.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/ruang-lingkup-form.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/master-pages.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/delete-modal.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/searchable-select.css') }}?v={{ time() }}">
-    @else
-    <link rel="stylesheet" href="{{ asset('css/hospital-clean.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/admin-pages.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/contract-countdown.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/layout.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/master-data.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/kerjasama-list.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard-user.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/ruang-lingkup.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/master-pages.css') }}?v={{ time() }}">
-    <link rel="stylesheet" href="{{ asset('css/searchable-select.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset_v('css/settings.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('css/notifications.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('css/dashboard-admin.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('css/ruang-lingkup-form.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('css/delete-modal.css') }}">
     @endif
+    <link rel="stylesheet" href="{{ asset_v('css/kerjasama-list.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('css/dashboard-user.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('css/master-pages.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('css/searchable-select.css') }}">
 
-    <!-- Flatpickr -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
-
-    @if($isLegal)
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    @endif
 </head>
 
 <body>

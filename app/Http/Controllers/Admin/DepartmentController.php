@@ -12,7 +12,7 @@ class DepartmentController extends Controller
 {
     public function index()
     {
-        $units = OrganizationUnit::with(['type', 'parent', 'head', 'members'])->withCount('members')->orderBy('name')->get();
+        $units = OrganizationUnit::with(['type', 'parent', 'head'])->withCount('members')->orderBy('name')->get();
         $types = OrganizationType::orderBy('level')->orderBy('name')->get();
         $typeCount = $types->count();
 
